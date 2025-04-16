@@ -41,7 +41,7 @@
 #include <imxrt.h>
 #include <CrashReport.h>
 
-WDT_T4<WDT1> Watchdog;
+WDT_T4<WDT1> watchdog;
 /*
   #define CPU_REBOOT (_reboot_Teensyduino_());
 */
@@ -398,7 +398,17 @@ void setup()
   /////////////////
 
   //  Enable WDT T4.x
-  Watchdog.set(1000);
+  WDT_timings_t configewm;
+  // configewm.callback = myCallback;
+  // configewm.window = 100; /* window mode is disabled when ommitted */
+  configewm.timeout = 2000;
+  configewm.pin = 21;
+  watchdog.begin(configewm);
+
+  delay(100);
+  watchdog.feed();
+  /* window mode test */
+  delay(100); /* <-- not keeping this here would cause resets by Callback */
 
   //VE.begin(19200); //Victron VE direct bus
 #if defined (__arm__) && defined (__SAM3X8E__)
@@ -3672,7 +3682,7 @@ void resetwdog()
   // WDOG_REFRESH = 0xA602; Teensy 3.1
   // WDOG_REFRESH = 0xB480;
   // interrupts();
-  Watchdog.reset();
+  watchdog.feed();
 }
 
 void pwmcomms()
