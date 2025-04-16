@@ -25,12 +25,23 @@
 #include "SerialConsole.h"
 #include "Logger.h"
 #include <ADC.h> //https://github.com/pedvide/ADC
+// #include "libs/ADC/ADC.h" 
 #include <EEPROM.h>
 #include <FlexCAN.h> //https://github.com/collin80/FlexCAN_Library 
+// #include "libs/FlexCAN_Library/FlexCAN.h" 
 #include <SPI.h>
 #include <Filters.h>//https://github.com/JonHub/Filters
-#include "Serial_CAN_Module_TeensyS2.h" //https://github.com/tomdebree/Serial_CAN_Teensy
+// #include "libs/Filters/src/Filters.h" 
+#include <Serial_CAN_Module_Teensy.h> //https://github.com/tomdebree/Serial_CAN_Teensy
+// #include "Serial_CAN_Module_TeensyS2.h" //https://github.com/tomdebree/Serial_CAN_Teensy
+// #include "libs/Serial_CAN_Teensy/S2/Serial_CAN_Module_TeensyS2.h"
 
+// T4 Additions
+#include <Watchdog_t4.h>
+#include <imxrt.h>
+#include <CrashReport.h>
+
+WDT_T4<WDT1> Watchdog;
 /*
   #define CPU_REBOOT (_reboot_Teensyduino_());
 */
@@ -347,40 +358,47 @@ void setup()
   SERIALCONSOLE.println("SimpBMS V2 Tesla");
 
   Serial2.begin(115200); //display and can adpater canbus
+  // Teensy 3.1 
+  // // Display reason the Teensy was last reset
+  // Serial.println();
+  // Serial.println("Reason for last Reset: ");
 
-  // Display reason the Teensy was last reset
-  Serial.println();
-  Serial.println("Reason for last Reset: ");
+  // if (RCM_SRS1 & RCM_SRS1_SACKERR)   Serial.println("Stop Mode Acknowledge Error Reset");
+  // if (RCM_SRS1 & RCM_SRS1_MDM_AP)    Serial.println("MDM-AP Reset");
+  // if (RCM_SRS1 & RCM_SRS1_SW)        Serial.println("Software Reset");                   // reboot with SCB_AIRCR = 0x05FA0004
+  // if (RCM_SRS1 & RCM_SRS1_LOCKUP)    Serial.println("Core Lockup Event Reset");
+  // if (RCM_SRS0 & RCM_SRS0_POR)       Serial.println("Power-on Reset");                   // removed / applied power
+  // if (RCM_SRS0 & RCM_SRS0_PIN)       Serial.println("External Pin Reset");               // Reboot with software download
+  // if (RCM_SRS0 & RCM_SRS0_WDOG)      Serial.println("Watchdog(COP) Reset");              // WDT timed out
+  // if (RCM_SRS0 & RCM_SRS0_LOC)       Serial.println("Loss of External Clock Reset");
+  // if (RCM_SRS0 & RCM_SRS0_LOL)       Serial.println("Loss of Lock in PLL Reset");
+  // if (RCM_SRS0 & RCM_SRS0_LVD)       Serial.println("Low-voltage Detect Reset");
+  // Serial.println();
+  // ///////////////////
 
-  if (RCM_SRS1 & RCM_SRS1_SACKERR)   Serial.println("Stop Mode Acknowledge Error Reset");
-  if (RCM_SRS1 & RCM_SRS1_MDM_AP)    Serial.println("MDM-AP Reset");
-  if (RCM_SRS1 & RCM_SRS1_SW)        Serial.println("Software Reset");                   // reboot with SCB_AIRCR = 0x05FA0004
-  if (RCM_SRS1 & RCM_SRS1_LOCKUP)    Serial.println("Core Lockup Event Reset");
-  if (RCM_SRS0 & RCM_SRS0_POR)       Serial.println("Power-on Reset");                   // removed / applied power
-  if (RCM_SRS0 & RCM_SRS0_PIN)       Serial.println("External Pin Reset");               // Reboot with software download
-  if (RCM_SRS0 & RCM_SRS0_WDOG)      Serial.println("Watchdog(COP) Reset");              // WDT timed out
-  if (RCM_SRS0 & RCM_SRS0_LOC)       Serial.println("Loss of External Clock Reset");
-  if (RCM_SRS0 & RCM_SRS0_LOL)       Serial.println("Loss of Lock in PLL Reset");
-  if (RCM_SRS0 & RCM_SRS0_LVD)       Serial.println("Low-voltage Detect Reset");
-  Serial.println();
-  ///////////////////
+  // Teensy 4.x
+  if (CrashReport) {
+    /* print info (hope Serial Monitor windows is open) */
+    Serial.print(CrashReport);
+  }
 
+  // enable WDT - T3.1
+  // noInterrupts();                                         // don't allow interrupts while setting up WDOG
+  // WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;                         // unlock access to WDOG registers
+  // WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+  // delayMicroseconds(1);                                   // Need to wait a bit..
 
-  // enable WDT
-  noInterrupts();                                         // don't allow interrupts while setting up WDOG
-  WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;                         // unlock access to WDOG registers
-  WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-  delayMicroseconds(1);                                   // Need to wait a bit..
-
-  WDOG_TOVALH = 0x1000;
-  WDOG_TOVALL = 0x0000;
-  WDOG_PRESC  = 0;
-  WDOG_STCTRLH |= WDOG_STCTRLH_ALLOWUPDATE |
-                  WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_WAITEN |
-                  WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
-  interrupts();
+  // WDOG_TOVALH = 0x1000;
+  // WDOG_TOVALL = 0x0000;
+  // WDOG_PRESC  = 0;
+  // WDOG_STCTRLH |= WDOG_STCTRLH_ALLOWUPDATE |
+  //                 WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_WAITEN |
+  //                 WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
+  // interrupts();
   /////////////////
 
+  //  Enable WDT T4.x
+  Watchdog.set(1000);
 
   //VE.begin(19200); //Victron VE direct bus
 #if defined (__arm__) && defined (__SAM3X8E__)
@@ -3650,10 +3668,11 @@ void outputdebug()
 
 void resetwdog()
 {
-  noInterrupts();                                     //   No - reset WDT
-  WDOG_REFRESH = 0xA602;
-  WDOG_REFRESH = 0xB480;
-  interrupts();
+  // noInterrupts();                                     //   No - reset WDT
+  // WDOG_REFRESH = 0xA602; Teensy 3.1
+  // WDOG_REFRESH = 0xB480;
+  // interrupts();
+  Watchdog.reset();
 }
 
 void pwmcomms()
