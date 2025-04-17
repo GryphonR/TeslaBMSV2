@@ -19,6 +19,7 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "pinouts.h"
 #include "BMSModuleManager.h"
 #include <Arduino.h>
 #include "config.h"
@@ -64,24 +65,6 @@ int firmver = 230719; // Year Month Day
 float filterFrequency = 5.0;
 FilterOnePole lowpassFilter(LOWPASS, filterFrequency);
 
-// Simple BMS V2 wiring//
-const int ACUR2 = A0; // current 1
-const int ACUR1 = A1; // current 2
-const int IN1 = 17;   // input 1 - high active
-const int IN2 = 16;   // input 2- high active
-const int IN3 = 18;   // input 1 - high active
-const int IN4 = 19;   // input 2- high active
-const int OUT1 = 11;  // output 1 - high active
-const int OUT2 = 12;  // output 2 - high active
-const int OUT3 = 20;  // output 3 - high active
-const int OUT4 = 21;  // output 4 - high active
-const int OUT5 = 22;  // output 5 - Low active
-const int OUT6 = 23;  // output 6 - Low active
-const int OUT7 = 5;   // output 7 - Low active
-const int OUT8 = 6;   // output 8 - Low active
-const int led = 13;
-const int BMBfault = 11;
-
 byte bmsstatus = 0;
 // bms status values
 #define Boot 0
@@ -90,7 +73,7 @@ byte bmsstatus = 0;
 #define Charge 3
 #define Precharge 4
 #define Error 5
-//
+
 // Current sensor values
 #define Undefined 0
 #define Analoguedual 1
@@ -479,7 +462,6 @@ void setup()
   // RISING/HIGH/CHANGE/LOW/FALLING
   attachInterrupt(IN4, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 7 ]
 
-
   // TODO Low/High Voltage Interrupt disabled for T4
   // PMC_LVDSC1 = PMC_LVDSC1_LVDV(1);                    // enable hi v
   // PMC_LVDSC2 = PMC_LVDSC2_LVWIE | PMC_LVDSC2_LVWV(3); // 2.92-3.08v
@@ -493,7 +475,9 @@ void loop()
 {
 
   // On message recieve.
-  while (canRead()){}
+  while (canRead())
+  {
+  }
 
   if (SERIALCONSOLE.available() > 0)
   {
