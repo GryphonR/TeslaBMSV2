@@ -4,8 +4,8 @@
 // Simple BMS V2 wiring//
 const int ACUR2 = A0; // current 1
 const int ACUR1 = A1; // current 2
-const int IN1 = 17;   // input 1 - high active
-const int IN2 = 16;   // input 2- high active
+const int IN1 = 16;   // input 1 - high active
+const int IN2 = 17;   // input 2- high active
 const int IN3 = 18;   // input 1 - high active
 const int IN4 = 19;   // input 2- high active
 const int OUT1 = 11;  // output 1 - high active - Positive Contactor
