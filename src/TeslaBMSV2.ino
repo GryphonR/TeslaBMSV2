@@ -289,25 +289,25 @@ void setup()
   // ------------- Pin Mode Assignments -------------
   // pinMode(ACUR1, INPUT);//Not required for Analogue Pins
   // pinMode(ACUR2, INPUT);//Not required for Analogue Pins
-  pinMode(IN1, INPUT);
-  pinMode(IN2, INPUT);
-  pinMode(IN3, INPUT);
-  pinMode(IN4, INPUT);
-  pinMode(OUT1, OUTPUT); // drive contactor
-  pinMode(OUT2, OUTPUT); // precharge
-  pinMode(OUT3, OUTPUT); // charge relay
-  pinMode(OUT4, OUTPUT); // Negative contactor
-  pinMode(OUT5, OUTPUT); // pwm driver output
-  pinMode(OUT6, OUTPUT); // pwm driver output
-  pinMode(OUT7, OUTPUT); // pwm driver output
-  pinMode(OUT8, OUTPUT); // pwm driver output
-  pinMode(led, OUTPUT);
+  pinMode(PIN_IN1, INPUT);
+  pinMode(PIN_IN2, INPUT);
+  pinMode(PIN_IN3, INPUT);
+  pinMode(PIN_IN4, INPUT);
+  pinMode(PIN_OUT1, OUTPUT); // Positive contactor
+  pinMode(PIN_OUT2, OUTPUT); // precharge
+  pinMode(PIN_OUT3, OUTPUT); // charge relay
+  pinMode(PIN_OUT4, OUTPUT); // Negative contactor
+  pinMode(PIN_OUT5, OUTPUT); // pwm driver output
+  pinMode(PIN_OUT6, OUTPUT); // pwm driver output
+  pinMode(PIN_OUT7, OUTPUT); // pwm driver output
+  pinMode(PIN_OUT8, OUTPUT); // pwm driver output
+  pinMode(PIN_LED_BUILTIN, OUTPUT);
 
   // ------------- PWM Output Configuration -------------
-  analogWriteFrequency(OUT5, pwmfreq);
-  analogWriteFrequency(OUT6, pwmfreq);
-  analogWriteFrequency(OUT7, pwmfreq);
-  analogWriteFrequency(OUT8, pwmfreq);
+  analogWriteFrequency(PIN_OUT5, pwmfreq);
+  analogWriteFrequency(PIN_OUT6, pwmfreq);
+  analogWriteFrequency(PIN_OUT7, pwmfreq);
+  analogWriteFrequency(PIN_OUT8, pwmfreq);
 
   // ------------- EEPROM Setting Retreival -------------
   EEPROM.get(0, settings);
@@ -342,7 +342,7 @@ void setup()
   adc->adc0->setResolution(16); // set bits of resolution
   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);
-  adc->adc0->startContinuous(ACUR1);
+  adc->adc0->startContinuous(PIN_ACUR_1);
 
   SERIALCONSOLE.begin(115200);
   SERIALCONSOLE.println("Starting up!");
@@ -423,7 +423,7 @@ void setup()
 
   lastUpdate = 0;
   bms.findBoards();
-  digitalWrite(led, HIGH);
+  digitalWrite(PIN_LED_BUILTIN, HIGH);
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
 
@@ -460,7 +460,7 @@ void setup()
 
   // setup interrupts
   // RISING/HIGH/CHANGE/LOW/FALLING
-  attachInterrupt(IN4, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 7 ]
+  attachInterrupt(PIN_IN4, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 7 ]
 
   // TODO Low/High Voltage Interrupt disabled for T4
   // PMC_LVDSC1 = PMC_LVDSC1_LVDV(1);                    // enable hi v
@@ -494,7 +494,7 @@ void loop()
       }
       else
       {
-        if (digitalRead(IN2) == HIGH || CanOnReq == true)
+        if (digitalRead(PIN_IN2) == HIGH || CanOnReq == true)
         {
           OutputEnable = 1;
           // Serial.println(CanOnReq);
@@ -511,18 +511,18 @@ void loop()
         {
           if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint)
           {
-            if (digitalRead(OUT2) == LOW && digitalRead(OUT4) == LOW)
+            if (digitalRead(PIN_OUT2) == LOW && digitalRead(PIN_OUT4) == LOW)
             {
               mainconttimer = millis();
-              digitalWrite(OUT4, HIGH); // Precharge start
+              digitalWrite(PIN_OUT4, HIGH); // Precharge start
               Serial.println();
               Serial.println("Precharge!!!");
               Serial.println(mainconttimer);
               Serial.println();
             }
-            if (mainconttimer + settings.Pretime < millis() && digitalRead(OUT2) == LOW && abs(currentact) < settings.Precurrent)
+            if (mainconttimer + settings.Pretime < millis() && digitalRead(PIN_OUT2) == LOW && abs(currentact) < settings.Precurrent)
             {
-              digitalWrite(OUT2, HIGH); // turn on contactor
+              digitalWrite(PIN_OUT2, HIGH); // turn on contactor
               contctrl = contctrl | 2;  // turn on contactor
               Serial.println();
               Serial.println("Main On!!!");
@@ -531,16 +531,16 @@ void loop()
             }
             if (mainconttimer + settings.Pretime + 1000 < millis())
             {
-              digitalWrite(OUT4, LOW); // ensure precharge is low
+              digitalWrite(PIN_OUT4, LOW); // ensure precharge is low
             }
           }
           else
           {
-            digitalWrite(OUT4, LOW); // ensure precharge is low
+            digitalWrite(PIN_OUT4, LOW); // ensure precharge is low
             mainconttimer = 0;
           }
         }
-        if (digitalRead(IN1) == LOW) // Key OFF
+        if (digitalRead(PIN_IN1) == LOW) // Key OFF
         {
           if (storagemode == 1)
           {
@@ -569,7 +569,7 @@ void loop()
         {
           if (bms.getHighCellVolt() > settings.StoreVsetpoint || chargecurrent == 0)
           {
-            digitalWrite(OUT3, LOW); // turn off charger
+            digitalWrite(PIN_OUT3, LOW); // turn off charger
             // contctrl = contctrl & 253;
             // Pretimer = millis();
             Charged = 1;
@@ -582,7 +582,7 @@ void loop()
               if (bms.getHighCellVolt() < (settings.StoreVsetpoint - settings.ChargeHys))
               {
                 Charged = 0;
-                digitalWrite(OUT3, HIGH); // turn on charger
+                digitalWrite(PIN_OUT3, HIGH); // turn on charger
                 /*
                   if (Pretimer + settings.Pretime < millis())
                   {
@@ -594,7 +594,7 @@ void loop()
             }
             else
             {
-              digitalWrite(OUT3, HIGH); // turn on charger
+              digitalWrite(PIN_OUT3, HIGH); // turn on charger
               /*
                 if (Pretimer + settings.Pretime < millis())
                 {
@@ -611,11 +611,11 @@ void loop()
           {
             if ((millis() - overtriptimer) > settings.triptime)
             {
-              if (digitalRead(OUT3) == 1)
+              if (digitalRead(PIN_OUT3) == 1)
               {
                 Serial.println();
                 Serial.println("Over Voltage Trip");
-                digitalWrite(OUT3, LOW); // turn off charger
+                digitalWrite(PIN_OUT3, LOW); // turn off charger
                 // contctrl = contctrl & 253;
                 // Pretimer = millis();
                 Charged = 1;
@@ -631,12 +631,12 @@ void loop()
 
               if (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys))
               {
-                if (digitalRead(OUT3) == 0)
+                if (digitalRead(PIN_OUT3) == 0)
                 {
                   Serial.println();
                   Serial.println("Reset Over Voltage Trip Not Charged");
                   Charged = 0;
-                  digitalWrite(OUT3, HIGH); // turn on charger
+                  digitalWrite(PIN_OUT3, HIGH); // turn on charger
                 }
                 /*
                   if (Pretimer + settings.Pretime < millis())
@@ -649,11 +649,11 @@ void loop()
             }
             else
             {
-              if (digitalRead(OUT3) == 0)
+              if (digitalRead(PIN_OUT3) == 0)
               {
                 Serial.println();
                 Serial.println("Reset Over Voltage Trip Not Charged");
-                digitalWrite(OUT3, HIGH); // turn on charger
+                digitalWrite(PIN_OUT3, HIGH); // turn on charger
               }
               /*
                 if (Pretimer + settings.Pretime < millis())
@@ -668,14 +668,14 @@ void loop()
 
         if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
         {
-          if (digitalRead(OUT1) == 1)
+          if (digitalRead(PIN_OUT1) == 1)
           {
 
             if ((millis() - undertriptimer) > settings.triptime)
             {
               Serial.println();
               Serial.println("Under Voltage Trip");
-              digitalWrite(OUT1, LOW); // turn off discharge
+              digitalWrite(PIN_OUT1, LOW); // turn off discharge
               // contctrl = contctrl & 254;
               // Pretimer1 = millis();
             }
@@ -687,11 +687,11 @@ void loop()
 
           if (bms.getLowCellVolt() > settings.DischVsetpoint + settings.DischHys)
           {
-            if (digitalRead(OUT1) == 0)
+            if (digitalRead(PIN_OUT1) == 0)
             {
               Serial.println();
               Serial.println("Reset Under Voltage Trip");
-              digitalWrite(OUT1, HIGH); // turn on discharge
+              digitalWrite(PIN_OUT1, HIGH); // turn on discharge
             }
             /*
               if (Pretimer1 + settings.Pretime < millis())
@@ -707,21 +707,21 @@ void loop()
           {
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
             {
-              digitalWrite(OUT2, HIGH); // trip breaker
+              digitalWrite(PIN_OUT2, HIGH); // trip breaker
               bmsstatus = Error;
             }
             else
             {
-              digitalWrite(OUT2, LOW); // trip breaker
+              digitalWrite(PIN_OUT2, LOW); // trip breaker
             }
           }
           else
           {
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
             {
-              digitalWrite(OUT2, LOW);   // turn off contactor
+              digitalWrite(PIN_OUT2, LOW);   // turn off contactor
               contctrl = contctrl & 253; // turn off contactor
-              digitalWrite(OUT4, LOW);   // ensure precharge is low
+              digitalWrite(PIN_OUT4, LOW);   // ensure precharge is low
               bmsstatus = Error;
             }
           }
@@ -731,10 +731,10 @@ void loop()
       {
         // digitalWrite(OUT2, HIGH);//trip breaker
         Discharge = 0;
-        digitalWrite(OUT4, LOW);
-        digitalWrite(OUT3, LOW); // turn off charger
-        digitalWrite(OUT2, LOW);
-        digitalWrite(OUT1, LOW); // turn off discharge
+        digitalWrite(PIN_OUT4, LOW);
+        digitalWrite(PIN_OUT3, LOW); // turn off charger
+        digitalWrite(PIN_OUT2, LOW);
+        digitalWrite(PIN_OUT1, LOW); // turn off discharge
         contctrl = 0;            // turn off out 5 and 6
 
         if (SOCset == 1)
@@ -742,12 +742,12 @@ void loop()
           if (settings.tripcont == 0)
           {
 
-            digitalWrite(OUT2, HIGH); // trip breaker
+            digitalWrite(PIN_OUT2, HIGH); // trip breaker
           }
           else
           {
-            digitalWrite(OUT2, LOW); // turn off contactor
-            digitalWrite(OUT4, LOW); // ensure precharge is low
+            digitalWrite(PIN_OUT2, LOW); // turn off contactor
+            digitalWrite(PIN_OUT4, LOW); // ensure precharge is low
           }
 
           if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint && bms.getHighTemperature() < settings.OverTSetpoint && cellspresent == bms.seriescells() && cellspresent == (settings.Scells * settings.Pstrings))
@@ -764,20 +764,20 @@ void loop()
       {
       case (Boot):
         Discharge = 0;
-        digitalWrite(OUT4, LOW);
-        digitalWrite(OUT3, LOW); // turn off charger
-        digitalWrite(OUT2, LOW);
-        digitalWrite(OUT1, LOW); // turn off discharge
+        digitalWrite(PIN_OUT4, LOW);
+        digitalWrite(PIN_OUT3, LOW); // turn off charger
+        digitalWrite(PIN_OUT2, LOW);
+        digitalWrite(PIN_OUT1, LOW); // turn off discharge
         contctrl = 0;
         bmsstatus = Ready;
         break;
 
       case (Ready):
         Discharge = 0;
-        digitalWrite(OUT4, LOW);
-        digitalWrite(OUT3, LOW); // turn off charger
-        digitalWrite(OUT2, LOW);
-        digitalWrite(OUT1, LOW); // turn off discharge
+        digitalWrite(PIN_OUT4, LOW);
+        digitalWrite(PIN_OUT3, LOW); // turn off charger
+        digitalWrite(PIN_OUT2, LOW);
+        digitalWrite(PIN_OUT1, LOW); // turn off discharge
         contctrl = 0;            // turn off out 5 and 6
         accurlim = 0;
         if (bms.getHighCellVolt() > settings.balanceVoltage && bms.getHighCellVolt() > bms.getLowCellVolt() + settings.balanceHyst)
@@ -789,7 +789,7 @@ void loop()
         {
           balancecells = 0;
         }
-        if (digitalRead(IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys)) && bms.getHighTemperature() < (settings.OverTSetpoint - settings.WarnToff)) // detect AC present for charging and check not balancing
+        if (digitalRead(PIN_IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys)) && bms.getHighTemperature() < (settings.OverTSetpoint - settings.WarnToff)) // detect AC present for charging and check not balancing
         {
           if (settings.ChargerDirect == 1)
           {
@@ -801,7 +801,7 @@ void loop()
             Pretimer = millis();
           }
         }
-        if (digitalRead(IN1) == HIGH && bms.getLowCellVolt() > settings.DischVsetpoint) // detect Key ON
+        if (digitalRead(PIN_IN1) == HIGH && bms.getLowCellVolt() > settings.DischVsetpoint) // detect Key ON
         {
           bmsstatus = Precharge;
           Pretimer = millis();
@@ -817,11 +817,11 @@ void loop()
       case (Drive):
         Discharge = 1;
         accurlim = 0;
-        if (digitalRead(IN1) == LOW) // Key OFF
+        if (digitalRead(PIN_IN1) == LOW) // Key OFF
         {
           bmsstatus = Ready;
         }
-        if (digitalRead(IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys)) && bms.getHighTemperature() < (settings.OverTSetpoint - settings.WarnToff)) // detect AC present for charging and check not balancing
+        if (digitalRead(PIN_IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys)) && bms.getHighTemperature() < (settings.OverTSetpoint - settings.WarnToff)) // detect AC present for charging and check not balancing
         {
           bmsstatus = Charge;
         }
@@ -832,13 +832,13 @@ void loop()
         if (settings.ChargerDirect > 0)
         {
           Discharge = 0;
-          digitalWrite(OUT4, LOW);
-          digitalWrite(OUT2, LOW);
-          digitalWrite(OUT1, LOW); // turn off discharge
+          digitalWrite(PIN_OUT4, LOW);
+          digitalWrite(PIN_OUT2, LOW);
+          digitalWrite(PIN_OUT1, LOW); // turn off discharge
           contctrl = 0;            // turn off out 5 and 6
         }
         Discharge = 0;
-        if (digitalRead(IN2) == HIGH)
+        if (digitalRead(PIN_IN2) == HIGH)
         {
           chargecurrentlimit = true;
         }
@@ -846,7 +846,7 @@ void loop()
         {
           chargecurrentlimit = false;
         }
-        digitalWrite(OUT3, HIGH); // enable charger
+        digitalWrite(PIN_OUT3, HIGH); // enable charger
         if (bms.getHighCellVolt() > settings.balanceVoltage)
         {
           // bms.balanceCells();
@@ -866,10 +866,10 @@ void loop()
           {
             SOCcharged(1);
           }
-          digitalWrite(OUT3, LOW); // turn off charger
+          digitalWrite(PIN_OUT3, LOW); // turn off charger
           bmsstatus = Ready;
         }
-        if (digitalRead(IN3) == LOW) // detect AC not present for charging
+        if (digitalRead(PIN_IN3) == LOW) // detect AC not present for charging
         {
           bmsstatus = Ready;
         }
@@ -877,10 +877,10 @@ void loop()
 
       case (Error):
         Discharge = 0;
-        digitalWrite(OUT4, LOW);
-        digitalWrite(OUT3, LOW); // turn off charger
-        digitalWrite(OUT2, LOW);
-        digitalWrite(OUT1, LOW); // turn off discharge
+        digitalWrite(PIN_OUT4, LOW);
+        digitalWrite(PIN_OUT3, LOW); // turn off charger
+        digitalWrite(PIN_OUT2, LOW);
+        digitalWrite(PIN_OUT1, LOW); // turn off discharge
         contctrl = 0;            // turn off out 5 and 6
         /*
                   if (digitalRead(IN3) == HIGH) //detect AC present for charging
@@ -888,7 +888,7 @@ void loop()
                     bmsstatus = Charge;
                   }
         */
-        if (bms.getLowCellVolt() >= settings.UnderVSetpoint && bms.getHighCellVolt() <= settings.OverVSetpoint && digitalRead(IN1) == LOW)
+        if (bms.getLowCellVolt() >= settings.UnderVSetpoint && bms.getHighCellVolt() <= settings.OverVSetpoint && digitalRead(PIN_IN1) == LOW)
         {
           bmsstatus = Ready;
         }
@@ -1109,7 +1109,7 @@ void gaugeupdate()
     {
       SOCtest = 0;
     }
-    analogWrite(OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
+    analogWrite(PIN_OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
     if (debug != 0)
     {
       SERIALCONSOLE.println("  ");
@@ -1123,16 +1123,16 @@ void gaugeupdate()
   if (gaugedebug == 2)
   {
     SOCtest = 0;
-    analogWrite(OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
+    analogWrite(PIN_OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
   }
   if (gaugedebug == 3)
   {
     SOCtest = 1000;
-    analogWrite(OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
+    analogWrite(PIN_OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
   }
   if (gaugedebug == 0)
   {
-    analogWrite(OUT8, map(SOC, 0, 100, settings.gaugelow, settings.gaugehigh));
+    analogWrite(PIN_OUT8, map(SOC, 0, 100, settings.gaugelow, settings.gaugehigh));
   }
 }
 
@@ -1225,11 +1225,11 @@ void printbmsstat()
     }
   }
   SERIALCONSOLE.print("  ");
-  if (digitalRead(IN3) == HIGH)
+  if (digitalRead(PIN_IN3) == HIGH)
   {
     SERIALCONSOLE.print("| AC Present |");
   }
-  if (digitalRead(IN1) == HIGH)
+  if (digitalRead(PIN_IN1) == HIGH)
   {
     SERIALCONSOLE.print("| Key ON |");
   }
@@ -1241,10 +1241,10 @@ void printbmsstat()
   SERIALCONSOLE.print(cellspresent);
   SERIALCONSOLE.println();
   SERIALCONSOLE.print("Out:");
-  SERIALCONSOLE.print(digitalRead(OUT1));
-  SERIALCONSOLE.print(digitalRead(OUT2));
-  SERIALCONSOLE.print(digitalRead(OUT3));
-  SERIALCONSOLE.print(digitalRead(OUT4));
+  SERIALCONSOLE.print(digitalRead(PIN_OUT1));
+  SERIALCONSOLE.print(digitalRead(PIN_OUT2));
+  SERIALCONSOLE.print(digitalRead(PIN_OUT3));
+  SERIALCONSOLE.print(digitalRead(PIN_OUT4));
   SERIALCONSOLE.print(" Cont:");
   if ((contstat & 1) == 1)
   {
@@ -1279,10 +1279,10 @@ void printbmsstat()
     SERIALCONSOLE.print("0");
   }
   SERIALCONSOLE.print(" In:");
-  SERIALCONSOLE.print(digitalRead(IN1));
-  SERIALCONSOLE.print(digitalRead(IN2));
-  SERIALCONSOLE.print(digitalRead(IN3));
-  SERIALCONSOLE.print(digitalRead(IN4));
+  SERIALCONSOLE.print(digitalRead(PIN_IN1));
+  SERIALCONSOLE.print(digitalRead(PIN_IN2));
+  SERIALCONSOLE.print(digitalRead(PIN_IN3));
+  SERIALCONSOLE.print(digitalRead(PIN_IN4));
 
   SERIALCONSOLE.print(" Charge Current Limit : ");
   SERIALCONSOLE.print(chargecurrent * 0.1, 0);
@@ -1323,18 +1323,18 @@ void getcurrent()
       if (currentact < settings.changecur && currentact > (settings.changecur * -1))
       {
         sensor = 1;
-        adc->adc0->startContinuous(ACUR1);
+        adc->adc0->startContinuous(PIN_ACUR_1);
       }
       else
       {
         sensor = 2;
-        adc->adc0->startContinuous(ACUR2);
+        adc->adc0->startContinuous(PIN_ACUR_2);
       }
     }
     else
     {
       sensor = 1;
-      adc->adc0->startContinuous(ACUR1);
+      adc->adc0->startContinuous(PIN_ACUR_1);
     }
     if (sensor == 1)
     {
@@ -1625,17 +1625,17 @@ void SOCcharged(int y)
 
 void Prechargecon()
 {
-  if (digitalRead(IN1) == HIGH || digitalRead(IN3) == HIGH) // detect Key ON or AC present
+  if (digitalRead(PIN_IN1) == HIGH || digitalRead(PIN_IN3) == HIGH) // detect Key ON or AC present
   {
-    digitalWrite(OUT4, HIGH); // Negative Contactor Close
+    digitalWrite(PIN_OUT4, HIGH); // Negative Contactor Close
     contctrl = 2;
     if (Pretimer + settings.Pretime > millis() || currentact > settings.Precurrent)
     {
-      digitalWrite(OUT2, HIGH); // precharge
+      digitalWrite(PIN_OUT2, HIGH); // precharge
     }
     else // close main contactor
     {
-      digitalWrite(OUT1, HIGH); // Positive Contactor Close
+      digitalWrite(PIN_OUT1, HIGH); // Positive Contactor Close
       contctrl = 3;
       if (settings.ChargerDirect == 1)
       {
@@ -1643,23 +1643,23 @@ void Prechargecon()
       }
       else
       {
-        if (digitalRead(IN3) == HIGH)
+        if (digitalRead(PIN_IN3) == HIGH)
         {
           bmsstatus = Charge;
         }
-        if (digitalRead(IN1) == HIGH)
+        if (digitalRead(PIN_IN1) == HIGH)
         {
           bmsstatus = Drive;
         }
       }
-      digitalWrite(OUT2, LOW);
+      digitalWrite(PIN_OUT2, LOW);
     }
   }
   else
   {
-    digitalWrite(OUT1, LOW);
-    digitalWrite(OUT2, LOW);
-    digitalWrite(OUT4, LOW);
+    digitalWrite(PIN_OUT1, LOW);
+    digitalWrite(PIN_OUT2, LOW);
+    digitalWrite(PIN_OUT4, LOW);
     bmsstatus = Ready;
     contctrl = 0;
   }
@@ -1671,17 +1671,17 @@ void contcon()
   {
     if ((contctrl & 1) == 0)
     {
-      analogWrite(OUT5, 0);
+      analogWrite(PIN_OUT5, 0);
       contstat = contstat & 254;
     }
     if ((contctrl & 2) == 0)
     {
-      analogWrite(OUT6, 0);
+      analogWrite(PIN_OUT6, 0);
       contstat = contstat & 253;
     }
     if ((contctrl & 4) == 0)
     {
-      analogWrite(OUT7, 0);
+      analogWrite(PIN_OUT7, 0);
       contstat = contstat & 251;
     }
 
@@ -1691,12 +1691,12 @@ void contcon()
       {
         if (conttimer1 == 0)
         {
-          analogWrite(OUT5, 255);
+          analogWrite(PIN_OUT5, 255);
           conttimer1 = millis() + pulltime;
         }
         if (conttimer1 < millis())
         {
-          analogWrite(OUT5, settings.conthold);
+          analogWrite(PIN_OUT5, settings.conthold);
           contstat = contstat | 1;
           conttimer1 = 0;
         }
@@ -1714,12 +1714,12 @@ void contcon()
             Serial.println();
             Serial.println("pull in OUT6");
           }
-          analogWrite(OUT6, 255);
+          analogWrite(PIN_OUT6, 255);
           conttimer2 = millis() + pulltime;
         }
         if (conttimer2 < millis())
         {
-          analogWrite(OUT6, settings.conthold);
+          analogWrite(PIN_OUT6, settings.conthold);
           contstat = contstat | 2;
           conttimer2 = 0;
         }
@@ -1736,12 +1736,12 @@ void contcon()
             Serial.println();
             Serial.println("pull in OUT7");
           }
-          analogWrite(OUT7, 255);
+          analogWrite(PIN_OUT7, 255);
           conttimer3 = millis() + pulltime;
         }
         if (conttimer3 < millis())
         {
-          analogWrite(OUT7, settings.conthold);
+          analogWrite(PIN_OUT7, settings.conthold);
           contstat = contstat | 4;
           conttimer3 = 0;
         }
@@ -1758,14 +1758,14 @@ void contcon()
   }
   if (contctrl == 0)
   {
-    analogWrite(OUT5, 0);
-    analogWrite(OUT6, 0);
+    analogWrite(PIN_OUT5, 0);
+    analogWrite(PIN_OUT6, 0);
   }
 }
 
 void calcur()
 {
-  adc->startContinuous(ACUR1, ADC_0);
+  adc->startContinuous(PIN_ACUR_1, ADC_0);
   sensor = 1;
   x = 0;
   SERIALCONSOLE.print(" Calibrating Current Offset ::::: ");
@@ -1781,7 +1781,7 @@ void calcur()
   SERIALCONSOLE.print(" current offset 1 calibrated ");
   SERIALCONSOLE.println("  ");
   x = 0;
-  adc->adc0->startContinuous(ACUR2);
+  adc->adc0->startContinuous(PIN_ACUR_2);
   sensor = 2;
   SERIALCONSOLE.print(" Calibrating Current Offset ::::: ");
   while (x < 20)
@@ -1910,7 +1910,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[0] = lowByte(uint16_t(settings.Pstrings * settings.CAP));
   msg.buf[1] = highByte(uint16_t(settings.Pstrings * settings.CAP));
   msg.buf[2] = contstat; // contactor state
-  msg.buf[3] = (digitalRead(OUT1) | (digitalRead(OUT2) << 1) | (digitalRead(OUT3) << 2) | (digitalRead(OUT4) << 3));
+  msg.buf[3] = (digitalRead(PIN_OUT1) | (digitalRead(PIN_OUT2) << 1) | (digitalRead(PIN_OUT3) << 2) | (digitalRead(PIN_OUT4) << 3));
   msg.buf[4] = bmsstatus;
   msg.buf[5] = 0x00;
   msg.buf[6] = 0x00;
@@ -1974,10 +1974,10 @@ void menu()
       if (outputcheck == 0)
       {
         contctrl = 0;
-        digitalWrite(OUT1, LOW);
-        digitalWrite(OUT2, LOW);
-        digitalWrite(OUT3, LOW);
-        digitalWrite(OUT4, LOW);
+        digitalWrite(PIN_OUT1, LOW);
+        digitalWrite(PIN_OUT2, LOW);
+        digitalWrite(PIN_OUT3, LOW);
+        digitalWrite(PIN_OUT4, LOW);
       }
       incomingByte = 'd';
       break;
@@ -3611,7 +3611,7 @@ void inputdebug()
 {
   Serial.println();
   Serial.print("Input : ");
-  if (digitalRead(IN1))
+  if (digitalRead(PIN_IN1))
   {
     Serial.print("1 ON  ");
   }
@@ -3619,7 +3619,7 @@ void inputdebug()
   {
     Serial.print("1 OFF ");
   }
-  if (digitalRead(IN3))
+  if (digitalRead(PIN_IN3))
   {
     Serial.print("2 ON  ");
   }
@@ -3627,7 +3627,7 @@ void inputdebug()
   {
     Serial.print("2 OFF ");
   }
-  if (digitalRead(IN3))
+  if (digitalRead(PIN_IN3))
   {
     Serial.print("3 ON  ");
   }
@@ -3635,7 +3635,7 @@ void inputdebug()
   {
     Serial.print("3 OFF ");
   }
-  if (digitalRead(IN4))
+  if (digitalRead(PIN_IN4))
   {
     Serial.print("4 ON  ");
   }
@@ -3650,26 +3650,26 @@ void outputdebug()
 {
   if (outputstate < 5)
   {
-    digitalWrite(OUT1, HIGH);
-    digitalWrite(OUT2, HIGH);
-    digitalWrite(OUT3, HIGH);
-    digitalWrite(OUT4, HIGH);
-    analogWrite(OUT5, 255);
-    analogWrite(OUT6, 255);
-    analogWrite(OUT7, 255);
-    analogWrite(OUT8, 255);
+    digitalWrite(PIN_OUT1, HIGH);
+    digitalWrite(PIN_OUT2, HIGH);
+    digitalWrite(PIN_OUT3, HIGH);
+    digitalWrite(PIN_OUT4, HIGH);
+    analogWrite(PIN_OUT5, 255);
+    analogWrite(PIN_OUT6, 255);
+    analogWrite(PIN_OUT7, 255);
+    analogWrite(PIN_OUT8, 255);
     outputstate++;
   }
   else
   {
-    digitalWrite(OUT1, LOW);
-    digitalWrite(OUT2, LOW);
-    digitalWrite(OUT3, LOW);
-    digitalWrite(OUT4, LOW);
-    analogWrite(OUT5, 0);
-    analogWrite(OUT6, 0);
-    analogWrite(OUT7, 0);
-    analogWrite(OUT8, 0);
+    digitalWrite(PIN_OUT1, LOW);
+    digitalWrite(PIN_OUT2, LOW);
+    digitalWrite(PIN_OUT3, LOW);
+    digitalWrite(PIN_OUT4, LOW);
+    analogWrite(PIN_OUT5, 0);
+    analogWrite(PIN_OUT6, 0);
+    analogWrite(PIN_OUT7, 0);
+    analogWrite(PIN_OUT8, 0);
     outputstate++;
   }
   if (outputstate > 10)
@@ -3691,7 +3691,7 @@ void pwmcomms()
 {
   int p = 0;
   p = map((currentact * 0.001), pwmcurmin, pwmcurmax, 50, 255);
-  analogWrite(OUT7, p);
+  analogWrite(PIN_OUT7, p);
   /*
     Serial.println();
     Serial.print(p*100/255);
@@ -3700,12 +3700,12 @@ void pwmcomms()
 
   if (bms.getLowCellVolt() < settings.UnderVSetpoint)
   {
-    analogWrite(OUT7, 255); // 12V to 10V converter 1.5V
+    analogWrite(PIN_OUT7, 255); // 12V to 10V converter 1.5V
   }
   else
   {
     p = map(SOC, 0, 100, 220, 50);
-    analogWrite(OUT8, p); // 2V to 10V converter 1.5-10V
+    analogWrite(PIN_OUT8, p); // 2V to 10V converter 1.5-10V
   }
   /*
     Serial.println();
@@ -3897,7 +3897,7 @@ void chargercomms()
       chargertoggle = 0;
       }
     */
-    if (digitalRead(IN2) == LOW) // Gen OFF
+    if (digitalRead(PIN_IN2) == LOW) // Gen OFF
     {
       msg.buf[1] = highByte(maxac1 * 10);
       msg.buf[2] = lowByte(maxac1 * 10);
@@ -3918,7 +3918,7 @@ void chargercomms()
     msg.id = chargerid2;
     msg.len = 7;
     msg.buf[0] = 0x80;
-    if (digitalRead(IN2) == LOW) // Gen OFF
+    if (digitalRead(PIN_IN2) == LOW) // Gen OFF
     {
       msg.buf[1] = highByte(maxac1 * 10);
       msg.buf[2] = lowByte(maxac1 * 10);
@@ -3999,7 +3999,7 @@ void chargercomms()
 
 void isrCP()
 {
-  if (digitalRead(IN4) == LOW)
+  if (digitalRead(PIN_IN4) == LOW)
   {
     duration = micros() - pilottimer;
     pilottimer = micros();

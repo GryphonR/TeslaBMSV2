@@ -23,7 +23,7 @@ BMSModule::BMSModule()
   moduleAddress = 0;
 }
 
-void BMSModule::clearmodule()
+void BMSModule::clearModule()
 {
   for (int i = 0; i < 6; i++)
   {

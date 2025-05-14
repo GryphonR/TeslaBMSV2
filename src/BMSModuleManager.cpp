@@ -24,7 +24,7 @@ void BMSModuleManager::clearmodules()
   {
     if (modules[y].isExisting())
     {
-      modules[y].clearmodule();
+      modules[y].clearModule();
     }
   }
 }

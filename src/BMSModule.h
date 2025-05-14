@@ -5,7 +5,7 @@ class BMSModule
   public:
     BMSModule();
     void readStatus();
-    void clearmodule();
+    void clearModule();
     void stopBalance();
     bool readModuleValues();
     int getscells();
