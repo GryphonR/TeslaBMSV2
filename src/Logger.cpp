@@ -43,11 +43,29 @@ void Logger::debug(char *message, ...) {
   va_end(args);
 }
 
+void Logger::debug(const char *message, ...) {
+  if (logLevel > Debug)
+    return;
+  va_list args;
+  va_start(args, message);
+  Logger::log(Debug, message, args);
+  va_end(args);
+}
+
 /*
    Output a info message with a variable amount of parameters
    printf() style, see Logger::log()
 */
 void Logger::info(char *message, ...) {
+  if (logLevel > Info)
+    return;
+  va_list args;
+  va_start(args, message);
+  Logger::log(Info, message, args);
+  va_end(args);
+}
+
+void Logger::info(const char *message, ...) {
   if (logLevel > Info)
     return;
   va_list args;
@@ -69,6 +87,15 @@ void Logger::warn(char *message, ...) {
   va_end(args);
 }
 
+void Logger::warn(const char *message, ...) {
+  if (logLevel > Warn)
+    return;
+  va_list args;
+  va_start(args, message);
+  Logger::log(Warn, message, args);
+  va_end(args);
+}
+
 /*
    Output a error message with a variable amount of parameters
    printf() style, see Logger::log()
@@ -82,11 +109,27 @@ void Logger::error(char *message, ...) {
   va_end(args);
 }
 
+void Logger::error(const char *message, ...) {
+  if (logLevel > Error)
+    return;
+  va_list args;
+  va_start(args, message);
+  Logger::log(Error, message, args);
+  va_end(args);
+}
+
 /*
    Output a comnsole message with a variable amount of parameters
    printf() style, see Logger::logMessage()
 */
 void Logger::console(char *message, ...) {
+  va_list args;
+  va_start(args, message);
+  Logger::logMessage(message, args);
+  va_end(args);
+}
+
+void Logger::console(const char *message, ...) {
   va_list args;
   va_start(args, message);
   Logger::logMessage(message, args);
@@ -170,6 +213,30 @@ void Logger::log(LogLevel level, char *format, va_list args) {
   logMessage(format, args);
 }
 
+void Logger::log(LogLevel level, const char *format, va_list args) {
+  lastLogTime = millis();
+  SERIALCONSOLE.print(lastLogTime);
+  SERIALCONSOLE.print(" - ");
+
+  switch (level) {
+    case Debug:
+      SERIALCONSOLE.print("DEBUG");
+      break;
+    case Info:
+      SERIALCONSOLE.print("INFO");
+      break;
+    case Warn:
+      SERIALCONSOLE.print("WARNING");
+      break;
+    case Error:
+      SERIALCONSOLE.print("ERROR");
+      break;
+  }
+  SERIALCONSOLE.print(": ");
+
+  logMessage(format, args);
+}
+
 /*
    Output a log message (called by log(), console())
 
@@ -189,6 +256,83 @@ void Logger::log(LogLevel level, char *format, va_list args) {
    %T - prints the next parameter as boolean ('true' or 'false')
 */
 void Logger::logMessage(char *format, va_list args) {
+  for (; *format != 0; ++format) {
+    if (*format == '%') {
+      ++format;
+      if (*format == '\0')
+        break;
+      if (*format == '%') {
+        SERIALCONSOLE.print(*format);
+        continue;
+      }
+      if (*format == 's') {
+        register char *s = (char *) va_arg( args, int );
+        SERIALCONSOLE.print(s);
+        continue;
+      }
+      if (*format == 'd' || *format == 'i') {
+        SERIALCONSOLE.print(va_arg( args, int ), DEC);
+        continue;
+      }
+      if (*format == 'f') {
+        SERIALCONSOLE.print(va_arg( args, double ), 3);
+        continue;
+      }
+      if (*format == 'z') {
+        SERIALCONSOLE.print(va_arg( args, double ), 0);
+        continue;
+      }
+      if (*format == 'x') {
+        SERIALCONSOLE.print(va_arg( args, int ), HEX);
+        continue;
+      }
+      if (*format == 'X') {
+        SERIALCONSOLE.print("0x");
+        SERIALCONSOLE.print(va_arg( args, int ), HEX);
+        continue;
+      }
+      if (*format == 'b') {
+        SERIALCONSOLE.print(va_arg( args, int ), BIN);
+        continue;
+      }
+      if (*format == 'B') {
+        SERIALCONSOLE.print("0b");
+        SERIALCONSOLE.print(va_arg( args, int ), BIN);
+        continue;
+      }
+      if (*format == 'l') {
+        SERIALCONSOLE.print(va_arg( args, long ), DEC);
+        continue;
+      }
+
+      if (*format == 'c') {
+        SERIALCONSOLE.print(va_arg( args, int ));
+        continue;
+      }
+      if (*format == 't') {
+        if (va_arg( args, int ) == 1) {
+          SERIALCONSOLE.print("T");
+        } else {
+          SERIALCONSOLE.print("F");
+        }
+        continue;
+      }
+      if (*format == 'T') {
+        if (va_arg( args, int ) == 1) {
+          SERIALCONSOLE.print("TRUE");
+        } else {
+          SERIALCONSOLE.print("FALSE");
+        }
+        continue;
+      }
+
+    }
+    SERIALCONSOLE.print(*format);
+  }
+  SERIALCONSOLE.println();
+}
+
+void Logger::logMessage(const char *format, va_list args) {
   for (; *format != 0; ++format) {
     if (*format == '%') {
       ++format;
