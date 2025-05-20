@@ -60,19 +60,22 @@ EEPROMSettings settings;
 
 /////Version Identifier/////////
 int firmver = 230719; // Year Month Day
+const char* COMPILE_DATE = __DATE__;
+const char* COMPILE_TIME = __TIME__;
 
 // Curent filter//
 float filterFrequency = 5.0;
 FilterOnePole lowpassFilter(LOWPASS, filterFrequency);
 
 byte bmsstatus = 0;
+
 // bms status values
-#define Boot 0
-#define Ready 1
-#define Drive 2
-#define Charge 3
-#define Precharge 4
-#define Error 5
+#define BMS_STATUS_BOOT 0
+#define BMS_STATUS_READY 1
+#define BMS_STATUS_DRIVE 2
+#define BMS_STATUS_CHARGE 3
+#define BMS_STATUS_PRECHARGE 4
+#define BMS_STATUS_ERROR 5
 
 // Current sensor values
 #define Undefined 0
@@ -139,11 +142,11 @@ signed long voltage1, voltage2, voltage3 = 0; // mV only with ISAscale sensor
 // MCP2515 CAN1(10); //set CS pin for can controlelr
 
 // variables for current calulation
-int value;
+uint16_t value;
 float currentact, RawCur;
 float ampsecond;
 unsigned long lasttime;
-unsigned long looptime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout = 0; // ms
+unsigned long nextLoopTime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout = 0; // ms
 int currentsense = 14;
 int sensor = 1;
 
@@ -468,7 +471,7 @@ void setup()
   // attachInterruptVector(IRQ_LOW_VOLTAGE, low_voltage_isr);
   // NVIC_ENABLE_IRQ(IRQ_LOW_VOLTAGE);
 
-  bmsstatus = Boot;
+  bmsstatus = BMS_STATUS_BOOT;
 }
 
 void loop()
@@ -504,7 +507,7 @@ void loop()
           OutputEnable = 0;
         }
       }
-      if (bmsstatus != Error && bmsstatus != Boot && OutputEnable == 1)
+      if (bmsstatus != BMS_STATUS_ERROR && bmsstatus != BMS_STATUS_BOOT && OutputEnable == 1)
       {
         contctrl = contctrl | 4; // turn on negative contactor
         if (settings.tripcont != 0)
@@ -708,7 +711,7 @@ void loop()
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
             {
               digitalWrite(PIN_OUT2, HIGH); // trip breaker
-              bmsstatus = Error;
+              bmsstatus = BMS_STATUS_ERROR;
             }
             else
             {
@@ -722,7 +725,7 @@ void loop()
               digitalWrite(PIN_OUT2, LOW);   // turn off contactor
               contctrl = contctrl & 253; // turn off contactor
               digitalWrite(PIN_OUT4, LOW);   // ensure precharge is low
-              bmsstatus = Error;
+              bmsstatus = BMS_STATUS_ERROR;
             }
           }
         }
@@ -752,7 +755,7 @@ void loop()
 
           if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint && bms.getHighTemperature() < settings.OverTSetpoint && cellspresent == bms.seriescells() && cellspresent == (settings.Scells * settings.Pstrings))
           {
-            bmsstatus = Ready;
+            bmsstatus = BMS_STATUS_READY;
           }
         }
       }
@@ -762,17 +765,17 @@ void loop()
     {
       switch (bmsstatus)
       {
-      case (Boot):
+      case (BMS_STATUS_BOOT):
         Discharge = 0;
         digitalWrite(PIN_OUT4, LOW);
         digitalWrite(PIN_OUT3, LOW); // turn off charger
         digitalWrite(PIN_OUT2, LOW);
         digitalWrite(PIN_OUT1, LOW); // turn off discharge
         contctrl = 0;
-        bmsstatus = Ready;
+        bmsstatus = BMS_STATUS_READY;
         break;
 
-      case (Ready):
+      case (BMS_STATUS_READY):
         Discharge = 0;
         digitalWrite(PIN_OUT4, LOW);
         digitalWrite(PIN_OUT3, LOW); // turn off charger
@@ -793,42 +796,42 @@ void loop()
         {
           if (settings.ChargerDirect == 1)
           {
-            bmsstatus = Charge;
+            bmsstatus = BMS_STATUS_CHARGE;
           }
           else
           {
-            bmsstatus = Precharge;
+            bmsstatus = BMS_STATUS_PRECHARGE;
             Pretimer = millis();
           }
         }
         if (digitalRead(PIN_IN1) == HIGH && bms.getLowCellVolt() > settings.DischVsetpoint) // detect Key ON
         {
-          bmsstatus = Precharge;
+          bmsstatus = BMS_STATUS_PRECHARGE;
           Pretimer = millis();
         }
 
         break;
 
-      case (Precharge):
+      case (BMS_STATUS_PRECHARGE):
         Discharge = 0;
         Prechargecon();
         break;
 
-      case (Drive):
+      case (BMS_STATUS_DRIVE):
         Discharge = 1;
         accurlim = 0;
         if (digitalRead(PIN_IN1) == LOW) // Key OFF
         {
-          bmsstatus = Ready;
+          bmsstatus = BMS_STATUS_READY;
         }
         if (digitalRead(PIN_IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys)) && bms.getHighTemperature() < (settings.OverTSetpoint - settings.WarnToff)) // detect AC present for charging and check not balancing
         {
-          bmsstatus = Charge;
+          bmsstatus = BMS_STATUS_CHARGE;
         }
 
         break;
 
-      case (Charge):
+      case (BMS_STATUS_CHARGE):
         if (settings.ChargerDirect > 0)
         {
           Discharge = 0;
@@ -867,15 +870,15 @@ void loop()
             SOCcharged(1);
           }
           digitalWrite(PIN_OUT3, LOW); // turn off charger
-          bmsstatus = Ready;
+          bmsstatus = BMS_STATUS_READY;
         }
         if (digitalRead(PIN_IN3) == LOW) // detect AC not present for charging
         {
-          bmsstatus = Ready;
+          bmsstatus = BMS_STATUS_READY;
         }
         break;
 
-      case (Error):
+      case (BMS_STATUS_ERROR):
         Discharge = 0;
         digitalWrite(PIN_OUT4, LOW);
         digitalWrite(PIN_OUT3, LOW); // turn off charger
@@ -890,7 +893,7 @@ void loop()
         */
         if (bms.getLowCellVolt() >= settings.UnderVSetpoint && bms.getHighCellVolt() <= settings.OverVSetpoint && digitalRead(PIN_IN1) == LOW)
         {
-          bmsstatus = Ready;
+          bmsstatus = BMS_STATUS_READY;
         }
 
         break;
@@ -902,29 +905,34 @@ void loop()
     }
   }
 
-  if (millis() - looptime > 500)
+  if (millis() > nextLoopTime)
   {
-    looptime = millis();
+    nextLoopTime = millis() + 500; // Every 500ms
+
+    // Update BMS data
     bms.getAllVoltTemp();
-    // UV  check
-    if (settings.ESSmode == 1)
+
+    // Cell Voltage  check
+    if (settings.ESSmode == 1) // ESS Mode
     {
+      // Check if Lowest cell or highest cell is below the Undervoltage setpoint. (Why lowest and highest??)
       if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
       {
-        if (undertriptimer > millis()) // check is last time not undervoltage is longer thatn UnderDur ago
+        if (undertriptimer > millis()) // check is last time not undervoltage is longer than UnderDur ago
         {
-          bmsstatus = Error;
+          bmsstatus = BMS_STATUS_ERROR;
         }
       }
       else
       {
         undertriptimer = millis() + settings.triptime;
       }
+      
       if (bms.getLowCellVolt() > settings.OverVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint)
       {
         if (overtriptimer > millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
-          bmsstatus = Error;
+          bmsstatus = BMS_STATUS_ERROR;
         }
       }
       else
@@ -938,7 +946,7 @@ void loop()
       {
         if (UnderTimer < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
-          bmsstatus = Error;
+          bmsstatus = BMS_STATUS_ERROR;
         }
       }
       else
@@ -948,14 +956,14 @@ void loop()
 
       if (bms.getHighCellVolt() < settings.UnderVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
       {
-        bmsstatus = Error;
+        bmsstatus = BMS_STATUS_ERROR;
       }
 
       if (bms.getHighCellVolt() > settings.OverVSetpoint)
       {
         if (OverTime < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
-          bmsstatus = Error;
+          bmsstatus = BMS_STATUS_ERROR;
         }
       }
       else
@@ -1015,7 +1023,7 @@ void loop()
           SERIALCONSOLE.println("  ");
           SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
           SERIALCONSOLE.println("  ");
-          bmsstatus = Error;
+          bmsstatus = BMS_STATUS_ERROR;
         }
       }
     }
@@ -1043,7 +1051,7 @@ void loop()
     }
     else
     {
-      if (bmsstatus == Charge)
+      if (bmsstatus == BMS_STATUS_CHARGE)
       {
         chargercomms();
       }
@@ -1183,7 +1191,7 @@ void printbmsstat()
       if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint)
       {
 
-        if (bmsstatus == Error)
+        if (bmsstatus == BMS_STATUS_ERROR)
         {
           SERIALCONSOLE.print(": UNhappy:");
         }
@@ -1199,27 +1207,27 @@ void printbmsstat()
     SERIALCONSOLE.print(bmsstatus);
     switch (bmsstatus)
     {
-    case (Boot):
+    case (BMS_STATUS_BOOT):
       SERIALCONSOLE.print(" Boot ");
       break;
 
-    case (Ready):
+    case (BMS_STATUS_READY):
       SERIALCONSOLE.print(" Ready ");
       break;
 
-    case (Precharge):
+    case (BMS_STATUS_PRECHARGE):
       SERIALCONSOLE.print(" Precharge ");
       break;
 
-    case (Drive):
+    case (BMS_STATUS_DRIVE):
       SERIALCONSOLE.print(" Drive ");
       break;
 
-    case (Charge):
+    case (BMS_STATUS_CHARGE):
       SERIALCONSOLE.print(" Charge ");
       break;
 
-    case (Error):
+    case (BMS_STATUS_ERROR):
       SERIALCONSOLE.print(" Error ");
       break;
     }
@@ -1290,14 +1298,14 @@ void printbmsstat()
   SERIALCONSOLE.print(discurrent * 0.1, 0);
   SERIALCONSOLE.print(" A");
 
-  if (bmsstatus == Charge || accurlim > 0)
+  if (bmsstatus == BMS_STATUS_CHARGE || accurlim > 0)
   {
     Serial.print("  CP AC Current Limit: ");
     Serial.print(accurlim);
     Serial.print(" A");
   }
 
-  if (bmsstatus == Charge && CPdebug == 1)
+  if (bmsstatus == BMS_STATUS_CHARGE && CPdebug == 1)
   {
     Serial.print("A  CP Dur: ");
     Serial.print(duration);
@@ -1534,7 +1542,7 @@ void updateSOC()
       }
       if (settings.ESSmode == 1)
       {
-        bmsstatus = Ready;
+        bmsstatus = BMS_STATUS_READY;
       }
     }
   }
@@ -1552,7 +1560,7 @@ void updateSOC()
       }
       if (settings.ESSmode == 1)
       {
-        bmsstatus = Ready;
+        bmsstatus = BMS_STATUS_READY;
       }
     }
   }
@@ -1639,17 +1647,17 @@ void Prechargecon()
       contctrl = 3;
       if (settings.ChargerDirect == 1)
       {
-        bmsstatus = Drive;
+        bmsstatus = BMS_STATUS_DRIVE;
       }
       else
       {
         if (digitalRead(PIN_IN3) == HIGH)
         {
-          bmsstatus = Charge;
+          bmsstatus = BMS_STATUS_CHARGE;
         }
         if (digitalRead(PIN_IN1) == HIGH)
         {
-          bmsstatus = Drive;
+          bmsstatus = BMS_STATUS_DRIVE;
         }
       }
       digitalWrite(PIN_OUT2, LOW);
@@ -1660,11 +1668,12 @@ void Prechargecon()
     digitalWrite(PIN_OUT1, LOW);
     digitalWrite(PIN_OUT2, LOW);
     digitalWrite(PIN_OUT4, LOW);
-    bmsstatus = Ready;
+    bmsstatus = BMS_STATUS_READY;
     contctrl = 0;
   }
 }
 
+// Contactor Control Function
 void contcon()
 {
   if (contctrl != contstat) // check for contactor request change
@@ -3327,9 +3336,9 @@ bool canRead()
       {
         Serial.print(millis());
         if ((inMsg.id & 0x80000000) == 0x80000000) // Determine if ID is standard (11 bits) or extended (29 bits)
-          sprintf(msgString, "Extended ID : 0x % .8lX  DLC : % 1d  Data : ", (inMsg.id & 0x1FFFFFFF), inMsg.len);
+          sprintf(msgString, "Extended ID : 0x%.8lX  DLC : % 1d  Data : ", (inMsg.id & 0x1FFFFFFF), inMsg.len);
         else
-          sprintf(msgString, ", 0x % .3lX, false, % 1d", inMsg.id, inMsg.len);
+          sprintf(msgString, ", 0x%.3lX, false, % 1d", inMsg.id, inMsg.len);
 
         Serial.print(msgString);
 
@@ -3342,7 +3351,7 @@ bool canRead()
         {
           for (byte i = 0; i < inMsg.len; i++)
           {
-            sprintf(msgString, ", 0x % .2X", inMsg.buf[i]);
+            sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
             Serial.print(msgString);
           }
         }
@@ -3385,14 +3394,14 @@ void CAB300()
   {
     inbox = (inbox << 8) | inMsg.buf[i];
   }
-  CANmilliamps = inbox;
-  if (CANmilliamps > 0x80000000)
+  // CANmilliamps = inbox;
+  if (inbox > 0x80000000)
   {
-    CANmilliamps -= 0x80000000;
+    CANmilliamps = inbox - 0x80000000;
   }
   else
   {
-    CANmilliamps = (0x80000000 - CANmilliamps) * -1;
+    CANmilliamps = (0x80000000 - inbox) * -1;
   }
   if (settings.cursens == Canbus)
   {
@@ -3463,7 +3472,7 @@ void handleVictronLynx()
 
 void currentlimit()
 {
-  if (bmsstatus == Error)
+  if (bmsstatus == BMS_STATUS_ERROR)
   {
     discurrent = 0;
     chargecurrent = 0;
@@ -3722,10 +3731,10 @@ void dashupdate()
   {
     switch (bmsstatus)
     {
-    case (Boot):
+    case (BMS_STATUS_BOOT):
       Serial2.print(" Active ");
       break;
-    case (Error):
+    case (BMS_STATUS_ERROR):
       Serial2.print(" Error ");
       break;
     }
@@ -3734,27 +3743,27 @@ void dashupdate()
   {
     switch (bmsstatus)
     {
-    case (Boot):
+    case (BMS_STATUS_BOOT):
       Serial2.print(" Boot ");
       break;
 
-    case (Ready):
+    case (BMS_STATUS_READY):
       Serial2.print(" Ready ");
       break;
 
-    case (Precharge):
+    case (BMS_STATUS_PRECHARGE):
       Serial2.print(" Precharge ");
       break;
 
-    case (Drive):
+    case (BMS_STATUS_DRIVE):
       Serial2.print(" Drive ");
       break;
 
-    case (Charge):
+    case (BMS_STATUS_CHARGE):
       Serial2.print(" Charge ");
       break;
 
-    case (Error):
+    case (BMS_STATUS_ERROR):
       Serial2.print(" Error ");
       break;
     }

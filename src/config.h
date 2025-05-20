@@ -87,7 +87,7 @@ typedef struct {
   int gaugehigh;
   int ncur;
   int chargertype;
-  int chargerspd;
+  uint16_t chargerspd;
   uint16_t UnderDur;
   uint16_t CurDead;
   float DisTaper;

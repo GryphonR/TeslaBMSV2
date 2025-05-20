@@ -195,6 +195,8 @@ void Logger::log(LogLevel level, char *format, va_list args) {
   SERIALCONSOLE.print(" - ");
 
   switch (level) {
+    case Off:
+      break;
     case Debug:
       SERIALCONSOLE.print("DEBUG");
       break;
@@ -219,6 +221,8 @@ void Logger::log(LogLevel level, const char *format, va_list args) {
   SERIALCONSOLE.print(" - ");
 
   switch (level) {
+    case Off:
+      break;
     case Debug:
       SERIALCONSOLE.print("DEBUG");
       break;

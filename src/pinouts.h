@@ -17,7 +17,7 @@ const uint8_t PIN_OUT6 = 3;  // output 6 - Low active
 const uint8_t PIN_OUT7 = 5;   // output 7 - Low active
 const uint8_t PIN_OUT8 = 6;   // output 8 - Low active
 const uint8_t PIN_LED_BUILTIN = 13;
-const uint8_t PIN_BMB_FAULT = 11; //BAttery Management Board Fault Indicator
+const uint8_t PIN_BMB_FAULT = 11; //Battery Management Board Fault Indicator
 
 // Additional pins for BMS Comms Master
 const uint8_t PIN_BUZZER_CONTROL = 10;
