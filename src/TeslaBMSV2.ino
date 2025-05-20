@@ -78,10 +78,10 @@ byte bmsstatus = 0;
 #define BMS_STATUS_ERROR 5
 
 // Current sensor values
-#define Undefined 0
-#define Analoguedual 1
-#define Canbus 2
-#define Analoguesing 3
+#define CURR_SENSE_UNDEFINED 0
+#define CURR_SENSE_ANALOGUE_DUAL 1
+#define CURR_SENSE_CANBUS 2
+#define CURR_SENSE_ANALOGUE_GUESSING 3
 
 // Can current sensor values
 #define LemCAB300 1
@@ -113,8 +113,8 @@ int pwmcurmax = 50;       // Max current to be shown with pwm
 int pwmcurmid = 50;       // Mid point for pwm dutycycle based on current
 int16_t pwmcurmin = 0;    // DONOT fill in, calculated later based on other values
 
-bool OutputEnable = 0;
-bool CanOnReq = false;
+bool OutputEnable = 0; // Request to close contactors
+bool CanOnReq = false; // CAN Request to close Contacors
 bool CanOnRev = false;
 
 // variables for VE can
@@ -352,6 +352,7 @@ void setup()
   SERIALCONSOLE.println("SimpBMS V2 Tesla");
 
   Serial2.begin(115200); // display and can adpater canbus
+  
   // Teensy 3.1
   // // Display reason the Teensy was last reset
   // Serial.println();
@@ -377,29 +378,12 @@ void setup()
     Serial.print(CrashReport);
   }
 
-  // enable WDT - T3.1
-  // noInterrupts();                                         // don't allow interrupts while setting up WDOG
-  // WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;                         // unlock access to WDOG registers
-  // WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-  // delayMicroseconds(1);                                   // Need to wait a bit..
-
-  // WDOG_TOVALH = 0x1000;
-  // WDOG_TOVALL = 0x0000;
-  // WDOG_PRESC  = 0;
-  // WDOG_STCTRLH |= WDOG_STCTRLH_ALLOWUPDATE |
-  //                 WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_WAITEN |
-  //                 WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
-  // interrupts();
-  /////////////////
 
   //  Enable WDT T4.x
   WDT_timings_t configewm;
-  // configewm.callback = myCallback;
-  // configewm.window = 100; /* window mode is disabled when ommitted */
   configewm.timeout = 2000;
   configewm.pin = 21;
   watchdog.begin(configewm);
-
   delay(100);
   watchdog.feed();
   /* window mode test */
@@ -452,7 +436,7 @@ void setup()
   SERIALCONSOLE.println("Recovery SOC: ");
   SERIALCONSOLE.print(SOC);
 
-  ////Calculate fixed numbers
+  ////Calculate fixed numbers (??)
   pwmcurmin = (pwmcurmid / 50 * pwmcurmax * -1);
   ////
   bms.clearFaults();
@@ -463,7 +447,7 @@ void setup()
 
   // setup interrupts
   // RISING/HIGH/CHANGE/LOW/FALLING
-  attachInterrupt(PIN_IN4, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 7 ]
+  attachInterrupt(PIN_IN4, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 21 ]
 
   // TODO Low/High Voltage Interrupt disabled for T4
   // PMC_LVDSC1 = PMC_LVDSC1_LVDV(1);                    // enable hi v
@@ -899,7 +883,7 @@ void loop()
         break;
       }
     }
-    if (settings.cursens == Analoguedual || settings.cursens == Analoguesing)
+    if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL || settings.cursens == CURR_SENSE_ANALOGUE_GUESSING)
     {
       getcurrent();
     }
@@ -1324,9 +1308,9 @@ void printbmsstat()
 
 void getcurrent()
 {
-  if (settings.cursens == Analoguedual || settings.cursens == Analoguesing)
+  if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL || settings.cursens == CURR_SENSE_ANALOGUE_GUESSING)
   {
-    if (settings.cursens == Analoguedual)
+    if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
     {
       if (currentact < settings.changecur && currentact > (settings.changecur * -1))
       {
@@ -1346,10 +1330,10 @@ void getcurrent()
     }
     if (sensor == 1)
     {
-      if (debugCur != 0)
+      if (debugCur)
       {
         SERIALCONSOLE.println();
-        if (settings.cursens == Analoguedual)
+        if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
         {
           SERIALCONSOLE.print("Low Range: ");
         }
@@ -1360,7 +1344,7 @@ void getcurrent()
         SERIALCONSOLE.print("Value ADC0: ");
       }
       value = (uint16_t)adc->adc0->analogReadContinuous(); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
-      if (debugCur != 0)
+      if (debugCur)
       {
         SERIALCONSOLE.print(value * 3300 / adc->adc0->getMaxValue()); //- settings.offset1)
         SERIALCONSOLE.print(" ");
@@ -1436,7 +1420,7 @@ void getcurrent()
     SERIALCONSOLE.print("mA  ");
   }
 
-  if (settings.cursens == Analoguedual)
+  if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
   {
     if (sensor == 1)
     {
@@ -1587,7 +1571,7 @@ void updateSOC()
 
   if (debug != 0)
   {
-    if (settings.cursens == Analoguedual)
+    if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
     {
       if (sensor == 1)
       {
@@ -1598,11 +1582,11 @@ void updateSOC()
         SERIALCONSOLE.print("High Range");
       }
     }
-    if (settings.cursens == Analoguesing)
+    if (settings.cursens == CURR_SENSE_ANALOGUE_GUESSING)
     {
       SERIALCONSOLE.print("Analogue Single ");
     }
-    if (settings.cursens == Canbus)
+    if (settings.cursens == CURR_SENSE_CANBUS)
     {
       SERIALCONSOLE.print("CANbus ");
     }
@@ -3033,13 +3017,13 @@ void menu()
       SERIALCONSOLE.print("s - Current Sensor Type : ");
       switch (settings.cursens)
       {
-      case Analoguedual:
+      case CURR_SENSE_ANALOGUE_DUAL:
         SERIALCONSOLE.println(" Analogue Dual Current Sensor ");
         break;
-      case Analoguesing:
+      case CURR_SENSE_ANALOGUE_GUESSING:
         SERIALCONSOLE.println(" Analogue Single Current Sensor ");
         break;
-      case Canbus:
+      case CURR_SENSE_CANBUS:
         SERIALCONSOLE.println(" Canbus Current Sensor ");
         break;
       default:
@@ -3052,25 +3036,25 @@ void menu()
       SERIALCONSOLE.println(settings.voltsoc);
       SERIALCONSOLE.print("3 - Current Multiplication : ");
       SERIALCONSOLE.println(settings.ncur);
-      if (settings.cursens == Analoguesing || settings.cursens == Analoguedual)
+      if (settings.cursens == CURR_SENSE_ANALOGUE_GUESSING || settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
       {
         SERIALCONSOLE.print("4 - Analogue Low Range Conv : ");
         SERIALCONSOLE.print(settings.convlow * 0.01, 2);
         SERIALCONSOLE.println(" mV / A");
       }
-      if (settings.cursens == Analoguedual)
+      if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
       {
         SERIALCONSOLE.print("5 - Analogue High Range Conv : ");
         SERIALCONSOLE.print(settings.convhigh * 0.01, 2);
         SERIALCONSOLE.println(" mV / A");
       }
-      if (settings.cursens == Analoguesing || settings.cursens == Analoguedual)
+      if (settings.cursens == CURR_SENSE_ANALOGUE_GUESSING || settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
       {
         SERIALCONSOLE.print("6 - Current Sensor Deadband : ");
         SERIALCONSOLE.print(settings.CurDead);
         SERIALCONSOLE.println(" mV");
       }
-      if (settings.cursens == Analoguedual)
+      if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
       {
 
         SERIALCONSOLE.print("8 - Current Channel ChangeOver : ");
@@ -3078,7 +3062,7 @@ void menu()
         SERIALCONSOLE.println(" A");
       }
 
-      if (settings.cursens == Canbus)
+      if (settings.cursens == CURR_SENSE_CANBUS)
       {
         SERIALCONSOLE.print("7 - Can Current Sensor : ");
         if (settings.curcan == LemCAB300)
@@ -3243,7 +3227,7 @@ bool canRead()
   if (Can0.read(inMsg))
   {
     // Read data: len = data length, buf = data byte(s)
-    if (settings.cursens == Canbus)
+    if (settings.cursens == CURR_SENSE_CANBUS)
     {
       if (settings.curcan == 1)
       {
@@ -3291,7 +3275,7 @@ bool canRead()
         {
         case 0x521: //
           CANmilliamps = (long)((inMsg.buf[2] << 24) | (inMsg.buf[3] << 16) | (inMsg.buf[4] << 8) | (inMsg.buf[5]));
-          if (settings.cursens == Canbus)
+          if (settings.cursens == CURR_SENSE_CANBUS)
           {
             RawCur = CANmilliamps;
             getcurrent();
@@ -3299,7 +3283,7 @@ bool canRead()
           break;
         case 0x3C3: // Jaguar Ipace ISA shunt current reading
           CANmilliamps = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
-          if (settings.cursens == Canbus)
+          if (settings.cursens == CURR_SENSE_CANBUS)
           {
             RawCur = CANmilliamps;
             getcurrent();
@@ -3403,7 +3387,7 @@ void CAB300()
   {
     CANmilliamps = (0x80000000 - inbox) * -1;
   }
-  if (settings.cursens == Canbus)
+  if (settings.cursens == CURR_SENSE_CANBUS)
   {
     RawCur = CANmilliamps;
     getcurrent();
@@ -3437,7 +3421,7 @@ void CAB500()
   {
     CANmilliamps = (0x800000 - CANmilliamps) * -1;
   }
-  if (settings.cursens == Canbus)
+  if (settings.cursens == CURR_SENSE_CANBUS)
   {
     RawCur = CANmilliamps;
     getcurrent();
@@ -3457,7 +3441,7 @@ void handleVictronLynx()
   int16_t current = (int)inMsg.buf[4] << 8; // in 0.1A increments
   current |= inMsg.buf[3];
   CANmilliamps = current * 100;
-  if (settings.cursens == Canbus)
+  if (settings.cursens == CURR_SENSE_CANBUS)
   {
     RawCur = CANmilliamps;
     getcurrent();
