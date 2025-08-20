@@ -19,272 +19,70 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+// local files
 #include "pinouts.h"
+#include "globals.h"
+#include "Application_Settings.h"
 #include "BMSModuleManager.h"
-#include <Arduino.h>
 #include "config.h"
 #include "SerialConsole.h"
 #include "Logger.h"
+
+// Libraries
+#include <Arduino.h>
 #include <ADC.h> //https://github.com/pedvide/ADC
-// #include "libs/ADC/ADC.h"
 #include <EEPROM.h>
 #include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
-// #include "libs/FlexCAN_Library/FlexCAN.h"
 #include <SPI.h>
 #include <Filters.h> //https://github.com/JonHub/Filters
-// #include "libs/Filters/src/Filters.h"
 #include <Serial_CAN_Module_Teensy.h> //https://github.com/tomdebree/Serial_CAN_Teensy
-// #include "Serial_CAN_Module_TeensyS2.h" //https://github.com/tomdebree/Serial_CAN_Teensy
-// #include "libs/Serial_CAN_Teensy/S2/Serial_CAN_Module_TeensyS2.h"
 
 // T4 Additions
 #include <Watchdog_t4.h>
 #include <imxrt.h>
 #include <CrashReport.h>
 
-WDT_T4<WDT1> watchdog;
-/*
-  #define CPU_REBOOT (_reboot_Teensyduino_());
-*/
-#define RESTART_ADDR 0xE000ED0C
-#define READ_RESTART() (*(volatile uint32_t *)RESTART_ADDR)
-#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
-#define CPU_REBOOT WRITE_RESTART(0x5FA0004)
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can0;
-
-Serial_CAN can;
-BMSModuleManager bms;
-SerialConsole console;
-EEPROMSettings settings;
 
 /////Version Identifier/////////
 int firmver = 230719; // Year Month Day
 const char* COMPILE_DATE = __DATE__;
 const char* COMPILE_TIME = __TIME__;
 
+WDT_T4<WDT1> watchdog;
+
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
+
+Serial_CAN can;
+BMSModuleManager bms;
+SerialConsole console;
+EEPROMSettings settings;
+
 // Curent filter//
 float filterFrequency = 5.0;
 FilterOnePole lowpassFilter(LOWPASS, filterFrequency);
 
-byte bmsstatus = 0;
-
-// bms status values
-#define BMS_STATUS_BOOT 0
-#define BMS_STATUS_READY 1
-#define BMS_STATUS_DRIVE 2
-#define BMS_STATUS_CHARGE 3
-#define BMS_STATUS_PRECHARGE 4
-#define BMS_STATUS_ERROR 5
-
-// Current sensor values
-#define CURR_SENSE_UNDEFINED 0
-#define CURR_SENSE_ANALOGUE_DUAL 1
-#define CURR_SENSE_CANBUS 2
-#define CURR_SENSE_ANALOGUE_GUESSING 3
-
-// Can current sensor values
-#define LemCAB300 1
-#define IsaScale 3
-#define VictronLynx 4
-#define LemCAB500 2
-#define CurCanMax 4 // max value
-
-//
-// Charger Types
-#define NoCharger 0
-#define BrusaNLG5 1
-#define ChevyVolt 2
-#define Eltek 3
-#define Elcon 4
-#define Victron 5
-#define Coda 6
-#define VictronHV 7
-//
-
-int Discharge;
-
-// variables for output control
-int pulltime = 100;
-int contctrl, contstat = 0; // 1 = out 5 high 2 = out 6 high 3 = both high
-unsigned long conttimer1, conttimer2, conttimer3, Pretimer, Pretimer1, overtriptimer, undertriptimer, mainconttimer = 0;
-uint16_t pwmfreq = 18000; // pwm frequency
-int pwmcurmax = 50;       // Max current to be shown with pwm
-int pwmcurmid = 50;       // Mid point for pwm dutycycle based on current
-int16_t pwmcurmin = 0;    // DONOT fill in, calculated later based on other values
-
-bool OutputEnable = 0; // Request to close contactors
-bool CanOnReq = false; // CAN Request to close Contacors
-bool CanOnRev = false;
-
-// variables for VE can
-uint16_t chargevoltage = 49100; // max charge voltage in mv
-uint16_t chargecurrent, tempchargecurrent = 0;
-uint16_t disvoltage = 42000; // max discharge voltage in mv
-uint16_t discurrent = 0;
-int batvcal = 0;
-
-uint16_t SOH = 100; // SOH place holder
-
-unsigned char alarm[4] = {0, 0, 0, 0};
-unsigned char warning[4] = {0, 0, 0, 0};
-unsigned char mes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-unsigned char bmsname[8] = {'S', 'I', 'M', 'P', ' ', 'B', 'M', 'S'};
-unsigned char bmsmanu[8] = {'S', 'I', 'M', 'P', ' ', 'E', 'C', 'O'};
-long unsigned int rxId;
-unsigned char len = 0;
-byte rxBuf[8];
-char msgString[128]; // Array to store serial string
-uint32_t inbox;
-signed long CANmilliamps;                     // mV
-signed long voltage1, voltage2, voltage3 = 0; // mV only with ISAscale sensor
-// struct can_frame canMsg;
-// MCP2515 CAN1(10); //set CS pin for can controlelr
-
-// variables for current calulation
-uint16_t value;
-float currentact, RawCur;
-float ampsecond;
-unsigned long lasttime;
-unsigned long nextLoopTime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout = 0; // ms
-int currentsense = 14;
-int sensor = 1;
-
-// Variables for SOC calc
-int SOC = 100; // State of Charge
-int SOCset = 0;
-int SOCtest = 0;
-int SOCmem = 0;
-int SOCreset = 0;
-
-/// charger variables
-int maxac1 = 16;          // Shore power 16A per charger
-int maxac2 = 10;          // Generator Charging
-int chargerid1 = 0x618;   // bulk chargers
-int chargerid2 = 0x638;   // finishing charger
-float chargerendbulk = 0; // V before Charge Voltage to turn off the bulk charger/s
-float chargerend = 0;     // V before Charge Voltage to turn off the finishing charger/s
-int chargertoggle = 0;
-int ncharger = 1; // number of chargers
-bool chargecurrentlimit = 0;
-
-// serial canbus expansion
-unsigned long id = 0;
-unsigned char dta[8];
-
-// AC current control
-volatile uint32_t pilottimer = 0;
-volatile uint16_t timehigh, duration = 0;
-volatile uint16_t accurlim = 0;
-volatile int dutycycle = 0;
-uint16_t chargerpower = 0;
-bool CPdebug = 0;
-
-// variables
-int outputstate = 0;
-int incomingByte = 0;
-int x = 0;
-int storagemode = 0;
-int cellspresent = 0;
-int dashused = 1;
-int Charged = 0;
-int renum = 0;
-
-// Debugging modes//////////////////
-int debug = 1;
-int inputcheck = 0;  // read digital inputs
-int outputcheck = 0; // check outputs
-int candebug = 0;    // view can frames
-int gaugedebug = 0;
-int debugCur = 0;
-int CSVdebug = 0;
-int delim = 0;
-int menuload = 0;
-int balancecells;
-int debugdigits = 2; // amount of digits behind decimal for voltage reading
-
-int testcount = 0;
-
 ADC *adc = new ADC(); // adc object
-
-void loadSettings()
-{
-  Logger::console("Resetting to factory defaults");
-  settings.version = EEPROM_VERSION;
-  settings.checksum = 2;
-  settings.canSpeed = 500000;
-  settings.batteryID = 0x01; // in the future should be 0xFF to force it to ask for an address
-  settings.OverVSetpoint = 4.2f;
-  settings.UnderVSetpoint = 3.0f;
-  settings.ChargeVsetpoint = 4.1f;
-  settings.ChargeHys = 0.2f; // voltage drop required for charger to kick back on
-  settings.WarnOff = 0.1f;   // voltage offset to raise a warning
-  settings.DischVsetpoint = 3.2f;
-  settings.DischHys = 0.2f; // Discharge voltage offset
-  settings.CellGap = 0.2f;  // max delta between high and low cell
-  settings.OverTSetpoint = 65.0f;
-  settings.UnderTSetpoint = -10.0f;
-  settings.ChargeTSetpoint = 0.0f;
-  settings.triptime = 500; // mS of delay before counting over or undervoltage
-  settings.DisTSetpoint = 40.0f;
-  settings.WarnToff = 5.0f;  // temp offset before raising warning
-  settings.IgnoreTemp = 0;   // 0 - use both sensors, 1 or 2 only use that sensor
-  settings.IgnoreVolt = 0.5; //
-  settings.balanceVoltage = 3.9f;
-  settings.balanceHyst = 0.04f;
-  settings.balanceDuty = 50;
-  settings.logLevel = 2;
-  settings.CAP = 100;               // battery size in Ah
-  settings.Pstrings = 1;            // strings in parallel used to divide voltage of pack
-  settings.Scells = 12;             // Cells in series
-  settings.StoreVsetpoint = 3.8;    // V storage mode charge max
-  settings.discurrentmax = 300;     // max discharge current in 0.1A
-  settings.DisTaper = 0.3f;         // V offset to bring in discharge taper to Zero Amps at settings.DischVsetpoint
-  settings.chargecurrentmax = 300;  // max charge current in 0.1A
-  settings.chargecurrent2max = 150; // max charge current in 0.1A
-  settings.chargecurrentend = 50;   // end charge current in 0.1A
-  settings.PulseCh = 600;           // Peak Charge current in 0.1A
-  settings.PulseChDur = 5000;       // Ms of discharge pulse derating
-  settings.PulseDi = 600;           // Peak Charge current in 0.1A
-  settings.PulseDiDur = 5000;       // Ms of discharge pulse derating
-  settings.socvolt[0] = 3100;       // Voltage and SOC curve for voltage based SOC calc
-  settings.socvolt[1] = 10;         // Voltage and SOC curve for voltage based SOC calc
-  settings.socvolt[2] = 4100;       // Voltage and SOC curve for voltage based SOC calc
-  settings.socvolt[3] = 90;         // Voltage and SOC curve for voltage based SOC calc
-  settings.invertcur = 0;           // Invert current sensor direction
-  settings.cursens = 2;
-  settings.curcan = LemCAB300;
-  settings.voltsoc = 0;       // SOC purely voltage based
-  settings.Pretime = 5000;    // ms of precharge time
-  settings.conthold = 50;     // holding duty cycle for contactor 0-255
-  settings.Precurrent = 1000; // ma before closing main contator
-  settings.convhigh = 580;    // mV/A current sensor high range channel
-  settings.convlow = 6430;    // mV/A current sensor low range channel
-  settings.offset1 = 1750;    // mV mid point of channel 1
-  settings.offset2 = 1750;    // mV mid point of channel 2
-  settings.changecur = 20000; // mA change overpoint
-  settings.gaugelow = 50;     // empty fuel gauge pwm
-  settings.gaugehigh = 255;   // full fuel gauge pwm
-  settings.ESSmode = 0;       // activate ESS mode
-  settings.ncur = 1;          // number of multiples to use for current measurement
-  settings.chargertype = 2;   // 1 - Brusa NLG5xx 2 - Volt charger 0 -No Charger
-  settings.chargerspd = 100;  // ms per message
-  settings.chargereff = 85;   //% effiecency of charger
-  settings.chargerACv = 240;  // AC input voltage into Charger
-  settings.UnderDur = 5000;   // ms of allowed undervoltage before throwing open stopping discharge.
-  settings.CurDead = 5;       // mV of dead band on current sensor
-  settings.ExpMess = 0;       // send alternate victron info
-  settings.SerialCan = 0;     // Serial canbus or display: 0-display 1- canbus expansion
-  settings.tripcont = 1;      // in ESSmode 1 - Main contactor function, 0 - Trip function
-}
 
 CAN_message_t msg;
 CAN_message_t inMsg;
 
-uint32_t lastUpdate;
+
 
 void setup()
 {
+  // ------------- LED Indicators -------------
+  pinMode(PIN_LED_BUILTIN, OUTPUT);
+  pinMode(PIN_HEARTBEAT_LED, OUTPUT);
+  pinMode(PIN_ERROR_LED, OUTPUT);
+  pinMode(PIN_BUZZER_CONTROL, OUTPUT);
+
+  digitalWrite(PIN_LED_BUILTIN, HIGH);
+  digitalWrite(PIN_HEARTBEAT_LED, HIGH);
+  digitalWrite(PIN_ERROR_LED, HIGH);
+  digitalWrite(PIN_BUZZER_CONTROL, HIGH);
   // ------------- Start Tesla Serial BUS -------------
   SERIALBMS.begin(612500); // Tesla serial bus
   delay(2000);             // just for easy debugging. It takes a few seconds for USB to come up properly on most OS's
@@ -304,13 +102,19 @@ void setup()
   pinMode(PIN_OUT6, OUTPUT); // pwm driver output
   pinMode(PIN_OUT7, OUTPUT); // pwm driver output
   pinMode(PIN_OUT8, OUTPUT); // pwm driver output
-  pinMode(PIN_LED_BUILTIN, OUTPUT);
 
   // ------------- PWM Output Configuration -------------
   analogWriteFrequency(PIN_OUT5, pwmfreq);
   analogWriteFrequency(PIN_OUT6, pwmfreq);
   analogWriteFrequency(PIN_OUT7, pwmfreq);
   analogWriteFrequency(PIN_OUT8, pwmfreq);
+
+
+  // ------------- LEDS and Buzzer off-------------
+  digitalWrite(PIN_LED_BUILTIN, LOW);
+  digitalWrite(PIN_HEARTBEAT_LED, LOW);
+  digitalWrite(PIN_ERROR_LED, LOW);
+  digitalWrite(PIN_BUZZER_CONTROL, LOW);
 
   // ------------- EEPROM Setting Retreival -------------
   EEPROM.get(0, settings);
@@ -320,13 +124,13 @@ void setup()
   }
 
   // ------------- CAN Setup -------------
-  Can0.begin();
-  Can0.setBaudRate(settings.canSpeed);
-  // Can0.setMaxMB(16);
-  // Can0.enableFIFO();
-  // Can0.enableFIFOInterrupt();
-  // Can0.onReceive(canRead);
-  // Can0.mailboxStatus();
+  Can1.begin();
+  Can1.setBaudRate(settings.canSpeed);
+  // Can1.setMaxMB(16);
+  // Can1.enableFIFO();
+  // Can1.enableFIFOInterrupt();
+  // Can1.onReceive(canRead);
+  // Can1.mailboxStatus();
 
   // Filters for T3.1 - FlexCAN_T4 should be unfiltered by default
   // CAN_filter_t allPassFilter; // Enables extended addresses
@@ -336,7 +140,7 @@ void setup()
 
   // for (int filterNum = 4; filterNum < 16; filterNum++)
   // {
-  //   Can0.setFilter(allPassFilter, filterNum);
+  //   Can1.setFilter(allPassFilter, filterNum);
   // }
 
   // if using enable pins on a transceiver they need to be set on
@@ -390,9 +194,6 @@ void setup()
   delay(100); /* <-- not keeping this here would cause resets by Callback */
 
   // VE.begin(19200); //Victron VE direct bus
-#if defined(__arm__) && defined(__SAM3X8E__)
-  serialSpecialInit(USART0, 612500); // required for Due based boards as the stock core files don't support 612500 baud.
-#endif
 
   SERIALCONSOLE.println("Started serial interface to BMS.");
 
@@ -406,7 +207,7 @@ void setup()
 
   bms.renumberBoardIDs();
 
-  Logger::setLoglevel(Logger::Off); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setLoglevel(Logger::Debug); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
 
   lastUpdate = 0;
   bms.findBoards();
@@ -455,24 +256,52 @@ void setup()
   // attachInterruptVector(IRQ_LOW_VOLTAGE, low_voltage_isr);
   // NVIC_ENABLE_IRQ(IRQ_LOW_VOLTAGE);
 
+
+  // Blink Heartbeat LED to indicate setup is complete
+  digitalWrite(PIN_HEARTBEAT_LED, HIGH); // Turn off heartbeat LED
+  delay(500);                          // Wait for 1 second    
+  digitalWrite(PIN_HEARTBEAT_LED, LOW); // Turn on heartbeat LED
+
   bmsstatus = BMS_STATUS_BOOT;
 }
 
 void loop()
 {
 
+  //  LED Control - TODO break out into separate files
+  static unsigned long nextLedTime = 0;
+  static uint8_t ledState = 0;
+  if(millis() > nextLedTime){
+    if(ledState){
+      analogWrite(PIN_HEARTBEAT_LED, 0); // Turn off heartbeat LED
+      analogWrite(PIN_ERROR_LED, 0); // Turn off heartbeat LED
+      // digitalWrite(PIN_HEARTBEAT_LED, 0); // Turn off heartbeat LED
+      ledState = 0;
+      nextLedTime = millis() + 2990; // Set next toggle time
+    } else {
+      analogWrite(PIN_HEARTBEAT_LED, 50); // Turn on heartbeat LED
+      analogWrite(PIN_ERROR_LED, 50); // Turn on heartbeat LED
+      // digitalWrite(PIN_HEARTBEAT_LED, 1); // Turn on heartbeat LED
+      ledState = 1;
+      nextLedTime = millis() + 10; // Set next toggle time
+    }
+  }
+
   // On message recieve.
   while (canRead())
   {
   }
 
+  // Check if serial menu is requested
   if (SERIALCONSOLE.available() > 0)
   {
     menu();
   }
+
+  
   if (outputcheck != 1)
   {
-    contcon();
+    contactoControl();
     if (settings.ESSmode == 1)
     {
       if (settings.ChargerDirect == 1)
@@ -1041,6 +870,78 @@ void loop()
       }
     }
   }
+}
+
+void loadSettings()
+{
+  Logger::console("Resetting to factory defaults");
+  settings.version = EEPROM_VERSION;
+  settings.checksum = DEFAULT_CHECKSUM;
+  settings.canSpeed = DEFAULT_CAN_SPEED;
+  settings.batteryID = DEFAULT_BATTERY_ID;
+  settings.OverVSetpoint = DEFAULT_OVERV_SETPOINT;
+  settings.UnderVSetpoint = DEFAULT_UNDERV_SETPOINT;
+  settings.ChargeVsetpoint = DEFAULT_CHARGEV_SETPOINT;
+  settings.ChargeHys = DEFAULT_CHARGE_HYS;
+  settings.WarnOff = DEFAULT_WARN_OFF;
+  settings.DischVsetpoint = DEFAULT_DISCHV_SETPOINT;
+  settings.DischHys = DEFAULT_DISCH_HYS;
+  settings.CellGap = DEFAULT_CELL_GAP;
+  settings.OverTSetpoint = DEFAULT_OVERT_SETPOINT;
+  settings.UnderTSetpoint = DEFAULT_UNDERT_SETPOINT;
+  settings.ChargeTSetpoint = DEFAULT_CHARGET_SETPOINT;
+  settings.triptime = DEFAULT_TRIPTIME;
+  settings.DisTSetpoint = DEFAULT_DIST_SETPOINT;
+  settings.WarnToff = DEFAULT_WARN_TOFF;
+  settings.IgnoreTemp = DEFAULT_IGNORE_TEMP;
+  settings.IgnoreVolt = DEFAULT_IGNORE_VOLT;
+  settings.balanceVoltage = DEFAULT_BALANCE_VOLTAGE;
+  settings.balanceHyst = DEFAULT_BALANCE_HYST;
+  settings.balanceDuty = DEFAULT_BALANCE_DUTY;
+  settings.logLevel = DEFAULT_LOG_LEVEL;
+  settings.CAP = DEFAULT_CAP;
+  settings.Pstrings = DEFAULT_PSTRINGS;
+  settings.Scells = DEFAULT_SCELLS;
+  settings.StoreVsetpoint = DEFAULT_STOREV_SETPOINT;
+  settings.discurrentmax = DEFAULT_DISCURRENTMAX;
+  settings.DisTaper = DEFAULT_DISTAPER;
+  settings.chargecurrentmax = DEFAULT_CHARGECURRENTMAX;
+  settings.chargecurrent2max = DEFAULT_CHARGECURRENT2MAX;
+  settings.chargecurrentend = DEFAULT_CHARGECURRENTEND;
+  settings.PulseCh = DEFAULT_PULSECH;
+  settings.PulseChDur = DEFAULT_PULSECHDUR;
+  settings.PulseDi = DEFAULT_PULSEDI;
+  settings.PulseDiDur = DEFAULT_PULSEDIDUR;
+  settings.socvolt[0] = DEFAULT_SOCVOLT_0;
+  settings.socvolt[1] = DEFAULT_SOCVOLT_1;
+  settings.socvolt[2] = DEFAULT_SOCVOLT_2;
+  settings.socvolt[3] = DEFAULT_SOCVOLT_3;
+  settings.invertcur = DEFAULT_INVERTCUR;
+  settings.cursens = DEFAULT_CURSENS;
+  settings.curcan = DEFAULT_CURCAN;
+  settings.voltsoc = DEFAULT_VOLTSOC;
+  settings.Pretime = DEFAULT_PRETIME;
+  settings.conthold = DEFAULT_CONTHOLD;
+  settings.Precurrent = DEFAULT_PRECURRENT;
+  settings.convhigh = DEFAULT_CONVHIGH;
+  settings.convlow = DEFAULT_CONVLOW;
+  settings.offset1 = DEFAULT_OFFSET1;
+  settings.offset2 = DEFAULT_OFFSET2;
+  settings.changecur = DEFAULT_CHANGECUR;
+  settings.gaugelow = DEFAULT_GAUGELOW;
+  settings.gaugehigh = DEFAULT_GAUGEHIGH;
+  settings.ESSmode = DEFAULT_ESSMODE;
+  settings.ncur = DEFAULT_NCUR;
+  settings.chargertype = DEFAULT_CHARGERTYPE;
+  settings.chargerspd = DEFAULT_CHARGERSPD;
+  settings.chargereff = DEFAULT_CHARGEREFF;
+  settings.chargerACv = DEFAULT_CHARGERACV;
+  settings.UnderDur = DEFAULT_UNDERDUR;
+  settings.CurDead = DEFAULT_CURDEAD;
+  settings.ExpMess = DEFAULT_EXPMESS;
+  settings.SerialCan = DEFAULT_SERIALCAN;
+  settings.tripcont = DEFAULT_TRIPCONT;
+  settings.ChargerDirect = DEFAULT_CHARGERDIRECT;
 }
 
 void alarmupdate()
@@ -1658,7 +1559,7 @@ void Prechargecon()
 }
 
 // Contactor Control Function
-void contcon()
+void contactoControl()
 {
   if (contctrl != contstat) // check for contactor request change
   {
@@ -1810,7 +1711,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = highByte(discurrent);
   msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
   msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
-  Can0.write(msg);
+  Can1.write(msg);
 
   msg.id = 0x355;
   msg.len = 8;
@@ -1822,7 +1723,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = highByte(SOC * 10);
   msg.buf[6] = 0;
   msg.buf[7] = 0;
-  Can0.write(msg);
+  Can1.write(msg);
 
   msg.id = 0x356;
   msg.len = 8;
@@ -1844,7 +1745,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = highByte(int16_t(bms.getAvgTemperature() * 10));
   msg.buf[6] = 0;
   msg.buf[7] = 0;
-  Can0.write(msg);
+  Can1.write(msg);
 
   delay(2);
   msg.id = 0x35A;
@@ -1857,7 +1758,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = warning[1]; // High Discharge Current | Low Temperature
   msg.buf[6] = warning[2]; // Internal Failure | High Charge current
   msg.buf[7] = warning[3]; // Cell Imbalance
-  Can0.write(msg);
+  Can1.write(msg);
 
   msg.id = 0x35E;
   msg.len = 8;
@@ -1869,7 +1770,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = bmsname[5];
   msg.buf[6] = bmsname[6];
   msg.buf[7] = bmsname[7];
-  Can0.write(msg);
+  Can1.write(msg);
 
   delay(2);
   msg.id = 0x370;
@@ -1882,7 +1783,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = bmsmanu[5];
   msg.buf[6] = bmsmanu[6];
   msg.buf[7] = bmsmanu[7];
-  Can0.write(msg);
+  Can1.write(msg);
 
   delay(2);
   msg.id = 0x373;
@@ -1895,7 +1796,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = highByte(uint16_t(bms.getLowTemperature() + 273.15));
   msg.buf[6] = lowByte(uint16_t(bms.getHighTemperature() + 273.15));
   msg.buf[7] = highByte(uint16_t(bms.getHighTemperature() + 273.15));
-  Can0.write(msg);
+  Can1.write(msg);
 
   delay(2);
   msg.id = 0x379; // Installed capacity
@@ -1908,7 +1809,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = 0x00;
   msg.buf[6] = 0x00;
   msg.buf[7] = 0x00;
-  Can0.write(msg);
+  Can1.write(msg);
   /*
       delay(2);
     msg.id  = 0x378; //Installed capacity
@@ -1936,7 +1837,7 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[5] = 0x00;
   msg.buf[6] = 0x00;
   msg.buf[7] = 0x00;
-  Can0.write(msg);
+  Can1.write(msg);
 }
 
 // Settings menu
@@ -2357,9 +2258,9 @@ void menu()
       if (Serial.available() > 0)
       {
         settings.canSpeed = Serial.parseInt() * 1000;
-        // Can0.end(); //FlexCAN_T4 has no end function TODO
-        Can0.begin();
-        Can0.setBaudRate(settings.canSpeed);
+        // Can1.end(); //FlexCAN_T4 has no end function TODO
+        Can1.begin();
+        Can1.setBaudRate(settings.canSpeed);
         menuload = 1;
         incomingByte = 'e';
       }
@@ -3224,7 +3125,7 @@ int pgnFromCANId(int canId)
 
 bool canRead()
 {
-  if (Can0.read(inMsg))
+  if (Can1.read(inMsg))
   {
     // Read data: len = data length, buf = data byte(s)
     if (settings.cursens == CURR_SENSE_CANBUS)
@@ -3855,7 +3756,7 @@ void chargercomms()
     msg.buf[6] = 0x00;
     msg.buf[7] = 0x00;
 
-    Can0.write(msg);
+    Can1.write(msg);
     msg.flags.extended = 0;
   }
 
@@ -3871,7 +3772,7 @@ void chargercomms()
     msg.buf[5] = lowByte(chargecurrent / ncharger);
     msg.buf[6] = highByte(chargecurrent / ncharger);
 
-    Can0.write(msg);
+    Can1.write(msg);
   }
   if (settings.chargertype == BrusaNLG5)
   {
@@ -3904,7 +3805,7 @@ void chargercomms()
     msg.buf[6] = lowByte(chargecurrent / ncharger);
     msg.buf[3] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerendbulk) * 10));
     msg.buf[4] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerendbulk) * 10));
-    Can0.write(msg);
+    Can1.write(msg);
 
     delay(2);
 
@@ -3925,14 +3826,14 @@ void chargercomms()
     msg.buf[4] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerend) * 10));
     msg.buf[5] = highByte(chargecurrent / ncharger);
     msg.buf[6] = lowByte(chargecurrent / ncharger);
-    Can0.write(msg);
+    Can1.write(msg);
   }
   if (settings.chargertype == ChevyVolt)
   {
     msg.id = 0x30E;
     msg.len = 1;
     msg.buf[0] = 0x02; // only HV charging , 0x03 hv and 12V charging
-    Can0.write(msg);
+    Can1.write(msg);
 
     msg.id = 0x304;
     msg.len = 4;
@@ -3955,7 +3856,7 @@ void chargercomms()
       msg.buf[2] = highByte(400);
       msg.buf[3] = lowByte(400);
     }
-    Can0.write(msg);
+    Can1.write(msg);
   }
 
   if (settings.chargertype == Coda)
@@ -3986,7 +3887,7 @@ void chargercomms()
       msg.buf[6] = 0x96;
     }
     msg.buf[7] = 0x01; // HV charging
-    Can0.write(msg);
+    Can1.write(msg);
   }
 }
 
