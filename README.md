@@ -26,3 +26,5 @@ Code https://github.com/jamiejones85/ESP32-BMS
 Hardware https://oshwlab.com/EV-Team/spaceballs
 
 'Fix' To CAN_T4 not recieveing some frames: https://openinverter.org/forum/viewtopic.php?p=62789#p62789
+
+Tesla Module BMS Connecor part number appears to be: 15-97-5101 
