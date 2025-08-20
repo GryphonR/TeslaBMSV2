@@ -1,4 +1,5 @@
-#pragma once 
+#pragma once
+#include <Arduino.h>
 
 // bms status values
 #define BMS_STATUS_BOOT 0
@@ -21,7 +22,6 @@
 #define LemCAB500 2
 #define CurCanMax 4 // max value
 
-//
 // Charger Types
 #define NoCharger 0
 #define BrusaNLG5 1
@@ -31,121 +31,128 @@
 #define Victron 5
 #define Coda 6
 #define VictronHV 7
-//
-
 
 #define RESTART_ADDR 0xE000ED0C
 #define READ_RESTART() (*(volatile uint32_t *)RESTART_ADDR)
 #define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
 #define CPU_REBOOT WRITE_RESTART(0x5FA0004)
 
-
-
-
-
-int Discharge;
+extern int Discharge;
 
 // variables for output control
-int pulltime = 100;
-int contctrl, contstat = 0; // 1 = out 5 high 2 = out 6 high 3 = both high
-unsigned long conttimer1, conttimer2, conttimer3, Pretimer, Pretimer1, overtriptimer, undertriptimer, mainconttimer = 0;
-uint16_t pwmfreq = 18000; // pwm frequency
-int pwmcurmax = 50;       // Max current to be shown with pwm
-int pwmcurmid = 50;       // Mid point for pwm dutycycle based on current
-int16_t pwmcurmin = 0;    // DONOT fill in, calculated later based on other values
+extern int pulltime;
+extern int contctrl, contstat;
+extern unsigned long conttimer1, conttimer2, conttimer3, Pretimer, Pretimer1, overtriptimer, undertriptimer, mainconttimer;
+extern uint16_t pwmfreq;
+extern int pwmcurmax;
+extern int pwmcurmid;
+extern int16_t pwmcurmin;
 
-bool OutputEnable = 0; // Request to close contactors
-bool CanOnReq = false; // CAN Request to close Contacors
-bool CanOnRev = false;
+extern bool OutputEnable;
+extern bool CanOnReq;
+extern bool CanOnRev;
 
 // variables for VE can
-uint16_t chargevoltage = 49100; // max charge voltage in mv
-uint16_t chargecurrent, tempchargecurrent = 0;
-uint16_t disvoltage = 42000; // max discharge voltage in mv
-uint16_t discurrent = 0;
-int batvcal = 0;
+extern uint16_t chargevoltage;
+extern uint16_t chargecurrent, tempchargecurrent;
+extern uint16_t disvoltage;
+extern uint16_t discurrent;
+extern int batvcal;
 
-uint16_t SOH = 100; // SOH place holder
+extern uint16_t SOH;
 
-unsigned char alarm[4] = {0, 0, 0, 0};
-unsigned char warning[4] = {0, 0, 0, 0};
-unsigned char mes[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-unsigned char bmsname[8] = {'S', 'I', 'M', 'P', ' ', 'B', 'M', 'S'};
-unsigned char bmsmanu[8] = {'S', 'I', 'M', 'P', ' ', 'E', 'C', 'O'};
-long unsigned int rxId;
-unsigned char len = 0;
-byte rxBuf[8];
-char msgString[128]; // Array to store serial string
-uint32_t inbox;
-signed long CANmilliamps;                     // mV
-signed long voltage1, voltage2, voltage3 = 0; // mV only with ISAscale sensor
-// struct can_frame canMsg;
-// MCP2515 CAN1(10); //set CS pin for can controlelr
+extern unsigned char alarm[4];
+extern unsigned char warning[4];
+extern unsigned char mes[8];
+extern unsigned char bmsname[8];
+extern unsigned char bmsmanu[8];
+extern long unsigned int rxId;
+extern unsigned char len;
+extern byte rxBuf[8];
+extern char msgString[128];
+extern uint32_t inbox;
+extern signed long CANmilliamps;
+extern signed long voltage1, voltage2, voltage3;
 
-// variables for current calulation
-uint16_t value;
-float currentact, RawCur;
-float ampsecond;
-unsigned long lasttime;
-unsigned long nextLoopTime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout = 0; // ms
-int currentsense = 14;
-int sensor = 1;
+// variables for current calculation
+extern uint16_t value;
+extern float currentact, RawCur;
+extern float ampsecond;
+extern unsigned long lasttime;
+extern unsigned long nextLoopTime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout;
+extern int currentsense;
+extern int sensor;
 
 // Variables for SOC calc
-int SOC = 100; // State of Charge
-int SOCset = 0;
-int SOCtest = 0;
-int SOCmem = 0;
-int SOCreset = 0;
+extern int SOC;
+extern int SOCset;
+extern int SOCtest;
+extern int SOCmem;
+extern int SOCreset;
 
-/// charger variables
-int maxac1 = 16;          // Shore power 16A per charger
-int maxac2 = 10;          // Generator Charging
-int chargerid1 = 0x618;   // bulk chargers
-int chargerid2 = 0x638;   // finishing charger
-float chargerendbulk = 0; // V before Charge Voltage to turn off the bulk charger/s
-float chargerend = 0;     // V before Charge Voltage to turn off the finishing charger/s
-int chargertoggle = 0;
-int ncharger = 1; // number of chargers
-bool chargecurrentlimit = 0;
+// charger variables
+extern int maxac1;
+extern int maxac2;
+extern int chargerid1;
+extern int chargerid2;
+extern float chargerendbulk;
+extern float chargerend;
+extern int chargertoggle;
+extern int ncharger;
+extern bool chargecurrentlimit;
 
 // serial canbus expansion
-unsigned long id = 0;
-unsigned char dta[8];
+extern unsigned long id;
+extern unsigned char dta[8];
 
 // AC current control
-volatile uint32_t pilottimer = 0;
-volatile uint16_t timehigh, duration = 0;
-volatile uint16_t accurlim = 0;
-volatile int dutycycle = 0;
-uint16_t chargerpower = 0;
-bool CPdebug = 0;
+extern volatile uint32_t pilottimer;
+extern volatile uint16_t timehigh, duration;
+extern volatile uint16_t accurlim;
+extern volatile int dutycycle;
+extern uint16_t chargerpower;
+extern bool CPdebug;
 
 // variables
-int outputstate = 0;
-int incomingByte = 0;
-int x = 0;
-int storagemode = 0;
-int cellspresent = 0;
-int dashused = 1;
-int Charged = 0;
-int renum = 0;
+extern int outputstate;
+extern int incomingByte;
+extern int x;
+extern int storagemode;
+extern int cellspresent;
+extern int dashused;
+extern int Charged;
+extern int renum;
 
-// Debugging modes//////////////////
-int debug = 1;
-int inputcheck = 0;  // read digital inputs
-int outputcheck = 0; // check outputs
-int candebug = 0;    // view can frames
-int gaugedebug = 0;
-int debugCur = 0;
-int CSVdebug = 0;
-int delim = 0;
-int menuload = 0;
-int balancecells;
-int debugdigits = 2; // amount of digits behind decimal for voltage reading
+// Debugging modes
+extern int debug;
+extern int inputcheck;
+extern int outputcheck;
+extern int candebug;
+extern int gaugedebug;
+extern int debugCur;
+extern int CSVdebug;
+extern int delim;
+extern int menuload;
+extern int balancecells;
+extern int debugdigits;
 
-int testcount = 0;
+enum errorType
+{
+    ERROR_NONE = 0,
+    ERROR_BATTERY_COMMS = 1,
+    ERROR_VOLTAGE = 2,
+    ERROR_CONTACTORS_NOT_CLOSING = 4,
+    ERROR_CONTACTORS_OPENED_EMERGENCY = 5,
+    ERROR_CURRENT_READING = 6,
+    ERROR_OVER_VOLTAGE = 7,
+    ERROR_UNDER_VOLTAGE = 8,
+    ERROR_OVER_TEMPERATURE = 9,
+    ERROR_CAN = 10,
+};
 
-byte bmsstatus = 0;
+extern int testcount;
 
-uint32_t lastUpdate;
+extern byte bmsstatus;
+extern byte bmsError;
+
+extern uint32_t lastUpdate;
