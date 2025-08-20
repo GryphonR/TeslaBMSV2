@@ -67,7 +67,7 @@ const uint8_t PIN_ERROR_LED = 33;      // Fault Indicator LED
 const uint8_t PIN_BUZZER_CONTROL = 10; // Buzzer
 
 // ==========================
-// High-Side Driver (HSD) Control
+// High-Side Driver (HSD) Feedback
 // ==========================
 const uint8_t PIN_HSD_SEL_0_A = 32;
 const uint8_t PIN_HSD_SEL_1_A = 27;

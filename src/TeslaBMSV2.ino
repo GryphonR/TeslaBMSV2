@@ -23,6 +23,7 @@
 #include "pinouts.h"
 #include "globals.h"
 #include "Application_Settings.h"
+#include "indicators.h"
 #include "BMSModuleManager.h"
 #include "config.h"
 #include "SerialConsole.h"
@@ -73,6 +74,7 @@ CAN_message_t inMsg;
 
 void setup()
 {
+  indicatorsSetup();
   // ------------- LED Indicators -------------
   pinMode(PIN_LED_BUILTIN, OUTPUT);
   pinMode(PIN_HEARTBEAT_LED, OUTPUT);
@@ -212,6 +214,7 @@ void setup()
   lastUpdate = 0;
   bms.findBoards();
   digitalWrite(PIN_LED_BUILTIN, HIGH);
+  bmsError = ERROR_CAN; // TODO - refine error state
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
 
@@ -268,24 +271,7 @@ void setup()
 void loop()
 {
 
-  //  LED Control - TODO break out into separate files
-  static unsigned long nextLedTime = 0;
-  static uint8_t ledState = 0;
-  if(millis() > nextLedTime){
-    if(ledState){
-      analogWrite(PIN_HEARTBEAT_LED, 0); // Turn off heartbeat LED
-      analogWrite(PIN_ERROR_LED, 0); // Turn off heartbeat LED
-      // digitalWrite(PIN_HEARTBEAT_LED, 0); // Turn off heartbeat LED
-      ledState = 0;
-      nextLedTime = millis() + 2990; // Set next toggle time
-    } else {
-      analogWrite(PIN_HEARTBEAT_LED, 50); // Turn on heartbeat LED
-      analogWrite(PIN_ERROR_LED, 50); // Turn on heartbeat LED
-      // digitalWrite(PIN_HEARTBEAT_LED, 1); // Turn on heartbeat LED
-      ledState = 1;
-      nextLedTime = millis() + 10; // Set next toggle time
-    }
-  }
+  indicatorsLoop(); // Call the indicators loop to handle LED and buzzer state
 
   // On message recieve.
   while (canRead())
@@ -525,6 +511,8 @@ void loop()
             {
               digitalWrite(PIN_OUT2, HIGH); // trip breaker
               bmsstatus = BMS_STATUS_ERROR;
+              bmsError = ERROR_VOLTAGE; // TODO - refine error state
+              // TODO - break out the above if statement to assign correct error
             }
             else
             {
@@ -539,6 +527,7 @@ void loop()
               contctrl = contctrl & 253; // turn off contactor
               digitalWrite(PIN_OUT4, LOW);   // ensure precharge is low
               bmsstatus = BMS_STATUS_ERROR;
+              bmsError = ERROR_VOLTAGE; // TODO - refine error state
             }
           }
         }
@@ -734,6 +723,7 @@ void loop()
         if (undertriptimer > millis()) // check is last time not undervoltage is longer than UnderDur ago
         {
           bmsstatus = BMS_STATUS_ERROR;
+          bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
       else
@@ -746,6 +736,7 @@ void loop()
         if (overtriptimer > millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
           bmsstatus = BMS_STATUS_ERROR;
+          bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
       else
@@ -760,6 +751,7 @@ void loop()
         if (UnderTimer < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
           bmsstatus = BMS_STATUS_ERROR;
+          bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
       else
@@ -770,6 +762,7 @@ void loop()
       if (bms.getHighCellVolt() < settings.UnderVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
       {
         bmsstatus = BMS_STATUS_ERROR;
+        bmsError = ERROR_VOLTAGE; // TODO - refine error state
       }
 
       if (bms.getHighCellVolt() > settings.OverVSetpoint)
@@ -777,6 +770,7 @@ void loop()
         if (OverTime < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
           bmsstatus = BMS_STATUS_ERROR;
+          bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
       else
@@ -837,6 +831,7 @@ void loop()
           SERIALCONSOLE.print("   !!! Series Cells Fault !!!");
           SERIALCONSOLE.println("  ");
           bmsstatus = BMS_STATUS_ERROR;
+          bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
     }
