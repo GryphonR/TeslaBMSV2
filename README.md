@@ -69,10 +69,12 @@ Molex Mini-Fit TPA, 10ckt 15-97-5101
 https://www.molex.com/en-us/products/part-detail/15975101
 
 Mouser Links:
-15975101 MINIFIT TPA 10CKT Receptical Housing: https://www.mouser.co.uk/ProductDetail/Molex/15-97-5101
-TPA Key: https://www.mouser.co.uk/ProductDetail/Molex/15-97-9101
-CPA Key: https://www.mouser.co.uk/ProductDetail/538-15-97-0071
+
+15975101 MINIFIT TPA 10CKT Receptical Housing: https://www.mouser.co.uk/ProductDetail/Molex/15-97-5101  
+TPA Key: https://www.mouser.co.uk/ProductDetail/Molex/15-97-9101  
+CPA Key: https://www.mouser.co.uk/ProductDetail/538-15-97-0071  
 Pins: https://www.mouser.co.uk/ProductDetail/Molex/39-00-0038
+
 
 
 
