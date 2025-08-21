@@ -62,4 +62,17 @@ Hardware https://oshwlab.com/EV-Team/spaceballs
 
 'Fix' To CAN_T4 not recieveing some frames: https://openinverter.org/forum/viewtopic.php?p=62789#p62789
 
-Tesla Module BMS Connecor part number appears to be: 15-97-5101 
+## Tesla module harnessing
+
+Tesla Module BMS Connecor part number appears to be: 
+Molex Mini-Fit TPA, 10ckt 15-97-5101 
+https://www.molex.com/en-us/products/part-detail/15975101
+
+Mouser Links:
+15975101 MINIFIT TPA 10CKT Receptical Housing: https://www.mouser.co.uk/ProductDetail/Molex/15-97-5101
+TPA Key: https://www.mouser.co.uk/ProductDetail/Molex/15-97-9101
+CPA Key: https://www.mouser.co.uk/ProductDetail/538-15-97-0071
+Pins: https://www.mouser.co.uk/ProductDetail/Molex/39-00-0038
+
+
+
