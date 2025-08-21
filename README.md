@@ -1,10 +1,23 @@
-# TeslaBMSV2 for SimpBMS
-Porting to Teensy 4
+# Tesla BMS firmware for eChook BMS Comms Master Board
+Forked from Tom-evnut/TeslaBMSV2 and increasingly heavily adapted.
+
+Target hardware: Teensy 4.1
 
 ## Changes from Original
 - Converted to VSCode PlatformIO project from Arduino IDE project
+- Adapted to Teensy 4.1 from Teensy 3.2
+- Refactoring for clarity
+- Breaking code into multiple files for readability
+- Pinout changes for BMS Comms Master board
+- Adding BMS Comms Master board features not found in simpBms
+    - Extra networks (2x CAN, RS-485)
+    - High Side driver monitoring
+    - Indication LEDs and Buzzer
+    - 0.91" OLED I2C Display
+ 
+## Progress Tracking
 
-## Porting Progress
+### Porting Progress
 - [ ] Reboot Crash Report
     - [x] Compiling
     - [ ] Tested
@@ -16,6 +29,28 @@ Porting to Teensy 4
 - [ ] Switch to FlexCAN_T4 Library
     - [x] Compiling ***Removed filtering
     - [ ] Tested
+     
+### New Feature Progrss
+- [x] Pinout Changes
+- [x] LED and Buzzer Indicators (Rudimentary)
+- [ ] Extra CAN networks
+- [ ] RS-485
+- [ ] I2C OLED Display
+
+## Testing
+- [x] Error LED
+- [x] Heartbeat LED
+- [ ] Buzzer
+- [ ] Isolated Serial
+- [ ] Isolated CAN (CAN1)
+- [ ] Aux CAN (CAN2)
+- [ ] RJ45 CAN (CAN3)
+- [ ] Aux Serial
+- [ ] Current Reading
+- [ ] Digital Inputs
+- [ ] HSD Outputs
+- [ ] HSD Monitoring
+- [ ] LSD outputs
 
 
 ### Useful Links
