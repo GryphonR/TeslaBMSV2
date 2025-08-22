@@ -2,6 +2,8 @@
 #include "globals.h"
 #include "pinouts.h"
 
+const int ENABLE_BUZZER = 0; // Enable buzzer control
+
 // Error LED Patters
 const bool errorPatterns[11][12] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // One Short flash pattern
                                     {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // Two Short flash pattern
@@ -84,6 +86,9 @@ void errorLedLoop()
             if (errorCount < 12)
             {
                 analogWrite(PIN_ERROR_LED, errorPatterns[bmsError][errorCount]? errorLedBrightness : 0); // Set error LED brightness based on pattern
+                if(ENABLE_BUZZER){
+                    digitalWrite(PIN_BUZZER_CONTROL, errorPatterns[bmsError][errorCount] ? HIGH : LOW); // Control buzzer based on error pattern
+                }
                 errorCount++;
             }
             else if (errorCount == 12)
@@ -95,7 +100,7 @@ void errorLedLoop()
             else
             {
                 digitalWrite(PIN_LED_BUILTIN, HIGH); // Turn on built-in LED
-                nextErrorLedState -= 250;            // Half Length flash
+                nextErrorLedState += 250;            // one and a Half Length flash
                 errorCount = 0;                      // Reset error count
             }
         }

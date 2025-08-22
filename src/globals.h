@@ -1,5 +1,21 @@
 #pragma once
 #include <Arduino.h>
+#include "config.h"
+#include "BMSModuleManager.h"
+#include <ADC.h> //https://github.com/pedvide/ADC
+#include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
+
+#include <Filters.h> //https://github.com/JonHub/Filters
+
+extern EEPROMSettings settings; // Declared in .ino
+extern BMSModuleManager bms;
+extern ADC *adc; // adc object
+
+extern int firmver;
+
+extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1;
+extern FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
+extern FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
 
 // bms status values
 #define BMS_STATUS_BOOT 0

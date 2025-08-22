@@ -530,29 +530,29 @@ void BMSModuleManager::printPackSummary()
         Logger::console("  MODULE IS FAULTED:");
         if (faults & 1)
         {
-          SERIALCONSOLE.print("    Overvoltage Cell Numbers (1-6): ");
+          SERIAL_CONSOLE.print("    Overvoltage Cell Numbers (1-6): ");
           for (int i = 0; i < 6; i++)
           {
             if (COV & (1 << i))
             {
-              SERIALCONSOLE.print(i + 1);
-              SERIALCONSOLE.print(" ");
+              SERIAL_CONSOLE.print(i + 1);
+              SERIAL_CONSOLE.print(" ");
             }
           }
-          SERIALCONSOLE.println();
+          SERIAL_CONSOLE.println();
         }
         if (faults & 2)
         {
-          SERIALCONSOLE.print("    Undervoltage Cell Numbers (1-6): ");
+          SERIAL_CONSOLE.print("    Undervoltage Cell Numbers (1-6): ");
           for (int i = 0; i < 6; i++)
           {
             if (CUV & (1 << i))
             {
-              SERIALCONSOLE.print(i + 1);
-              SERIALCONSOLE.print(" ");
+              SERIAL_CONSOLE.print(i + 1);
+              SERIAL_CONSOLE.print(" ");
             }
           }
-          SERIALCONSOLE.println();
+          SERIAL_CONSOLE.println();
         }
         if (faults & 4)
         {
@@ -607,7 +607,7 @@ void BMSModuleManager::printPackSummary()
           Logger::console("    Address not registered");
         }
       }
-      if (faults > 0 || alerts > 0) SERIALCONSOLE.println();
+      if (faults > 0 || alerts > 0) SERIAL_CONSOLE.println();
     }
   }
 }
@@ -635,26 +635,26 @@ void BMSModuleManager::printPackDetails(int digits)
       COV = modules[y].getCOVCells();
       CUV = modules[y].getCUVCells();
 
-      SERIALCONSOLE.print("Module #");
-      SERIALCONSOLE.print(y);
-      if (y < 10) SERIALCONSOLE.print(" ");
-      SERIALCONSOLE.print("  ");
-      SERIALCONSOLE.print(modules[y].getModuleVoltage(), digits);
-      SERIALCONSOLE.print("V");
+      SERIAL_CONSOLE.print("Module #");
+      SERIAL_CONSOLE.print(y);
+      if (y < 10) SERIAL_CONSOLE.print(" ");
+      SERIAL_CONSOLE.print("  ");
+      SERIAL_CONSOLE.print(modules[y].getModuleVoltage(), digits);
+      SERIAL_CONSOLE.print("V");
       for (int i = 0; i < 6; i++)
       {
-        if (cellNum < 10) SERIALCONSOLE.print(" ");
-        SERIALCONSOLE.print("  Cell");
-        SERIALCONSOLE.print(cellNum++);
-        SERIALCONSOLE.print(": ");
-        SERIALCONSOLE.print(modules[y].getCellVoltage(i), digits);
-        SERIALCONSOLE.print("V");
+        if (cellNum < 10) SERIAL_CONSOLE.print(" ");
+        SERIAL_CONSOLE.print("  Cell");
+        SERIAL_CONSOLE.print(cellNum++);
+        SERIAL_CONSOLE.print(": ");
+        SERIAL_CONSOLE.print(modules[y].getCellVoltage(i), digits);
+        SERIAL_CONSOLE.print("V");
       }
-      SERIALCONSOLE.print("  Neg Term Temp: ");
-      SERIALCONSOLE.print(modules[y].getTemperature(0));
-      SERIALCONSOLE.print("C  Pos Term Temp: ");
-      SERIALCONSOLE.print(modules[y].getTemperature(1));
-      SERIALCONSOLE.println("C");
+      SERIAL_CONSOLE.print("  Neg Term Temp: ");
+      SERIAL_CONSOLE.print(modules[y].getTemperature(0));
+      SERIAL_CONSOLE.print("C  Pos Term Temp: ");
+      SERIAL_CONSOLE.print(modules[y].getTemperature(1));
+      SERIAL_CONSOLE.println("C");
 
     }
   }
@@ -666,56 +666,56 @@ void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int S
   {
     if (modules[y].isExisting())
     {
-      SERIALCONSOLE.print(timestamp);
+      SERIAL_CONSOLE.print(timestamp);
       if (delim == 1)
       {
-        SERIALCONSOLE.print(" ");
+        SERIAL_CONSOLE.print(" ");
       }
       else
       {
-        SERIALCONSOLE.print(",");
+        SERIAL_CONSOLE.print(",");
       }
-      SERIALCONSOLE.print(current, 0);
+      SERIAL_CONSOLE.print(current, 0);
       if (delim == 1)       {
-        SERIALCONSOLE.print(" ");
+        SERIAL_CONSOLE.print(" ");
       }       else       {
-        SERIALCONSOLE.print(",");
+        SERIAL_CONSOLE.print(",");
       }
-      SERIALCONSOLE.print(SOC);
+      SERIAL_CONSOLE.print(SOC);
       if (delim == 1)       {
-        SERIALCONSOLE.print(" ");
+        SERIAL_CONSOLE.print(" ");
       }       else       {
-        SERIALCONSOLE.print(",");
+        SERIAL_CONSOLE.print(",");
       }
-      SERIALCONSOLE.print(y);
+      SERIAL_CONSOLE.print(y);
       if (delim == 1)       {
-        SERIALCONSOLE.print(" ");
+        SERIAL_CONSOLE.print(" ");
       }       else       {
-        SERIALCONSOLE.print(",");
+        SERIAL_CONSOLE.print(",");
       }
       for (int i = 0; i < 8; i++)
       {
-        SERIALCONSOLE.print(modules[y].getCellVoltage(i));
+        SERIAL_CONSOLE.print(modules[y].getCellVoltage(i));
         if (delim == 1)       {
-          SERIALCONSOLE.print(" ");
+          SERIAL_CONSOLE.print(" ");
         }       else       {
-          SERIALCONSOLE.print(",");
+          SERIAL_CONSOLE.print(",");
         }
       }
-      SERIALCONSOLE.print(modules[y].getTemperature(0));
+      SERIAL_CONSOLE.print(modules[y].getTemperature(0));
       if (delim == 1)       {
-        SERIALCONSOLE.print(" ");
+        SERIAL_CONSOLE.print(" ");
       }       else       {
-        SERIALCONSOLE.print(",");
+        SERIAL_CONSOLE.print(",");
       }
-      SERIALCONSOLE.print(modules[y].getTemperature(1));
+      SERIAL_CONSOLE.print(modules[y].getTemperature(1));
       if (delim == 1)       {
-        SERIALCONSOLE.print(" ");
+        SERIAL_CONSOLE.print(" ");
       }       else       {
-        SERIALCONSOLE.print(",");
+        SERIAL_CONSOLE.print(",");
       }
-      SERIALCONSOLE.print(modules[y].getTemperature(2));
-      SERIALCONSOLE.println();
+      SERIAL_CONSOLE.print(modules[y].getTemperature(2));
+      SERIAL_CONSOLE.println();
     }
   }
   for (int y = 1; y < 63; y++)
