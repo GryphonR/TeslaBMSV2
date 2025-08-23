@@ -163,7 +163,8 @@ enum errorType
     ERROR_OVER_VOLTAGE = 7,
     ERROR_UNDER_VOLTAGE = 8,
     ERROR_OVER_TEMPERATURE = 9,
-    ERROR_CAN = 10,
+    ERROR_UNDER_TEMPERATURE = 10,
+    ERROR_CAN = 11,
 };
 
 extern int testcount;

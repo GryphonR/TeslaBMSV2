@@ -39,7 +39,7 @@
 #include <EEPROM.h>
 #include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
 #include <SPI.h>
-#include <Filters.h> //https://github.com/JonHub/Filters
+#include <Filters.h>                  //https://github.com/JonHub/Filters
 #include <Serial_CAN_Module_Teensy.h> //https://github.com/tomdebree/Serial_CAN_Teensy
 
 // T4 Additions
@@ -47,12 +47,10 @@
 #include <imxrt.h>
 #include <CrashReport.h>
 
-
-
 /////Version Identifier/////////
 int firmver = 230719; // Year Month Day
-const char* COMPILE_DATE = __DATE__;
-const char* COMPILE_TIME = __TIME__;
+const char *COMPILE_DATE = __DATE__;
+const char *COMPILE_TIME = __TIME__;
 
 WDT_T4<WDT1> watchdog;
 
@@ -65,14 +63,16 @@ BMSModuleManager bms;
 SerialConsole console; // TODO - Appears unused?
 EEPROMSettings settings;
 
-
-
 ADC *adc = new ADC(); // adc object
 
 CAN_message_t msg;
 CAN_message_t inMsg;
 
-
+// Prototypes
+void setBMSstatus(int newstatus, const char *message = nullptr);
+void setBMSstatus(int newstatus, int newError = 0, const char *message = nullptr);
+const char *getBMSStatusString(int status);
+const char *getBMSErrorString(int error);
 
 void setup()
 {
@@ -112,7 +112,6 @@ void setup()
   analogWriteFrequency(PIN_OUT6, pwmfreq);
   analogWriteFrequency(PIN_OUT7, pwmfreq);
   analogWriteFrequency(PIN_OUT8, pwmfreq);
-
 
   // ------------- LEDS and Buzzer off-------------
   digitalWrite(PIN_LED_BUILTIN, LOW);
@@ -160,15 +159,14 @@ void setup()
   SERIAL_CONSOLE.println("SimpBMS V2 Tesla");
 
   Serial2.begin(115200); // display and can adpater canbus
-  
-   // Teensy 4.x
+
+  // Teensy 4.x
   if (CrashReport)
   {
-    // print info (hope Serial Monitor windows is open) 
+    // print info (hope Serial Monitor windows is open)
     // TODO - Log to SD card
     Serial.print(CrashReport);
   }
-
 
   //  Enable WDT T4.x
   WDT_timings_t configewm;
@@ -199,7 +197,8 @@ void setup()
   lastUpdate = 0;
   bms.findBoards();
   digitalWrite(PIN_LED_BUILTIN, HIGH);
-  bmsstatus = BMS_STATUS_ERROR;
+  // bmsstatus = BMS_STATUS_ERROR;
+  setBMSstatus(BMS_STATUS_ERROR, "Initial state on setup");
   bmsError = ERROR_CAN; // TODO - refine error state
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
@@ -245,13 +244,14 @@ void setup()
   // attachInterruptVector(IRQ_LOW_VOLTAGE, low_voltage_isr);
   // NVIC_ENABLE_IRQ(IRQ_LOW_VOLTAGE);
 
-
   // Blink Heartbeat LED to indicate setup is complete
   digitalWrite(PIN_HEARTBEAT_LED, HIGH); // Turn off heartbeat LED
-  delay(500);                          // Wait for 1 second    
-  digitalWrite(PIN_HEARTBEAT_LED, LOW); // Turn on heartbeat LED
+  delay(500);                            // Wait for 1 second
+  digitalWrite(PIN_HEARTBEAT_LED, LOW);  // Turn on heartbeat LED
 
-  bmsstatus = BMS_STATUS_BOOT;
+  // bmsstatus = BMS_STATUS_BOOT;
+  setBMSstatus(BMS_STATUS_BOOT, "Setup complete");
+  bmsError = ERROR_NONE;
 }
 
 void loop()
@@ -272,7 +272,6 @@ void loop()
     menu();
   }
 
-  
   // Serial.printf("Loop: If output check. Outputcheck: %d, bmsStatus: %d\n", outputcheck, bmsstatus);
   if (outputcheck != 1)
   {
@@ -308,13 +307,15 @@ void loop()
               digitalWrite(PIN_OUT4, HIGH); // Precharge start
               Serial.println();
               Serial.println("Precharge!!!");
+              Serial.printf("Conditions: Output2: %d, output4: %d, bmsStatus: %d\n", digitalRead(PIN_OUT2), digitalRead(PIN_OUT4), bmsstatus);
+              Serial.println();
               Serial.println(mainconttimer);
               Serial.println();
             }
             if (mainconttimer + settings.Pretime < millis() && digitalRead(PIN_OUT2) == LOW && abs(currentact) < settings.Precurrent)
             {
               digitalWrite(PIN_OUT2, HIGH); // turn on contactor
-              contctrl = contctrl | 2;  // turn on contactor
+              contctrl = contctrl | 2;      // turn on contactor
               Serial.println();
               Serial.println("Main On!!!");
               Serial.println();
@@ -499,7 +500,8 @@ void loop()
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
             {
               digitalWrite(PIN_OUT2, HIGH); // trip breaker
-              bmsstatus = BMS_STATUS_ERROR;
+              // bmsstatus = BMS_STATUS_ERROR;
+              setBMSstatus(BMS_STATUS_ERROR, "Voltage or Temperature fault in ESS mode with tripcont=0");
               bmsError = ERROR_VOLTAGE; // TODO - refine error state
               // TODO - break out the above if statement to assign correct error
             }
@@ -512,10 +514,11 @@ void loop()
           {
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
             {
-              digitalWrite(PIN_OUT2, LOW);   // turn off contactor
-              contctrl = contctrl & 253; // turn off contactor
-              digitalWrite(PIN_OUT4, LOW);   // ensure precharge is low
-              bmsstatus = BMS_STATUS_ERROR;
+              digitalWrite(PIN_OUT2, LOW); // turn off contactor
+              contctrl = contctrl & 253;   // turn off contactor
+              digitalWrite(PIN_OUT4, LOW); // ensure precharge is low
+              // bmsstatus = BMS_STATUS_ERROR;
+              setBMSstatus(BMS_STATUS_ERROR, "Voltage or Temperature fault in ESS mode with tripcont=1");
               bmsError = ERROR_VOLTAGE; // TODO - refine error state
             }
           }
@@ -529,7 +532,7 @@ void loop()
         digitalWrite(PIN_OUT3, LOW); // turn off charger
         digitalWrite(PIN_OUT2, LOW);
         digitalWrite(PIN_OUT1, LOW); // turn off discharge
-        contctrl = 0;            // turn off out 5 and 6
+        contctrl = 0;                // turn off out 5 and 6
 
         if (SOCset == 1)
         {
@@ -546,7 +549,9 @@ void loop()
 
           if (bms.getLowCellVolt() > settings.UnderVSetpoint && bms.getHighCellVolt() < settings.OverVSetpoint && bms.getHighTemperature() < settings.OverTSetpoint && cellspresent == bms.seriescells() && cellspresent == (settings.Scells * settings.Pstrings))
           {
-            bmsstatus = BMS_STATUS_READY;
+            // bmsstatus = BMS_STATUS_READY;
+            setBMSstatus(BMS_STATUS_READY, "Voltage and Temperature normal in ESS mode");
+            bmsError = ERROR_NONE;
           }
         }
       }
@@ -563,7 +568,8 @@ void loop()
         digitalWrite(PIN_OUT2, LOW);
         digitalWrite(PIN_OUT1, LOW); // turn off discharge
         contctrl = 0;
-        bmsstatus = BMS_STATUS_READY;
+        // bmsstatus = BMS_STATUS_READY;
+        setBMSstatus(BMS_STATUS_READY, "Boot complete");
         break;
 
       case (BMS_STATUS_READY):
@@ -572,7 +578,7 @@ void loop()
         digitalWrite(PIN_OUT3, LOW); // turn off charger
         digitalWrite(PIN_OUT2, LOW);
         digitalWrite(PIN_OUT1, LOW); // turn off discharge
-        contctrl = 0;            // turn off out 5 and 6
+        contctrl = 0;                // turn off out 5 and 6
         accurlim = 0;
         if (bms.getHighCellVolt() > settings.balanceVoltage && bms.getHighCellVolt() > bms.getLowCellVolt() + settings.balanceHyst)
         {
@@ -587,17 +593,20 @@ void loop()
         {
           if (settings.ChargerDirect == 1)
           {
-            bmsstatus = BMS_STATUS_CHARGE;
+            // bmsstatus = BMS_STATUS_CHARGE;
+            setBMSstatus(BMS_STATUS_CHARGE, "AC detected in READY state with ChargerDirect=1");
           }
           else
           {
-            bmsstatus = BMS_STATUS_PRECHARGE;
+            // bmsstatus = BMS_STATUS_PRECHARGE;
+            setBMSstatus(BMS_STATUS_PRECHARGE, "AC detected in READY state with ChargerDirect=0");
             Pretimer = millis();
           }
         }
         if (digitalRead(PIN_IN1) == HIGH && bms.getLowCellVolt() > settings.DischVsetpoint) // detect Key ON
         {
-          bmsstatus = BMS_STATUS_PRECHARGE;
+          // bmsstatus = BMS_STATUS_PRECHARGE;
+          setBMSstatus(BMS_STATUS_PRECHARGE, "Key ON detected in READY state");
           Pretimer = millis();
         }
 
@@ -613,11 +622,13 @@ void loop()
         accurlim = 0;
         if (digitalRead(PIN_IN1) == LOW) // Key OFF
         {
-          bmsstatus = BMS_STATUS_READY;
+          // bmsstatus = BMS_STATUS_READY;
+          setBMSstatus(BMS_STATUS_READY, "Key OFF detected in DRIVE state");
         }
         if (digitalRead(PIN_IN3) == HIGH && (bms.getHighCellVolt() < (settings.ChargeVsetpoint - settings.ChargeHys)) && bms.getHighTemperature() < (settings.OverTSetpoint - settings.WarnToff)) // detect AC present for charging and check not balancing
         {
-          bmsstatus = BMS_STATUS_CHARGE;
+          // bmsstatus = BMS_STATUS_CHARGE;
+          setBMSstatus(BMS_STATUS_CHARGE, "AC detected in DRIVE state");
         }
 
         break;
@@ -629,7 +640,7 @@ void loop()
           digitalWrite(PIN_OUT4, LOW);
           digitalWrite(PIN_OUT2, LOW);
           digitalWrite(PIN_OUT1, LOW); // turn off discharge
-          contctrl = 0;            // turn off out 5 and 6
+          contctrl = 0;                // turn off out 5 and 6
         }
         Discharge = 0;
         if (digitalRead(PIN_IN2) == HIGH)
@@ -661,11 +672,13 @@ void loop()
             SOCcharged(1);
           }
           digitalWrite(PIN_OUT3, LOW); // turn off charger
-          bmsstatus = BMS_STATUS_READY;
+          // bmsstatus = BMS_STATUS_READY;
+          setBMSstatus(BMS_STATUS_READY, "Charge or Temperature setpoint reached in CHARGE state");
         }
         if (digitalRead(PIN_IN3) == LOW) // detect AC not present for charging
         {
-          bmsstatus = BMS_STATUS_READY;
+          // bmsstatus = BMS_STATUS_READY;
+          setBMSstatus(BMS_STATUS_READY, "AC not detected in CHARGE state");
         }
         break;
 
@@ -675,7 +688,7 @@ void loop()
         digitalWrite(PIN_OUT3, LOW); // turn off charger
         digitalWrite(PIN_OUT2, LOW);
         digitalWrite(PIN_OUT1, LOW); // turn off discharge
-        contctrl = 0;            // turn off out 5 and 6
+        contctrl = 0;                // turn off out 5 and 6
         /*
                   if (digitalRead(IN3) == HIGH) //detect AC present for charging
                   {
@@ -684,7 +697,8 @@ void loop()
         */
         if (bms.getLowCellVolt() >= settings.UnderVSetpoint && bms.getHighCellVolt() <= settings.OverVSetpoint && digitalRead(PIN_IN1) == LOW)
         {
-          bmsstatus = BMS_STATUS_READY;
+          // bmsstatus = BMS_STATUS_READY;
+          setBMSstatus(BMS_STATUS_READY, "Voltage and Key OFF normal in ERROR state");
         }
 
         break;
@@ -711,7 +725,8 @@ void loop()
       {
         if (undertriptimer > millis()) // check is last time not undervoltage is longer than UnderDur ago
         {
-          bmsstatus = BMS_STATUS_ERROR;
+          // bmsstatus = BMS_STATUS_ERROR;
+          setBMSstatus(BMS_STATUS_ERROR, "Undervoltage detected in ESS mode");
           bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
@@ -719,12 +734,13 @@ void loop()
       {
         undertriptimer = millis() + settings.triptime;
       }
-      
+
       if (bms.getLowCellVolt() > settings.OverVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint)
       {
         if (overtriptimer > millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
-          bmsstatus = BMS_STATUS_ERROR;
+          // bmsstatus = BMS_STATUS_ERROR;
+          setBMSstatus(BMS_STATUS_ERROR, "Overvoltage detected in ESS mode");
           bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
@@ -739,7 +755,8 @@ void loop()
       {
         if (UnderTimer < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
-          bmsstatus = BMS_STATUS_ERROR;
+          // bmsstatus = BMS_STATUS_ERROR;
+          setBMSstatus(BMS_STATUS_ERROR, "Undervoltage detected in vehicle mode");
           bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
@@ -750,7 +767,8 @@ void loop()
 
       if (bms.getHighCellVolt() < settings.UnderVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
       {
-        bmsstatus = BMS_STATUS_ERROR;
+        // bmsstatus = BMS_STATUS_ERROR;
+        setBMSstatus(BMS_STATUS_ERROR, "Undervoltage or Overtemperature detected in vehicle mode");
         bmsError = ERROR_VOLTAGE; // TODO - refine error state
       }
 
@@ -759,6 +777,7 @@ void loop()
         if (OverTime < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
         {
           bmsstatus = BMS_STATUS_ERROR;
+          setBMSstatus(BMS_STATUS_ERROR, "Overvoltage detected in vehicle mode");
           bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
@@ -820,6 +839,7 @@ void loop()
           SERIAL_CONSOLE.print("   !!! Series Cells Fault !!!");
           SERIAL_CONSOLE.println("  ");
           bmsstatus = BMS_STATUS_ERROR;
+          setBMSstatus(BMS_STATUS_ERROR, "Series Cells count fault detected");
           bmsError = ERROR_VOLTAGE; // TODO - refine error state
         }
       }
@@ -856,7 +876,76 @@ void loop()
   }
 }
 
+void setBMSstatus(int newstatus, const char *message = nullptr)
+{
+  bmsstatus = newstatus;
+  if (message)
+  {
+    Logger::debug("BMS Status set to %s: %s", getBMSStatusString(newstatus), message);
+  }
+  else
+  {
+    Logger::debug("BMS Status set to %s", getBMSStatusString(newstatus));
+  }
+}
 
+void setBMSstatus(int newstatus, int newError = 0, const char *message = nullptr)
+{
+  setBMSstatus(newstatus, message);
+
+  if (newError != 0)
+  {
+    bmsError = newError;
+    Logger::debug("BMS Error set to %d", newError);
+  }
+}
+
+const char *getBMSStatusString(int status)
+{
+  switch (status)
+  {
+  case BMS_STATUS_BOOT:
+    return "Boot";
+  case BMS_STATUS_READY:
+    return "Ready";
+  case BMS_STATUS_PRECHARGE:
+    return "Precharge";
+  case BMS_STATUS_DRIVE:
+    return "Drive";
+  case BMS_STATUS_CHARGE:
+    return "Charge";
+  case BMS_STATUS_ERROR:
+    return "Error";
+  default:
+    return "Unknown";
+  }
+}
+
+// a function to recieve the error state and return a string for display
+const char *getBMSErrorString(int error)
+{
+  switch (error)
+  {
+  case ERROR_NONE:
+    return "No Error";
+  case ERROR_CAN:
+    return "CAN Error";
+  case ERROR_VOLTAGE:
+    return "Voltage Error";
+  case ERROR_UNDER_VOLTAGE:
+    return "Undervoltage Error";
+  case ERROR_OVER_VOLTAGE:
+    return "Overvoltage Error";
+  case ERROR_OVER_TEMPERATURE:
+    return "Over Temperature Error";
+  case ERROR_UNDER_TEMPERATURE:
+    return "Under Temperature Error";
+  case ERROR_CURRENT_READING:
+    return "Current Sensor Error";
+  default:
+    return "Unknown Error";
+  }
+}
 
 /**
  * @brief Updates the alarm and warning status arrays based on current BMS readings and settings.
@@ -938,12 +1027,11 @@ void alarmupdate()
   }
 }
 
-
-
 void printbmsstat()
 {
-  SERIAL_CONSOLE.println();
-  SERIAL_CONSOLE.println();
+  Serial.print("\033[H\033[J");
+  // SERIAL_CONSOLE.println();
+  // SERIAL_CONSOLE.println();
   SERIAL_CONSOLE.println(testcount);
   SERIAL_CONSOLE.print("BMS Status : ");
   if (settings.ESSmode == 1)
@@ -1118,8 +1206,6 @@ void printbmsstat()
   }
 }
 
-
-
 void updateSOC()
 {
   if (SOCreset == 1)
@@ -1144,7 +1230,8 @@ void updateSOC()
       }
       if (settings.ESSmode == 1)
       {
-        bmsstatus = BMS_STATUS_READY;
+        // bmsstatus = BMS_STATUS_READY;
+        setBMSstatus(BMS_STATUS_READY, "SOC initialized from voltage after 5 seconds in ESS mode");
       }
     }
   }
@@ -1162,7 +1249,8 @@ void updateSOC()
       }
       if (settings.ESSmode == 1)
       {
-        bmsstatus = BMS_STATUS_READY;
+        // bmsstatus = BMS_STATUS_READY;
+        setBMSstatus(BMS_STATUS_READY, "SOC initialized from memory after 5 seconds in ESS mode");
       }
     }
   }
@@ -1249,17 +1337,20 @@ void Prechargecon()
       contctrl = 3;
       if (settings.ChargerDirect == 1)
       {
-        bmsstatus = BMS_STATUS_DRIVE;
+        // bmsstatus = BMS_STATUS_DRIVE;
+        setBMSstatus(BMS_STATUS_DRIVE, "ChargerDirect=1 so going to DRIVE state after precharge");
       }
       else
       {
         if (digitalRead(PIN_IN3) == HIGH)
         {
-          bmsstatus = BMS_STATUS_CHARGE;
+          // bmsstatus = BMS_STATUS_CHARGE;
+          setBMSstatus(BMS_STATUS_CHARGE, "AC detected so going to CHARGE state after precharge");
         }
         if (digitalRead(PIN_IN1) == HIGH)
         {
-          bmsstatus = BMS_STATUS_DRIVE;
+          // bmsstatus = BMS_STATUS_DRIVE;
+          setBMSstatus(BMS_STATUS_DRIVE, "Key ON detected so going to DRIVE state after precharge");
         }
       }
       digitalWrite(PIN_OUT2, LOW);
@@ -1270,7 +1361,8 @@ void Prechargecon()
     digitalWrite(PIN_OUT1, LOW);
     digitalWrite(PIN_OUT2, LOW);
     digitalWrite(PIN_OUT4, LOW);
-    bmsstatus = BMS_STATUS_READY;
+    // bmsstatus = BMS_STATUS_READY;
+    setBMSstatus(BMS_STATUS_READY, "Key OFF and AC not detected during PRECHARGE state");
     contctrl = 0;
   }
 }
@@ -1373,8 +1465,6 @@ void contactorControl()
     analogWrite(PIN_OUT6, 0);
   }
 }
-
-
 
 void VEcan() // communication with Victron system over CAN
 {
@@ -1524,8 +1614,6 @@ void VEcan() // communication with Victron system over CAN
   msg.buf[7] = 0x00;
   Can1.write(msg);
 }
-
-
 
 int pgnFromCANId(int canId)
 {

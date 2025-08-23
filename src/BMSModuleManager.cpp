@@ -3,6 +3,8 @@
 #include "BMSUtil.h"
 #include "Logger.h"
 
+#include "pinouts.h"
+
 extern EEPROMSettings settings;
 
 BMSModuleManager::BMSModuleManager()
@@ -360,7 +362,13 @@ void BMSModuleManager::getAllVoltTemp()
   if (packVolt > highestPackVolt) highestPackVolt = packVolt;
   if (packVolt < lowestPackVolt) lowestPackVolt = packVolt;
 
-  if (digitalRead(11) == LOW) {
+
+  // TODO - why is there a digital read here? Should be less application specific, also
+  // don't understand why a contactor being open would indicate a fault.
+  if (digitalRead(PIN_OUT1) == LOW)
+  {
+    // TODO Remove debug line!!
+    Serial.println("Setting is faulted after digital read");
     if (!isFaulted) Logger::error("One or more BMS modules have entered the fault state!");
     isFaulted = true;
   }
