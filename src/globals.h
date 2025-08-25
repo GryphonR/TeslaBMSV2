@@ -171,5 +171,6 @@ extern int testcount;
 
 extern byte bmsstatus;
 extern byte bmsError;
+extern bool modulesConnected; // true if modules are connected, false if modules are not responding
 
 extern uint32_t lastUpdate;

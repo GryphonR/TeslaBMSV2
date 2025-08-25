@@ -1,8 +1,7 @@
 #include "config.h"
 #include "BMSModuleManager.h"
 #include "BMSUtil.h"
-#include "Logger.h"
-
+#include "Libraries/Logger.h"
 #include "pinouts.h"
 
 extern EEPROMSettings settings;
@@ -20,6 +19,14 @@ BMSModuleManager::BMSModuleManager()
   isFaulted = false;
 }
 
+/**
+ * @brief Clears all module voltage, temperature, and cell voltage data.
+ *
+ * Loops over all modules and calls their clearModule() method to
+ * clear out all of the voltage and temperature data. This is used
+ * prior to reading all of the module data to ensure that we are
+ * starting from a clean slate.
+ */
 void BMSModuleManager::clearmodules()
 {
   for (int y = 1; y < 63; y++)
@@ -31,6 +38,15 @@ void BMSModuleManager::clearmodules()
   }
 }
 
+/**
+ * @brief Calculates the total number of cells in series in the pack.
+ *
+ * Loops through all modules and sums up the number of cells in each module
+ * to get the total number of cells in the pack. This is used to calculate
+ * the pack voltage.
+ *
+ * @return The total number of cells in series.
+ */
 int BMSModuleManager::seriescells()
 {
   spack = 0;

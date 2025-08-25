@@ -1,8 +1,7 @@
 #include "config.h"
 #include "BMSModule.h"
 #include "BMSUtil.h"
-#include "Logger.h"
-
+#include "Libraries/Logger.h"
 
 BMSModule::BMSModule()
 {
@@ -23,6 +22,11 @@ BMSModule::BMSModule()
   moduleAddress = 0;
 }
 
+/**
+ * @brief Clears all module voltage and temperature data.
+ *
+ * Sets all cell voltage, module voltage, and temperature values to 0.0f.
+ */
 void BMSModule::clearModule()
 {
   for (int i = 0; i < 6; i++)

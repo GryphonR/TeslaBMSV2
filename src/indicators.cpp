@@ -1,6 +1,7 @@
 #include "indicators.h"
 #include "globals.h"
 #include "pinouts.h"
+#include "Libraries/Logger.h"
 
 const int ENABLE_BUZZER = 0; // Enable buzzer control
 
@@ -55,6 +56,7 @@ void heartbeatLoop()
     static uint8_t ledState = 0;
     if (millis() > nextLedTime)
     {
+        // Logger::debug("Toggle heartbeat LED");
         if (ledState)
         {
             analogWrite(PIN_HEARTBEAT_LED, 0); // Turn off heartbeat LED
@@ -69,7 +71,7 @@ void heartbeatLoop()
             // analogWrite(PIN_ERROR_LED, 50);     // Turn on heartbeat LED
             // digitalWrite(PIN_HEARTBEAT_LED, 1); // Turn on heartbeat LED
             ledState = 1;
-            nextLedTime = millis() + 10; // Set next toggle time
+            nextLedTime = millis()+ 10; // Set next toggle time
         }
     }
 }
