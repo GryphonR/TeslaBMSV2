@@ -6,7 +6,7 @@ Target hardware: Teensy 4.1
 ## Changes from Original
 - Converted to VSCode PlatformIO project from Arduino IDE project
 - Adapted to Teensy 4.1 from Teensy 3.2
-- Refactoring for clarity
+- Refactoring for clarity (Turning into a full re-architecting)
 - Breaking code into multiple files for readability
 - Pinout changes for BMS Comms Master board
 - Adding BMS Comms Master board features not found in simpBms
@@ -25,7 +25,7 @@ Target hardware: Teensy 4.1
     - Removed for now - it triggerd an EEPROM Update.    
 - [ ] Watchdog Timer Implementation
     - [x] Compiling
-    - [ ] Tested
+    - [x] Tested
 - [ ] Switch to FlexCAN_T4 Library
     - [x] Compiling ***Removed filtering
     - [ ] Tested
@@ -40,7 +40,7 @@ Target hardware: Teensy 4.1
 ## Testing
 - [x] Error LED
 - [x] Heartbeat LED
-- [ ] Buzzer
+- [x] Buzzer
 - [ ] Isolated Serial
 - [ ] Isolated CAN (CAN1)
 - [ ] Aux CAN (CAN2)
