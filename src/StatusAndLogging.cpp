@@ -62,7 +62,7 @@ void setBMSstatus(int newStatus, int newError, const char *message)
     if (newError != 0)
     {
         bmsError = newError;
-        Logger::error("BMS Error set to %d", getBMSErrorString(bmsError));
+        Logger::error("BMS Error set to %s", getBMSErrorString(bmsError));
     }
 }
 
