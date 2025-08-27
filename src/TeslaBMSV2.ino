@@ -27,7 +27,7 @@
 #include "BMSModuleManager.h"
 #include "config.h"
 #include "SerialConsole.h"
-#include "Libraries/Logger.h"
+#include "Logger.h"
 #include "SerialMenu.h"
 #include "CurrentSensing.h"
 #include "PhysicalGauges.h"

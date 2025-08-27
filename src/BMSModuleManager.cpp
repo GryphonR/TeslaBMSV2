@@ -1,7 +1,7 @@
 #include "config.h"
 #include "BMSModuleManager.h"
 #include "BMSUtil.h"
-#include "Libraries/Logger.h"
+#include "Logger.h"
 #include "pinouts.h"
 
 extern EEPROMSettings settings;

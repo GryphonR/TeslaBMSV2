@@ -28,7 +28,6 @@ void RTCSetup()
  */
 String getFormattedTime(time_t t)
 {
-    // Use String::format() for a convenient way to build the string
     return String(day(t), DEC) + "/" +
            String(month(t), DEC) + "/" +
            String(year(t) % 100, DEC) + "-" + // Get last two digits of the year

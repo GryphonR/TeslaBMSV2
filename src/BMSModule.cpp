@@ -1,7 +1,7 @@
 #include "config.h"
 #include "BMSModule.h"
 #include "BMSUtil.h"
-#include "Libraries/Logger.h"
+#include "Logger.h"
 
 BMSModule::BMSModule()
 {

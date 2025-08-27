@@ -3,7 +3,7 @@
 #include "Settings.h"
 #include "TeslaBMSV2.h"
 #include "pinouts.h"
-#include "Libraries/Logger.h"
+#include "Logger.h"
 
 /**
  * @brief Periodic loop for BMS functions
