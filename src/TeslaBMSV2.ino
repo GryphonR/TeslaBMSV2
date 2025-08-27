@@ -34,6 +34,8 @@
 #include "NextionDisplay.h"
 #include "BMSLogic.h"
 #include "StatusAndLogging.h"
+#include "BMS_SD.h"
+#include "BMS_RTC.h"
 
 // Libraries
 #include <Arduino.h>
@@ -97,7 +99,9 @@ void isrCP();
 
 void setup()
 {
-  Logger::setLoglevel(Logger::Debug); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+
+
 
   indicatorsSetup();
 
@@ -110,18 +114,36 @@ void setup()
   SERIAL_CONSOLE.println("Starting up!");
   SERIAL_CONSOLE.println("SimpBMS V2 Tesla");
 
+  
   SERIAL_AUX.begin(115200); // display and can adpater canbus
   delay(2000);              // just for easy debugging. It takes a few seconds for USB to come up properly on most OS's
   Serial.println("Serial busses started, plus 2 second delay");
+
+  if (CrashReport)
+  {
+    // TODO - Log to SD card
+    Logger::error("Crash detected, printing report:");
+    SERIAL_CONSOLE.print(CrashReport);
+  }
+
+  // ------------- Pin Setup -------------
   pinSetup();
 
-  // ------------- LEDS and Buzzer off-------------
-  digitalWrite(PIN_LED_BUILTIN, LOW);
-  digitalWrite(PIN_HEARTBEAT_LED, LOW);
-  digitalWrite(PIN_ERROR_LED, LOW);
-  digitalWrite(PIN_BUZZER_CONTROL, LOW);
+  // ------------- RTC Setup -------------
+  RTCSetup();
+
+  // ------------- SD Card Setup -------------
+  SDInit();
 
   // ------------- EEPROM Setting Retreival -------------
+
+  /**
+   * A Note on Settings
+   * 
+   * They do not appear to be saved to the EEPROM, except when changing settings in the 
+   * Serial Menu. There is no automatic saving on the first boot that I can find,
+   * as would be implied by testing the settings version vs the eeprom version
+   */
   Serial.println("Loading settings from EEPROM");
   EEPROM.get(0, settings);
   if (settings.version != EEPROM_VERSION)
@@ -133,31 +155,16 @@ void setup()
   Serial.println("Starting CAN bus Can1 at " + String(settings.canSpeed) + " baud");
   Can1.begin();
   Can1.setBaudRate(settings.canSpeed);
-  // Can1.setMaxMB(16);
-  // Can1.enableFIFO();
-  // Can1.enableFIFOInterrupt();
-  // Can1.onReceive(canRead);
-  // Can1.mailboxStatus();
 
-  // Filters for T3.1 - FlexCAN_T4 should be unfiltered by default
-  // CAN_filter_t allPassFilter; // Enables extended addresses
-  // allPassFilter.id = 0;
-  // allPassFilter.ext = 1;
-  // allPassFilter.rtr = 0;
+  Serial.println("Starting CAN bus Can2 at " + String(settings.canSpeed) + " baud");
+  Can2.begin();
+  Can2.setBaudRate(settings.canSpeed);
 
-  // for (int filterNum = 4; filterNum < 16; filterNum++)
-  // {
-  //   Can1.setFilter(allPassFilter, filterNum);
-  // }
+  Serial.println("Starting CAN bus Can3 at " + String(settings.canSpeed) + " baud");
+  Can3.begin();
+  Can3.setBaudRate(settings.canSpeed);
 
-  // Teensy 4.x
-  if (CrashReport)
-  {
-    // print info (hope Serial Monitor windows is open)
-    // TODO - Log to SD card
-    Logger::error("Printing Crash Report:");
-    Serial.print(CrashReport);
-  }
+ 
 
   //  Enable WDT T4.x
   WDT_timings_t configewm;
@@ -172,15 +179,6 @@ void setup()
 
   // VE.begin(19200); //Victron VE direct bus
 
-  // SERIAL_CONSOLE.println("Started serial interface to BMS.");
-
-  /*
-    EEPROM.get(0, settings);
-    if (settings.version != EEPROM_VERSION)
-    {
-      loadSettings();
-    }
-  */
 
   moduleSetup();
 
@@ -285,6 +283,7 @@ void loop()
 
 void moduleSetup()
 {
+  Logger::info("Starting Communication with Battery Modules");
   Logger::debug("Renumbering BOARD IDs");
   bms.renumberBoardIDs();
 
@@ -292,8 +291,6 @@ void moduleSetup()
   Logger::debug("Finding BMS boards");
   bms.findBoards();
 
-  // setBMSstatus(BMS_STATUS_ERROR, "Default state on setup");
-  // bmsError = ERROR_NONE; // TODO - refine error state
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
 
@@ -304,9 +301,7 @@ void moduleSetup()
     Logger::error("No modules found - Check connections to pack");
     setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "No modules found - Check connections to pack");
     modulesConnected = 0;
-  }
-
-  if (bms.seriescells() != settings.Scells)
+  } else if (bms.seriescells() != settings.Scells)
   {
     Logger::error("Number of cells in pack does not match settings");
     Logger::error("Detected: %d, Expected: %d", bms.seriescells(), settings.Scells);

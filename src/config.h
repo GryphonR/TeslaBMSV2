@@ -2,18 +2,21 @@
 
 #include <Arduino.h>
 
+// ######### For the eChook Comms Master Board, Nothing here should need to be changed ###########
+
+
+
 // Set to the proper port for your USB connection - SerialUSB on Due (Native) or Serial for Due (Programming) or Teensy
 #define SERIAL_CONSOLE Serial
 
 // Define this to be the serial port the Tesla BMS modules are connected to.
-// On the Due you need to use a USART port (Serial1, Serial2, Serial3) and update the call to
-// serialSpecialInit if not Serial1
-// Serial3 for teensy
 #define SERIALBMS Serial2
+
+// Define this to be the serial port connected to 'Serial 2' on the J5 Aux Header
 #define SERIAL_AUX Serial7
 
 #define EEPROM_VERSION 0x14 // update any time EEPROM struct below is changed.
-#define EEPROM_PAGE 0
+// #define EEPROM_PAGE 0 //Not used?
 
 typedef struct
 {

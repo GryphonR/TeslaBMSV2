@@ -5,3 +5,4 @@
 
 void RTCSetup();
 String getFormattedTime(time_t t = now());
+time_t getTeensy3Time();

@@ -17,6 +17,10 @@ extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1;
 extern FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
 extern FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
 
+// SD Card Status Values
+#define SD_OK 0
+#define SD_ERROR 1
+
 // bms status values
 #define BMS_STATUS_BOOT 0
 #define BMS_STATUS_READY 1
@@ -169,8 +173,12 @@ enum errorType
 
 extern int testcount;
 
+// BMS Status Variables
 extern byte bmsstatus;
 extern byte bmsError;
 extern bool modulesConnected; // true if modules are connected, false if modules are not responding
+
+// SD Card Status
+extern byte sdStatus;
 
 extern uint32_t lastUpdate;

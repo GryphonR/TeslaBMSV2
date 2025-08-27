@@ -1,8 +1,9 @@
-#include "RTC.h"
+#include "BMS_RTC.h"
 #include <TimeLib.h>
-#include <DS1307RTC.h> // a basic DS1307 library that returns time as a time_t
+// #include <DS1307RTC.h> // a basic DS1307 library that returns time as a time_t
 #include <Arduino.h> // Required for Serial and other core Arduino functions
 
+time_t RTCTime;
 
 /**
  * @brief Initializes the RTC and syncs the Time library.
@@ -11,8 +12,8 @@
 void RTCSetup()
 {
     // Sync the Time library with the Teensy's built-in RTC
-    setSyncProvider(RTC.get);
-    
+    setSyncProvider(getTeensy3Time);
+
     delay(100);
 
     // Print the time to the serial monitor for confirmation
@@ -34,4 +35,9 @@ String getFormattedTime(time_t t)
            String(hour(t), DEC) + ":" +
            String(minute(t), DEC) + ":" +
            String(second(t), DEC);
+}
+
+time_t getTeensy3Time()
+{
+    return Teensy3Clock.get();
 }

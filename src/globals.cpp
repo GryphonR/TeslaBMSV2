@@ -107,4 +107,7 @@ byte bmsstatus = 0;
 byte bmsError = ERROR_NONE;
 bool modulesConnected = false;
 
+// SD Card Status
+byte sdStatus = SD_ERROR;
+
 uint32_t lastUpdate = 0;
