@@ -110,9 +110,9 @@ void setup()
   // ------------- Start Serial Busses -------------
   SERIALBMS.begin(612500); // Tesla serial bus
 
-  SERIAL_CONSOLE.begin(115200);
+  SERIAL_CONSOLE.begin(500000);
+  SERIAL_CONSOLE.println("eChook Comms Master BMS - Tesla");
   SERIAL_CONSOLE.println("Starting up!");
-  SERIAL_CONSOLE.println("SimpBMS V2 Tesla");
 
   
   SERIAL_AUX.begin(115200); // display and can adpater canbus
