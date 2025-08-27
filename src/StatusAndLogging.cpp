@@ -1,8 +1,12 @@
 /**
  * File to contain status management functions, Serial console logging funcions
  * and SD Card logging functions
-*/
-
+ *
+ * There are currently two error approaches in the code, the older byte based alarm and
+ * warning variables which werent in use in the original code, and a quickly implemented
+ * bmsError variable. Ideallt the old approach needs to be fleshed out and implemented
+ * properly, as it allows for tracking multiple error states at once.
+ */
 
 #include "StatusAndLogging.h"
 #include "pinouts.h"
@@ -115,22 +119,26 @@ const char *getBMSErrorString(int error)
     {
     case ERROR_NONE:
         return "No Error";
-    case ERROR_CAN:
-        return "CAN Error";
+    case ERROR_BATTERY_COMMS:
+        return "Battery Communication Error";
     case ERROR_VOLTAGE:
         return "Voltage Error";
-    case ERROR_UNDER_VOLTAGE:
-        return "Undervoltage Error";
+    case ERROR_CONTACTORS_NOT_CLOSING:
+        return "Contactors Not Responding Error";
+    case ERROR_CURRENT_READING:
+        return "Current Sensor Error";
     case ERROR_OVER_VOLTAGE:
         return "Overvoltage Error";
+    case ERROR_UNDER_VOLTAGE:
+        return "Undervoltage Error";
+    case ERROR_CAN:
+        return "CAN Error";
     case ERROR_OVER_TEMPERATURE:
         return "Over Temperature Error";
     case ERROR_UNDER_TEMPERATURE:
         return "Under Temperature Error";
-    case ERROR_CURRENT_READING:
-        return "Current Sensor Error";
     default:
-        return "Unknown Error";
+        return (String("Unknown Error [") + String(error) + "]").c_str();
     }
 }
 
