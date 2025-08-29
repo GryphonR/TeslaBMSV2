@@ -2,14 +2,14 @@
 #include <Arduino.h>
 #include "config.h"
 #include "BMSModuleManager.h"
-#include <ADC.h> //https://github.com/pedvide/ADC
+#include <ADC.h>        //https://github.com/pedvide/ADC
 #include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
 
 #include <Filters.h> //https://github.com/JonHub/Filters
 
-extern EEPROMSettings settings; // Declared in .ino
-extern BMSModuleManager bms;
-extern ADC *adc; // adc object
+extern EEPROMSettings settings; // Included in globals.h. Declared in .ino
+extern BMSModuleManager bms;    // Included in globals.h.Declared in.ino
+extern ADC *adc;                // adc object
 
 extern int firmver;
 
@@ -96,7 +96,8 @@ extern signed long voltage1, voltage2, voltage3;
 
 // variables for current calculation
 extern uint16_t value;
-extern float currentact, RawCur;
+extern float currentact; // Actual Current from main Current Sensor in Amps
+extern float RawCur;
 extern float ampsecond;
 extern unsigned long lasttime;
 extern unsigned long nextLoopTime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout;
@@ -169,6 +170,7 @@ enum errorType
     ERROR_OVER_TEMPERATURE = 9,
     ERROR_UNDER_TEMPERATURE = 10,
     ERROR_CAN = 11,
+    ERROR_CONTACTORS_NOT_OPENING = 12,
 };
 
 extern int testcount;

@@ -57,7 +57,7 @@ typedef struct
   int curcan;
   int voltsoc;
   int Pretime;
-  int conthold;
+  int conthold; //PWM Duty Cycle for holding extrernally economised contactor in closed state
   int Precurrent;
   float convhigh;
   float convlow;

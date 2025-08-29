@@ -113,7 +113,7 @@ void SerialConsole::handleConsoleCmd() {
 
 void SerialConsole::handleShortCmd() 
 {
-    uint8_t val;
+    // uint8_t val;
 
     switch (cmdBuffer[0]) 
     {
