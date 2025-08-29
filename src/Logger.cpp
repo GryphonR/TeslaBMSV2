@@ -223,9 +223,6 @@ void Logger::log(LogLevel level, const char *format, va_list args)
   }
   bufferIndex += snprintf(logBuffer + bufferIndex, sizeof(logBuffer) - bufferIndex, ": ");
 
-  Serial.println("Logbuffer test 1:");
-  Serial.println(logBuffer);
-
   logMessage(format, args);
 
   printLogs(level); // Outputs the buffer to each relevant device
