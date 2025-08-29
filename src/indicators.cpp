@@ -26,7 +26,8 @@ bool onboardState = false;
 bool errorLedState = false;
 
 uint8_t heartbearBrightness = 50; // Brightness for heartbeat LED
-uint8_t errorLedBrightness = 50;   // Brightness for error LED
+uint8_t errorLedBrightnessHigh = 50;   // Brightness for error LED
+uint8_t errorLedBrightnessLow = 2;   // Brightness for error LED
 
 // Function prototypes
 void errorLedLoop();
@@ -87,7 +88,7 @@ void errorLedLoop()
             nextErrorLedState = millis() + 500; // Set next toggle time
             if (errorCount < 12)
             {
-                analogWrite(PIN_ERROR_LED, errorPatterns[bmsError][errorCount]? errorLedBrightness : 0); // Set error LED brightness based on pattern
+                analogWrite(PIN_ERROR_LED, errorPatterns[bmsError][errorCount] ? errorLedBrightnessHigh : errorLedBrightnessLow); // Set error LED brightness based on pattern
                 if(ENABLE_BUZZER){
                     digitalWrite(PIN_BUZZER_CONTROL, errorPatterns[bmsError][errorCount] ? HIGH : LOW); // Control buzzer based on error pattern
                 }
@@ -102,10 +103,12 @@ void errorLedLoop()
             else
             {
                 digitalWrite(PIN_LED_BUILTIN, HIGH); // Turn on built-in LED
-                nextErrorLedState += 250;            // one and a Half Length flash
+                // nextErrorLedState -= 250;            // one and a Half Length flash
                 errorCount = 0;                      // Reset error count
             }
         }
+    }else{
+        digitalWrite(PIN_ERROR_LED, LOW);
     }
 }
 
