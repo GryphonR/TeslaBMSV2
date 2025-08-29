@@ -299,9 +299,11 @@ void BMS_Contactor::_readVoltage()
         digitalWrite(_pinSel1, HIGH);
         delay(2);
         uint16_t adc = analogRead(_pinMultisense);
-        Logger::debug("ADC: %d", adc);
-        float voltage = (adc * (3.3 - 0.37) * 8.0) / 65536.0; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
-        Logger::debug("Voltage: %0.2fV", voltage);
+        float voltage = (((adc * 3.3) / 1023) - _gndOffsetV);// * 8.0; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
+        Logger::debug("Voltage Read ADC: %d", adc);
+        Logger::debug("Voltage Pre Conversion: %fV", voltage);
+        voltage = voltage *8.0;
+        Logger::debug("Voltage: %fV", voltage);
         _voltage = voltage;
     }
     else
@@ -338,18 +340,19 @@ void BMS_Contactor::_readCurrent()
         }
         else
         {
-            digitalWrite(_pinSel0, LOW);
-            digitalWrite(_pinSel1, HIGH);
+            digitalWrite(_pinSel0, HIGH);
+            digitalWrite(_pinSel1, LOW);
         }
         delay(2);
         uint16_t adc = analogRead(_pinMultisense);
-        Logger::debug("ADC: %d", adc);
+        Logger::debug("Current Read ADC: %d", adc);
         // calculate voltage on current sense resistor
-        float voltage = (adc * (3.3 - 0.37)) / 65536.0; // 3.3 for reference voltage, -0.37 for ground network offset
+        float voltage = ((adc * 3.3 ) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset
+        Logger::debug("Current Reading - Voltage %fV", voltage);
         float senseResistorCurrent = voltage / 680;
         const float K = 1400; // Guestimate from page 16 graph VND7050 datasheet https://www.lcsc.com/datasheet/C443997.pdf
         float current = senseResistorCurrent * K;
-        Logger::debug("Current: %0.2fV", current);
+        Logger::debug("Current: %fA", current);
         _current = current;
     }
     else
@@ -377,15 +380,18 @@ void BMS_Contactor::_readTemperature()
     if (_diagnostics)
     {
         digitalWrite(_pinEn, HIGH);
-        digitalWrite(_pinSel0, HIGH);
-        digitalWrite(_pinSel1, LOW);
+        digitalWrite(_pinSel0, LOW);
+        digitalWrite(_pinSel1, HIGH);
         delay(2);
         uint16_t adc = analogRead(_pinMultisense);
         Logger::debug("ADC: %d", adc);
         // mV per degree = -5.5. Therefore Temp = max temp - (mVoltage/5.5) Max Temp isn't clear?
-        float voltage = ((adc * (3.3)) / 65536.0) - 0.37; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
-        float temp = 150 - (voltage / 0.0055);
-        Logger::debug("Temp Reading Voltage: %0.2fV", voltage);
+        // 5.5@5v, 3.63@3.3v?
+        // trial and error puts it at 13.5!
+        
+        float voltage = ((adc * (3300)) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
+        Logger::debug("Temp Reading Voltage: %fmV", voltage);
+        float temp = 150 - (voltage / 13.5); 
         _temperature = temp;
     }
     else
@@ -544,7 +550,7 @@ char *BMS_Contactor::_connectionToString(ContactorOutput connection)
     }
 }
 
-char *_contactorNameToString(ContactorName name)
+char *BMS_Contactor::_contactorNameToString(ContactorName name)
 {
     switch (name)
     {

@@ -64,6 +64,7 @@ public:
     float getResistance(bool forceUpdate);
 
 private:
+    float _gndOffsetV = 0.29;
     ContactorState _state;
     ContactorOutput _connection;
     Economiser _economiser;
