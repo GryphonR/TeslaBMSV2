@@ -44,15 +44,10 @@ public:
         Error = 3,
         Off = 4
     };
-    static void debug(char *, ...);
     static void debug(const char *, ...);
-    static void info(char *, ...);
     static void info(const char *, ...);
-    static void warn(char *, ...);
     static void warn(const char *, ...);
-    static void error(char *, ...);
     static void error(const char *, ...);
-    static void console(char *, ...);
     static void console(const char *, ...);
     static void setSerialLoglevel(LogLevel);
     static void setOledLoglevel(LogLevel);
@@ -71,10 +66,7 @@ private:
 
     static char *millisToText(unsigned long milliseconds);
 
-    static void
-    log(LogLevel, char *format, va_list);
     static void log(LogLevel, const char *format, va_list);
-    static void logMessage(char *format, va_list args);
     static void logMessage(const char *format, va_list args);
     static LogLevel getSerialLogLevel();
     static LogLevel getSdLogLevel();
