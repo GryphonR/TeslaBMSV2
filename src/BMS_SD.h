@@ -3,5 +3,4 @@
 #include <SD.h>
 
 void SDInit();
-void logtoSD(String dataString);
-
+void logtoSD(const char *dataString);

@@ -29,11 +29,20 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include "BMS_OLED.h"
+#include "BMS_SD.h"
+#include "BMS_RTC.h"
 
-class Logger {
+class Logger
+{
 public:
-    enum LogLevel {
-        Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+    enum LogLevel
+    {
+        Debug = 0,
+        Info = 1,
+        Warn = 2,
+        Error = 3,
+        Off = 4
     };
     static void debug(char *, ...);
     static void debug(const char *, ...);
@@ -45,20 +54,32 @@ public:
     static void error(const char *, ...);
     static void console(char *, ...);
     static void console(const char *, ...);
-    static void setLoglevel(LogLevel);
+    static void setSerialLoglevel(LogLevel);
+    static void setOledLoglevel(LogLevel);
+    static void setSdLoglevel(LogLevel);
     static LogLevel getLogLevel();
     static uint32_t getLastLogTime();
     static boolean isDebug();
+
 private:
     static LogLevel logLevel;
+    static LogLevel serialLogLevel;
+    static LogLevel sdLogLevel;
+    static LogLevel oledLogLevel;
+
     static uint32_t lastLogTime;
 
-    static void log(LogLevel, char *format, va_list);
+    static char *millisToText(unsigned long milliseconds);
+
+    static void
+    log(LogLevel, char *format, va_list);
     static void log(LogLevel, const char *format, va_list);
     static void logMessage(char *format, va_list args);
     static void logMessage(const char *format, va_list args);
+    static LogLevel getSerialLogLevel();
+    static LogLevel getSdLogLevel();
+    static LogLevel getOledLogLevel();
+    static void printLogs(LogLevel level);
 };
 
 #endif /* LOGGER_H_ */
-
-

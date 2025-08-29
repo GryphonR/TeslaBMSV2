@@ -33,14 +33,16 @@ Target hardware: Teensy 4.1
 ### New Feature Progrss
 - [x] Pinout Changes
 - [x] LED and Buzzer Indicators (Rudimentary)
+- [x] Logging to SD
+- [x] I2C OLED Display
 - [ ] Extra CAN networks
 - [ ] RS-485
-- [ ] I2C OLED Display
 
 ## Testing
 - [x] Error LED
 - [x] Heartbeat LED
 - [x] Buzzer
+- [x] Oled Display
 - [ ] Isolated Serial
 - [ ] Isolated CAN (CAN1)
 - [ ] Aux CAN (CAN2)

@@ -36,6 +36,7 @@
 #include "StatusAndLogging.h"
 #include "BMS_SD.h"
 #include "BMS_RTC.h"
+#include "BMS_OLED.h"
 
 // Libraries
 #include <Arduino.h>
@@ -99,7 +100,9 @@ void isrCP();
 
 void setup()
 {
-  Logger::setLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setSerialLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setSdLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setOledLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
 
 
 
@@ -125,6 +128,10 @@ void setup()
     Logger::error("Crash detected, printing report:");
     SERIAL_CONSOLE.print(CrashReport);
   }
+
+
+  // ------------- OLED Setup -------------
+  setupOLED();
 
   // ------------- Pin Setup -------------
   pinSetup();

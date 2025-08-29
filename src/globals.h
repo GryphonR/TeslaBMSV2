@@ -18,8 +18,8 @@ extern FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
 extern FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
 
 // SD Card Status Values
-#define SD_OK 0
-#define SD_ERROR 1
+#define SD_ERROR 0
+#define SD_OK 1
 
 // bms status values
 #define BMS_STATUS_BOOT 0
@@ -180,5 +180,8 @@ extern bool modulesConnected; // true if modules are connected, false if modules
 
 // SD Card Status
 extern byte sdStatus;
+
+// OLED Screen Status
+extern bool oledConnected;
 
 extern uint32_t lastUpdate;
