@@ -40,7 +40,7 @@ Target hardware: Teensy 4.1
 ## Testing
 - [x] Error LED
 - [x] Heartbeat LED
-- [ ] Buzzer
+- [x] Buzzer
 - [ ] Isolated Serial
 - [ ] Isolated CAN (CAN1)
 - [ ] Aux CAN (CAN2)
@@ -49,7 +49,7 @@ Target hardware: Teensy 4.1
 - [ ] Current Reading
 - [ ] Digital Inputs
 - [ ] HSD Outputs
-- [ ] HSD Monitoring
+- [x] HSD Monitoring
 - [ ] LSD outputs
 
 
