@@ -1,6 +1,9 @@
 #include "indicators.h"
 #include "globals.h"
 #include "pinouts.h"
+#include "Logger.h"
+
+const int ENABLE_BUZZER = 0; // Enable buzzer control
 
 // Error LED Patters
 const bool errorPatterns[11][12] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // One Short flash pattern
@@ -23,7 +26,8 @@ bool onboardState = false;
 bool errorLedState = false;
 
 uint8_t heartbearBrightness = 50; // Brightness for heartbeat LED
-uint8_t errorLedBrightness = 50;   // Brightness for error LED
+uint8_t errorLedBrightnessHigh = 50;   // Brightness for error LED
+uint8_t errorLedBrightnessLow = 2;   // Brightness for error LED
 
 // Function prototypes
 void errorLedLoop();
@@ -53,6 +57,7 @@ void heartbeatLoop()
     static uint8_t ledState = 0;
     if (millis() > nextLedTime)
     {
+        // Logger::debug("Toggle heartbeat LED");
         if (ledState)
         {
             analogWrite(PIN_HEARTBEAT_LED, 0); // Turn off heartbeat LED
@@ -67,7 +72,7 @@ void heartbeatLoop()
             // analogWrite(PIN_ERROR_LED, 50);     // Turn on heartbeat LED
             // digitalWrite(PIN_HEARTBEAT_LED, 1); // Turn on heartbeat LED
             ledState = 1;
-            nextLedTime = millis() + 10; // Set next toggle time
+            nextLedTime = millis()+ 10; // Set next toggle time
         }
     }
 }
@@ -83,7 +88,10 @@ void errorLedLoop()
             nextErrorLedState = millis() + 500; // Set next toggle time
             if (errorCount < 12)
             {
-                analogWrite(PIN_ERROR_LED, errorPatterns[bmsError][errorCount]? errorLedBrightness : 0); // Set error LED brightness based on pattern
+                analogWrite(PIN_ERROR_LED, errorPatterns[bmsError][errorCount] ? errorLedBrightnessHigh : errorLedBrightnessLow); // Set error LED brightness based on pattern
+                if(ENABLE_BUZZER){
+                    digitalWrite(PIN_BUZZER_CONTROL, errorPatterns[bmsError][errorCount] ? HIGH : LOW); // Control buzzer based on error pattern
+                }
                 errorCount++;
             }
             else if (errorCount == 12)
@@ -95,10 +103,12 @@ void errorLedLoop()
             else
             {
                 digitalWrite(PIN_LED_BUILTIN, HIGH); // Turn on built-in LED
-                nextErrorLedState -= 250;            // Half Length flash
+                // nextErrorLedState -= 250;            // one and a Half Length flash
                 errorCount = 0;                      // Reset error count
             }
         }
+    }else{
+        digitalWrite(PIN_ERROR_LED, LOW);
     }
 }
 

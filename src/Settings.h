@@ -106,3 +106,7 @@
 #define DEFAULT_EXPMESS 0        // Export messages flag
 #define DEFAULT_SERIALCAN 0      // Serial CAN flag
 #define DEFAULT_TRIPCONT 1       // Trip contactor flag
+
+
+// Function Prototypes
+void loadSettings();

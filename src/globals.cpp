@@ -89,7 +89,7 @@ int renum = 0;
 // Debugging modes
 int debug = 1;
 int inputcheck = 0;
-int outputcheck = 0;
+int outputcheck = 1; 
 int candebug = 0;
 int gaugedebug = 0;
 int debugCur = 0;
@@ -101,7 +101,13 @@ int debugdigits = 2;
 
 int testcount = 0;
 
+
+// Status Variables
 byte bmsstatus = 0;
-byte bmsError = 0;
+byte bmsError = ERROR_NONE;
+bool modulesConnected = false;
+
+// SD Card Status
+byte sdStatus = SD_ERROR;
 
 uint32_t lastUpdate = 0;

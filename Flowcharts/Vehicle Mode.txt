@@ -1,0 +1,25 @@
++-------------------------------+
+| switch (bmsstatus)            |
++-------------------------------+
+      |
+      v
++-------------------+   +-------------------+   +-------------------+
+| BOOT              |-->| READY             |-->| PRECHARGE         |-->(etc. See main loop flowchart)
++-------------------+   +-------------------+   +-------------------+
+      |
+      v
++-------------------+
+| ERROR             |
++-------------------+
+      |
+      v
++---------------------------------------------+
+| Discharge = 0                              |
+| digitalWrite(PIN_OUT4, LOW)                |
+| digitalWrite(PIN_OUT3, LOW)                |
+| digitalWrite(PIN_OUT2, LOW)                |
+| digitalWrite(PIN_OUT1, LOW)                |
+| contctrl = 0                               |
+| If (voltages OK && digitalRead(PIN_IN1)==0)|
+|   -> bmsstatus = READY                     |
++---------------------------------------------+

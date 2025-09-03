@@ -1,5 +1,25 @@
 #pragma once
 #include <Arduino.h>
+#include "config.h"
+#include "BMSModuleManager.h"
+#include <ADC.h>        //https://github.com/pedvide/ADC
+#include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
+
+#include <Filters.h> //https://github.com/JonHub/Filters
+
+extern EEPROMSettings settings; // Included in globals.h. Declared in .ino
+extern BMSModuleManager bms;    // Included in globals.h.Declared in.ino
+extern ADC *adc;                // adc object
+
+extern int firmver;
+
+extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1;
+extern FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
+extern FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
+
+// SD Card Status Values
+#define SD_ERROR 0
+#define SD_OK 1
 
 // bms status values
 #define BMS_STATUS_BOOT 0
@@ -76,7 +96,8 @@ extern signed long voltage1, voltage2, voltage3;
 
 // variables for current calculation
 extern uint16_t value;
-extern float currentact, RawCur;
+extern float currentact; // Actual Current from main Current Sensor in Amps
+extern float RawCur;
 extern float ampsecond;
 extern unsigned long lasttime;
 extern unsigned long nextLoopTime, looptime1, UnderTimer, OverTime, cleartime, baltimer, CanOntimeout;
@@ -147,12 +168,22 @@ enum errorType
     ERROR_OVER_VOLTAGE = 7,
     ERROR_UNDER_VOLTAGE = 8,
     ERROR_OVER_TEMPERATURE = 9,
-    ERROR_CAN = 10,
+    ERROR_UNDER_TEMPERATURE = 10,
+    ERROR_CAN = 11,
+    ERROR_CONTACTORS_NOT_OPENING = 12,
 };
 
 extern int testcount;
 
+// BMS Status Variables
 extern byte bmsstatus;
 extern byte bmsError;
+extern bool modulesConnected; // true if modules are connected, false if modules are not responding
+
+// SD Card Status
+extern byte sdStatus;
+
+// OLED Screen Status
+extern bool oledConnected;
 
 extern uint32_t lastUpdate;
