@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
+      with:
+          submodules: true
     
     - name: Install Doxygen and Graphviz
       run: |
@@ -27,7 +29,7 @@ jobs:
       run: doxygen Doxyfile
     
     - name: Copy Doxygen Awesome CSS
-      run: cp -r doxygen-awesome-css/* ./docs/html/
+      run: cp -r ./doxygen-awesome-css/* ./docs/html/
 
 
     - name: Deploy to GitHub Pages
