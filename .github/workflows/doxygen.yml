@@ -27,7 +27,7 @@ jobs:
       run: doxygen Doxyfile
     
     - name: Copy Doxygen Awesome CSS
-      run: cp -r doxygen-awesome-css/*.css html/
+      run: cp -r doxygen-awesome-css docs/html/
 
 
     - name: Deploy to GitHub Pages
