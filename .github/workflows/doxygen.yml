@@ -28,7 +28,7 @@ jobs:
 
     - name: Fix Directory Structure
       run: |
-        mkdir docs
+        mkdir -p docs
         mv html/* docs/
 
     - name: Deploy to GitHub Pages
