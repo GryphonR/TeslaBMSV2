@@ -20,10 +20,22 @@ jobs:
       with:
           submodules: true
     
-    - name: Install Doxygen and Graphviz
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y doxygen graphviz
+  - name: Cache Doxygen and Graphviz
+        id: cache-tools
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/doxygen_graphviz
+          key: ${{ runner.os }}-doxygen-graphviz-1.8.17-2.43 # Change version numbers to match what you are using
+
+      - name: Install Doxygen and Graphviz (if not in cache)
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+          # Copy the installed binaries to a shared location for caching
+          sudo mkdir -p /usr/local/doxygen_graphviz
+          sudo cp /usr/bin/doxygen /usr/local/doxygen_graphviz/
+          sudo cp /usr/bin/dot /usr/local/doxygen_graphviz/
         
     - name: Generate Doxygen Documentation
       run: doxygen Doxyfile
