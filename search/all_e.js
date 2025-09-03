@@ -11,7 +11,8 @@ var searchData=
   ['setignorecell_8',['setIgnoreCell',['../classBMSModule.html#a8c2dec908ce4dc8bbd5d00c6bc2efe68',1,'BMSModule']]],
   ['setpstrings_9',['setPstrings',['../classBMSModuleManager.html#a4c0cc66d5245f27d7c8f6adebd8662cb',1,'BMSModuleManager']]],
   ['settempsensor_10',['settempsensor',['../classBMSModule.html#a96bc3e57956a3a06fef15fe4cdfe4ead',1,'BMSModule']]],
-  ['sleepboards_11',['sleepBoards',['../classBMSModuleManager.html#a845579a1dae6762aec33df84536d5989',1,'BMSModuleManager']]],
-  ['stopbalance_12',['stopBalance',['../classBMSModule.html#ae5a50016dcd7df13452d0a8fe13523cb',1,'BMSModule']]],
-  ['stopbalancing_13',['StopBalancing',['../classBMSModuleManager.html#a26cca2180eda2fdbf06d91e270027327',1,'BMSModuleManager']]]
+  ['setup_11',['Setup',['../index.html#autotoc_md11',1,'']]],
+  ['sleepboards_12',['sleepBoards',['../classBMSModuleManager.html#a845579a1dae6762aec33df84536d5989',1,'BMSModuleManager']]],
+  ['stopbalance_13',['stopBalance',['../classBMSModule.html#ae5a50016dcd7df13452d0a8fe13523cb',1,'BMSModule']]],
+  ['stopbalancing_14',['StopBalancing',['../classBMSModuleManager.html#a26cca2180eda2fdbf06d91e270027327',1,'BMSModuleManager']]]
 ];

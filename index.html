@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>eChook Comms Board - Tesla BMS: Tesla BMS firmware for eChook BMS Comms Master Board</title>
+<title>eChook Comms Board - Tesla BMS: Welcome</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -91,98 +91,29 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">Tesla BMS firmware for eChook BMS Comms Master Board </div></div>
+  <div class="headertitle"><div class="title">Welcome </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_README"></a>Forked from Tom-evnut/TeslaBMSV2 and increasingly heavily adapted.</p>
-<p>Target hardware: Teensy 4.1</p>
-<h1><a class="anchor" id="autotoc_md1"></a>
-Changes from Original</h1>
-<ul>
-<li>Converted to VSCode PlatformIO project from Arduino IDE project</li>
-<li>Adapted to Teensy 4.1 from Teensy 3.2</li>
-<li>Refactoring for clarity (Turning into a full re-architecting)</li>
-<li>Breaking code into multiple files for readability</li>
-<li>Pinout changes for BMS Comms Master board</li>
-<li>Adding BMS Comms Master board features not found in simpBms<ul>
-<li>Extra networks (2x CAN, RS-485)</li>
-<li>High Side driver monitoring</li>
-<li>Indication LEDs and Buzzer</li>
-<li>0.91" OLED I2C Display</li>
-</ul>
-</li>
-</ul>
-<h1><a class="anchor" id="autotoc_md2"></a>
-Progress Tracking</h1>
-<h2><a class="anchor" id="autotoc_md3"></a>
-Porting Progress</h2>
-<ul>
-<li>[ ] Reboot Crash Report<ul>
-<li>[x] Compiling</li>
-<li>[ ] Tested</li>
-</ul>
-</li>
-<li>[ ] Under/Over Voltage Monitoring <br  />
-<ul>
-<li>Removed for now - it triggerd an EEPROM Update. <br  />
-</li>
-</ul>
-</li>
-<li>[ ] Watchdog Timer Implementation<ul>
-<li>[x] Compiling</li>
-<li>[x] Tested</li>
-</ul>
-</li>
-<li>[ ] Switch to FlexCAN_T4 Library<ul>
-<li>[x] Compiling ***Removed filtering</li>
-<li>[ ] Tested</li>
-</ul>
-</li>
-</ul>
-<h2><a class="anchor" id="autotoc_md4"></a>
-New Feature Progrss</h2>
-<ul>
-<li>[x] Pinout Changes</li>
-<li>[x] LED and Buzzer Indicators (Rudimentary)</li>
-<li>[x] Logging to SD</li>
-<li>[x] I2C OLED Display</li>
-<li>[ ] Extra CAN networks</li>
-<li>[ ] RS-485</li>
-</ul>
-<h1><a class="anchor" id="autotoc_md5"></a>
-Testing</h1>
-<ul>
-<li>[x] Error LED</li>
-<li>[x] Heartbeat LED</li>
-<li>[x] Buzzer</li>
-<li>[x] Oled Display</li>
-<li>[ ] Isolated Serial</li>
-<li>[ ] Isolated CAN (CAN1)</li>
-<li>[ ] Aux CAN (CAN2)</li>
-<li>[ ] RJ45 CAN (CAN3)</li>
-<li>[ ] Aux Serial</li>
-<li>[ ] Current Reading</li>
-<li>[ ] Digital Inputs</li>
-<li>[ ] HSD Outputs</li>
-<li>[x] HSD Monitoring</li>
-<li>[ ] LSD outputs</li>
-</ul>
-<h2><a class="anchor" id="autotoc_md6"></a>
-Useful Links</h2>
-<p><a href="https://openinverter.org/forum/viewtopic.php?t=131&start=75">https://openinverter.org/forum/viewtopic.php?t=131&amp;start=75</a></p>
-<p>ESP PORT, not sure which batteries: <br  />
- Code <a href="https://github.com/jamiejones85/ESP32-BMS">https://github.com/jamiejones85/ESP32-BMS</a> <br  />
- Hardware <a href="https://oshwlab.com/EV-Team/spaceballs">https://oshwlab.com/EV-Team/spaceballs</a></p>
-<p>'Fix' To CAN_T4 not recieveing some frames: <a href="https://openinverter.org/forum/viewtopic.php?p=62789#p62789">https://openinverter.org/forum/viewtopic.php?p=62789#p62789</a></p>
-<h1><a class="anchor" id="autotoc_md7"></a>
-Tesla module harnessing</h1>
-<p>Tesla Module BMS Connecor part number appears to be: Molex Mini-Fit TPA, 10ckt 15-97-5101 <a href="https://www.molex.com/en-us/products/part-detail/15975101">https://www.molex.com/en-us/products/part-detail/15975101</a></p>
-<p>Mouser Links:</p>
-<p>15975101 MINIFIT TPA 10CKT Receptical Housing: <a href="https://www.mouser.co.uk/ProductDetail/Molex/15-97-5101">https://www.mouser.co.uk/ProductDetail/Molex/15-97-5101</a> <br  />
- TPA Key: <a href="https://www.mouser.co.uk/ProductDetail/Molex/15-97-9101">https://www.mouser.co.uk/ProductDetail/Molex/15-97-9101</a> <br  />
- CPA Key: <a href="https://www.mouser.co.uk/ProductDetail/538-15-97-0071">https://www.mouser.co.uk/ProductDetail/538-15-97-0071</a> <br  />
- Pins: <a href="https://www.mouser.co.uk/ProductDetail/Molex/39-00-0038">https://www.mouser.co.uk/ProductDetail/Molex/39-00-0038</a> </p>
-</div></div><!-- PageDoc -->
+<div class="textblock"><p><a class="anchor" id="md_docsMD_2home"></a>These documents cover the code designed to use the eChook BMS Comms Master Board with Tesla battery modules.</p>
+<h1><a class="anchor" id="autotoc_md9"></a>
+Project Introduction</h1>
+<p>This code has been forked from the SimpBMS TeslaBMSV2 project. While the initial idea was some light adaptations just to get it working with the Teensy 4.1 (Original Target, Teensy 3.2) and the eChook BMS Comms Master Board, it quickly expanded into more of a complete re-architecting as I restructured the code to make it more modular and readable (in my opinion), expanded the logging functionality to aid state tracing and debugging, extending safety checks, and added a more robust contactor management implementation - amongst other changes!</p>
+<p>This code is not a plug and play solution to battery management - it will need code level edits and recompiling for any application, and I make no claims that it will work as intended. Perform your own testing and use it at your own risk.</p>
+<h1><a class="anchor" id="autotoc_md10"></a>
+License</h1>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. <br  />
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+<h1><a class="anchor" id="autotoc_md11"></a>
+Setup</h1>
+<p>The system setup has changed very little from the SimpBMS, meaning the original <a href="https://github.com/Tom-evnut/SimpBMS/blob/master/Simp%20BMS%20Setup%20Manual%20V0.29.pdf">SimpBMS manual</a> is a useful resource. <br  />
+ Configuring the contactors however has changed. Docs TODO!</p>
+<h1><a class="anchor" id="autotoc_md12"></a>
+Logging</h1>
+<p>The logging ability of the SimpBMS felt a little limited. The eChook board has two other output options; the SD card on the Teensy 4.1 PCB, and an optional I2C 0.91" OLED display plugged into the 4 pin header below the Teensy. These have different usecases - the OLED is designed for immediate feedback during system setup and configuration, to be removed once the system is deployed, and the SD card is for long term logging, trackig state and battery changes over time. To aid this the eChook board has a built in Real Time Clock, and an optional CR2032 3V button cell on the reverse of the boar to maintain the time when power is lost.</p>
+<p>To configure the log levels for each device, look at the start of the setup function: </p><div class="fragment"><div class="line">Logger::setSerialLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4</div>
+<div class="line">Logger::setSdLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4</div>
+<div class="line">Logger::setOledLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4</div>
+</div><!-- fragment --> </div></div><!-- PageDoc -->
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

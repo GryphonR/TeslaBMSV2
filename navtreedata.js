@@ -25,7 +25,19 @@
 var NAVTREE =
 [
   [ "eChook Comms Board - Tesla BMS", "index.html", [
-    [ "Tesla BMS firmware for eChook BMS Comms Master Board", "index.html", "index" ],
+    [ "Welcome", "index.html", "index" ],
+    [ "Tesla BMS firmware for eChook BMS Comms Master Board", "md_README.html", [
+      [ "Changes from Original", "md_README.html#autotoc_md1", null ],
+      [ "Progress Tracking", "md_README.html#autotoc_md2", [
+        [ "Porting Progress", "md_README.html#autotoc_md3", null ],
+        [ "New Feature Progrss", "md_README.html#autotoc_md4", null ]
+      ] ],
+      [ "Testing", "md_README.html#autotoc_md5", [
+        [ "Useful Links", "md_README.html#autotoc_md6", null ]
+      ] ],
+      [ "Tesla module harnessing", "md_README.html#autotoc_md7", null ]
+    ] ],
+    [ "modules", "md_docsMD_2modules.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
