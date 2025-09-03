@@ -27,11 +27,8 @@ jobs:
       run: doxygen Doxyfile
     
     - name: Copy Doxygen Awesome CSS
-      run: cp -r doxygen-awesome-css html/
-    # - name: Fix Directory Structure
-    #   run: |
-    #     mkdir -p ./docs
-    #     mv ./html/* ./docs/
+      run: cp -r doxygen-awesome-css/*.css html/
+
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
