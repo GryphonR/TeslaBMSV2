@@ -25,7 +25,9 @@ jobs:
         
     - name: Generate Doxygen Documentation
       run: doxygen Doxyfile
-
+    
+    - name: Copy Doxygen Awesome CSS
+      run: cp -r doxygen-awesome-css html/
     # - name: Fix Directory Structure
     #   run: |
     #     mkdir -p ./docs
