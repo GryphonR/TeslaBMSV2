@@ -1,0 +1,108 @@
+\doxysection{BMSUtil.\+h}
+\hypertarget{BMSUtil_8h_source}{}\label{BMSUtil_8h_source}\index{src/BMSUtil.h@{src/BMSUtil.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ }
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <Arduino.h>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}Logger.h"{}}}
+\DoxyCodeLine{00013\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classBMSUtil}{BMSUtil}}}
+\DoxyCodeLine{00014\ \{}
+\DoxyCodeLine{00015\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keyword}{static}\ uint8\_t\ \mbox{\hyperlink{classBMSUtil_a262cfe4e2818a95441002df320587b15}{genCRC}}(uint8\_t\ *input,\ \textcolor{keywordtype}{int}\ lenInput)}
+\DoxyCodeLine{00026\ \ \ \ \ \{}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ uint8\_t\ generator\ =\ 0x07;}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ uint8\_t\ crc\ =\ 0;}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ x\ =\ 0;\ x\ <\ lenInput;\ x++)}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \ \ \ \ crc\ \string^=\ input[x];\ \textcolor{comment}{/*\ XOR-\/in\ the\ next\ input\ byte\ */}}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ i\ =\ 0;\ i\ <\ 8;\ i++)}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ ((crc\ \&\ 0x80)\ !=\ 0)}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ crc\ =\ (uint8\_t)((crc\ <<\ 1)\ \string^\ generator);}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{else}}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ crc\ <<=\ 1;}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ crc;}
+\DoxyCodeLine{00048\ \ \ \ \ \}}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSUtil_ac1eb9e70215cb3ba74642db3e9da3614}{sendData}}(uint8\_t\ *data,\ uint8\_t\ dataLen,\ \textcolor{keywordtype}{bool}\ isWrite)}
+\DoxyCodeLine{00063\ \ \ \ \ \{}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ uint8\_t\ orig\ =\ data[0];}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ uint8\_t\ addrByte\ =\ data[0];}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isWrite)}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \ \ \ \ addrByte\ |=\ 1;}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ SERIALBMS.write(addrByte);}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ SERIALBMS.write(\&data[1],\ dataLen\ -\/\ 1);\ \textcolor{comment}{//\ assumes\ that\ there\ are\ at\ least\ 2\ bytes\ sent\ every\ time.\ There\ should\ be,\ addr\ and\ cmd\ at\ the\ least.}}
+\DoxyCodeLine{00070\ \ \ \ \ \ \ \ \ data[0]\ =\ addrByte;}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isWrite)}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ \ \ \ \ SERIALBMS.write(\mbox{\hyperlink{classBMSUtil_a262cfe4e2818a95441002df320587b15}{genCRC}}(data,\ dataLen));}
+\DoxyCodeLine{00073\ }
+\DoxyCodeLine{00074\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Logger::isDebug())}
+\DoxyCodeLine{00075\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(\textcolor{stringliteral}{"{}Sending:\ "{}});}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(addrByte,\ HEX);}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{int}\ x\ =\ 1;\ x\ <\ dataLen;\ x++)}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(data[x],\ HEX);}
+\DoxyCodeLine{00082\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00084\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (isWrite)}
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(\mbox{\hyperlink{classBMSUtil_a262cfe4e2818a95441002df320587b15}{genCRC}}(data,\ dataLen),\ HEX);}
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.println();}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ data[0]\ =\ orig;}
+\DoxyCodeLine{00090\ \ \ \ \ \}}
+\DoxyCodeLine{00091\ }
+\DoxyCodeLine{00103\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSUtil_abce1b51f931ded380e45dc1228e11383}{getReply}}(uint8\_t\ *data,\ \textcolor{keywordtype}{int}\ maxLen)}
+\DoxyCodeLine{00104\ \ \ \ \ \{}
+\DoxyCodeLine{00105\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ numBytes\ =\ 0;}
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Logger::isDebug())}
+\DoxyCodeLine{00107\ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(\textcolor{stringliteral}{"{}Reply:\ "{}});}
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (SERIALBMS.available()\ \&\&\ numBytes\ <\ maxLen)}
+\DoxyCodeLine{00109\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00110\ \ \ \ \ \ \ \ \ \ \ \ \ data[numBytes]\ =\ SERIALBMS.read();}
+\DoxyCodeLine{00111\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Logger::isDebug())}
+\DoxyCodeLine{00112\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00113\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(data[numBytes],\ HEX);}
+\DoxyCodeLine{00114\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.print(\textcolor{stringliteral}{"{}\ "{}});}
+\DoxyCodeLine{00115\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00116\ \ \ \ \ \ \ \ \ \ \ \ \ numBytes++;}
+\DoxyCodeLine{00117\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00118\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (maxLen\ ==\ numBytes)}
+\DoxyCodeLine{00119\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00120\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (SERIALBMS.available())}
+\DoxyCodeLine{00121\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ SERIALBMS.read();}
+\DoxyCodeLine{00122\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00123\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (Logger::isDebug())}
+\DoxyCodeLine{00124\ \ \ \ \ \ \ \ \ \ \ \ \ SERIAL\_CONSOLE.println();}
+\DoxyCodeLine{00125\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ numBytes;}
+\DoxyCodeLine{00126\ \ \ \ \ \}}
+\DoxyCodeLine{00127\ }
+\DoxyCodeLine{00144\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSUtil_aeb4da3c5571213d7f62ec7abebe7d556}{sendDataWithReply}}(uint8\_t\ *data,\ uint8\_t\ dataLen,\ \textcolor{keywordtype}{bool}\ isWrite,\ uint8\_t\ *retData,\ \textcolor{keywordtype}{int}\ retLen)}
+\DoxyCodeLine{00145\ \ \ \ \ \{}
+\DoxyCodeLine{00146\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ attempts\ =\ 1;}
+\DoxyCodeLine{00147\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{int}\ returnedLength;}
+\DoxyCodeLine{00148\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{while}\ (attempts\ <\ 4)}
+\DoxyCodeLine{00149\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00150\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classBMSUtil_ac1eb9e70215cb3ba74642db3e9da3614}{sendData}}(data,\ dataLen,\ isWrite);}
+\DoxyCodeLine{00151\ \ \ \ \ \ \ \ \ \ \ \ \ delay(2\ *\ ((retLen\ /\ 8)\ +\ 1));}
+\DoxyCodeLine{00152\ \ \ \ \ \ \ \ \ \ \ \ \ returnedLength\ =\ \mbox{\hyperlink{classBMSUtil_abce1b51f931ded380e45dc1228e11383}{getReply}}(retData,\ retLen);}
+\DoxyCodeLine{00153\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (returnedLength\ ==\ retLen)}
+\DoxyCodeLine{00154\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ returnedLength;}
+\DoxyCodeLine{00155\ \ \ \ \ \ \ \ \ \ \ \ \ attempts++;}
+\DoxyCodeLine{00156\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00157\ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ returnedLength;\ \textcolor{comment}{//\ failed\ to\ get\ a\ proper\ response.}}
+\DoxyCodeLine{00158\ \ \ \ \ \}}
+\DoxyCodeLine{00159\ \};}
+
+\end{DoxyCode}

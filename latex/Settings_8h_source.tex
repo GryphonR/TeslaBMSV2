@@ -1,0 +1,118 @@
+\doxysection{Settings.\+h}
+\hypertarget{Settings_8h_source}{}\label{Settings_8h_source}\index{src/Settings.h@{src/Settings.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ }
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}config.h"{}}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{comment}{//\ =====================}}
+\DoxyCodeLine{00006\ \textcolor{comment}{//\ Default\ BMS\ Settings}}
+\DoxyCodeLine{00007\ \textcolor{comment}{//\ =====================}}
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{comment}{//\ Logging\ }}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ DEFAULT\_LOG\_LEVEL\ 2\ }\textcolor{comment}{//\ Log\ level}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{comment}{//\ Operation\ Mode}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ DEFAULT\_ESSMODE\ 1\ }\textcolor{comment}{//\ ESS\ mode}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{comment}{//\ Battery\ Settings}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#define\ DEFAULT\_CAP\ 100\ \ \ \ \ }\textcolor{comment}{//\ Capacity\ (Ah)}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#define\ DEFAULT\_PSTRINGS\ 1\ \ }\textcolor{comment}{//\ Parallel\ strings}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#define\ DEFAULT\_SCELLS\ 12\ \ \ }\textcolor{comment}{//\ Series\ cells}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{comment}{//\ CAN}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHECKSUM\ 2}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#define\ DEFAULT\_CAN\_SPEED\ 500000}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#define\ DEFAULT\_BATTERY\_ID\ 0x01}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \textcolor{comment}{//\ Voltage\ Setpoints}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ DEFAULT\_OVERV\_SETPOINT\ 4.2f\ \ \ }\textcolor{comment}{//\ Overvoltage\ setpoint}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#define\ DEFAULT\_UNDERV\_SETPOINT\ 3.0f\ \ }\textcolor{comment}{//\ Undervoltage\ setpoint}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGEV\_SETPOINT\ 4.1f\ }\textcolor{comment}{//\ Charge\ voltage\ setpoint}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGE\_HYS\ 0.2f\ \ \ \ \ \ \ }\textcolor{comment}{//\ Charge\ voltage\ hysteresis}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#define\ DEFAULT\_WARN\_OFF\ 0.1f\ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Warning\ offset}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#define\ DEFAULT\_DISCHV\_SETPOINT\ 3.2f\ \ }\textcolor{comment}{//\ Discharge\ voltage\ setpoint}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#define\ DEFAULT\_DISCH\_HYS\ 0.2f\ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Discharge\ voltage\ hysteresis}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#define\ DEFAULT\_CELL\_GAP\ 0.2f\ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Cell\ voltage\ gap}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#define\ DEFAULT\_IGNORE\_VOLT\ 0.5f\ \ \ \ \ \ }\textcolor{comment}{//\ Ignore\ voltage\ threshold}}
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#define\ DEFAULT\_STOREV\_SETPOINT\ 3.8f\ \ }\textcolor{comment}{//\ Storage\ voltage\ setpoint}}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \textcolor{comment}{//\ Balancing}}
+\DoxyCodeLine{00038\ \textcolor{preprocessor}{\#define\ DEFAULT\_BALANCE\_VOLTAGE\ 3.9f\ }\textcolor{comment}{//\ Balancing\ voltage}}
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#define\ DEFAULT\_BALANCE\_HYST\ 0.04f\ \ \ }\textcolor{comment}{//\ Balancing\ hysteresis}}
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#define\ DEFAULT\_BALANCE\_DUTY\ 50\ \ \ \ \ \ }\textcolor{comment}{//\ Balancing\ duty\ cycle}}
+\DoxyCodeLine{00041\ }
+\DoxyCodeLine{00042\ \textcolor{comment}{//\ Current\ Sensor\ Settings}}
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#define\ DEFAULT\_NCUR\ 1\ \ \ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Number\ of\ current\ sensors}}
+\DoxyCodeLine{00044\ \textcolor{preprocessor}{\#define\ DEFAULT\_INVERTCUR\ 0\ \ \ \ \ \ }\textcolor{comment}{//\ Invert\ current\ sense}}
+\DoxyCodeLine{00045\ \textcolor{preprocessor}{\#define\ DEFAULT\_CURSENS\ 2\ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Current\ sensor\ type\ (see\ CURR\_SENSE\_*\ defines)}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#define\ DEFAULT\_CURCAN\ LemCAB300\ }\textcolor{comment}{//\ CAN\ current\ sensor\ type}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#define\ DEFAULT\_CONVHIGH\ 580\ \ \ \ \ }\textcolor{comment}{//\ High\ Current\ sensor\ calibration\ constant}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#define\ DEFAULT\_CONVLOW\ 6430\ \ \ \ \ }\textcolor{comment}{//\ Low\ Current\ sensor\ calibration\ constant}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#define\ DEFAULT\_OFFSET1\ 1750\ \ \ \ \ }\textcolor{comment}{//\ Low\ Current\ Sensor\ reading\ Offset}}
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#define\ DEFAULT\_OFFSET2\ 1750\ \ \ \ \ }\textcolor{comment}{//\ High\ Current\ Sensor\ reading\ Offset}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \textcolor{comment}{//\ Current\ Setpoints}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#define\ DEFAULT\_DISCURRENTMAX\ 300\ \ \ \ \ }\textcolor{comment}{//\ Max\ discharge\ current\ (A)}}
+\DoxyCodeLine{00054\ \textcolor{preprocessor}{\#define\ DEFAULT\_DISTAPER\ 0.3f\ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Discharge\ taper}}
+\DoxyCodeLine{00055\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGECURRENTMAX\ 300\ \ }\textcolor{comment}{//\ Max\ charge\ current\ (A)}}
+\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGECURRENT2MAX\ 150\ }\textcolor{comment}{//\ Max\ charge\ current\ 2\ (A)}}
+\DoxyCodeLine{00057\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGECURRENTEND\ 50\ \ \ }\textcolor{comment}{//\ Charge\ end\ current\ (A)}}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \textcolor{comment}{//\ Temperature\ Setpoints}}
+\DoxyCodeLine{00060\ \textcolor{preprocessor}{\#define\ DEFAULT\_OVERT\_SETPOINT\ 65.0f\ \ \ }\textcolor{comment}{//\ Overtemperature\ setpoint}}
+\DoxyCodeLine{00061\ \textcolor{preprocessor}{\#define\ DEFAULT\_UNDERT\_SETPOINT\ -\/10.0f\ }\textcolor{comment}{//\ Undertemperature\ setpoint}}
+\DoxyCodeLine{00062\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGET\_SETPOINT\ 0.0f\ \ }\textcolor{comment}{//\ Charge\ temperature\ setpoint}}
+\DoxyCodeLine{00063\ \textcolor{preprocessor}{\#define\ DEFAULT\_IGNORE\_TEMP\ 0\ \ \ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Ignore\ temperature\ flag}}
+\DoxyCodeLine{00064\ \textcolor{preprocessor}{\#define\ DEFAULT\_DIST\_SETPOINT\ 40.0f\ \ \ \ }\textcolor{comment}{//\ Discharge\ temperature\ setpoint}}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \textcolor{comment}{//\ Timing\ and\ Trip}}
+\DoxyCodeLine{00067\ \textcolor{preprocessor}{\#define\ DEFAULT\_TRIPTIME\ 500\ \ \ }\textcolor{comment}{//\ Trip\ time\ (ms)}}
+\DoxyCodeLine{00068\ \textcolor{preprocessor}{\#define\ DEFAULT\_WARN\_TOFF\ 5.0f\ }\textcolor{comment}{//\ Warning\ turn-\/off\ time\ (s)}}
+\DoxyCodeLine{00069\ }
+\DoxyCodeLine{00070\ \textcolor{comment}{//\ Pulse\ Charging/Discharging}}
+\DoxyCodeLine{00071\ \textcolor{preprocessor}{\#define\ DEFAULT\_PULSECH\ 600\ \ \ \ \ }\textcolor{comment}{//\ Pulse\ charge\ current\ (A)}}
+\DoxyCodeLine{00072\ \textcolor{preprocessor}{\#define\ DEFAULT\_PULSECHDUR\ 5000\ }\textcolor{comment}{//\ Pulse\ charge\ duration\ (ms)}}
+\DoxyCodeLine{00073\ \textcolor{preprocessor}{\#define\ DEFAULT\_PULSEDI\ 600\ \ \ \ \ }\textcolor{comment}{//\ Pulse\ discharge\ current\ (A)}}
+\DoxyCodeLine{00074\ \textcolor{preprocessor}{\#define\ DEFAULT\_PULSEDIDUR\ 5000\ }\textcolor{comment}{//\ Pulse\ discharge\ duration\ (ms)}}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \textcolor{comment}{//\ State\ of\ Charge\ Voltages}}
+\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#define\ DEFAULT\_SOCVOLT\_0\ 3100\ }\textcolor{comment}{//\ SOC\ voltage\ point\ 0\ (mV)}}
+\DoxyCodeLine{00078\ \textcolor{preprocessor}{\#define\ DEFAULT\_SOCVOLT\_1\ 10\ \ \ }\textcolor{comment}{//\ SOC\ percentage\ point\ 0}}
+\DoxyCodeLine{00079\ \textcolor{preprocessor}{\#define\ DEFAULT\_SOCVOLT\_2\ 4100\ }\textcolor{comment}{//\ SOC\ voltage\ point\ 1\ (mV)}}
+\DoxyCodeLine{00080\ \textcolor{preprocessor}{\#define\ DEFAULT\_SOCVOLT\_3\ 90\ \ \ }\textcolor{comment}{//\ SOC\ percentage\ point\ 1}}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{comment}{//\ Charger\ Settings}}
+\DoxyCodeLine{00083\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGERTYPE\ 2\ \ }\textcolor{comment}{//\ Charger\ type}}
+\DoxyCodeLine{00084\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGERSPD\ 100\ }\textcolor{comment}{//\ Charger\ speed}}
+\DoxyCodeLine{00085\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGEREFF\ 85\ \ }\textcolor{comment}{//\ Charger\ efficiency\ (\%)}}
+\DoxyCodeLine{00086\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGERACV\ 240\ }\textcolor{comment}{//\ Charger\ AC\ voltage}}
+\DoxyCodeLine{00087\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHARGERDIRECT\ 0\ }\textcolor{comment}{//\ Charger\ direct\ flag}}
+\DoxyCodeLine{00088\ }
+\DoxyCodeLine{00089\ \textcolor{comment}{//\ Contactor\ Settings}}
+\DoxyCodeLine{00090\ \textcolor{preprocessor}{\#define\ DEFAULT\_PRETIME\ 5000\ \ \ \ \ }\textcolor{comment}{//\ Precharge\ time\ (ms)}}
+\DoxyCodeLine{00091\ \textcolor{preprocessor}{\#define\ DEFAULT\_PRECURRENT\ 1000\ \ }\textcolor{comment}{//\ Precharge\ current\ (A).\ Current\ must\ be\ below\ this\ threshold\ to\ close\ the\ precharge\ contactor}}
+\DoxyCodeLine{00092\ \textcolor{preprocessor}{\#define\ DEFAULT\_CONTHOLD\ 50\ \ \ \ \ \ }\textcolor{comment}{//\ Contactor\ hold\ current\ (A)}}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \textcolor{comment}{//\ Miscellaneous\ Settings}}
+\DoxyCodeLine{00095\ \textcolor{preprocessor}{\#define\ DEFAULT\_VOLTSOC\ 0\ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Voltage\ SOC}}
+\DoxyCodeLine{00096\ \textcolor{preprocessor}{\#define\ DEFAULT\_CHANGECUR\ 20000\ \ }\textcolor{comment}{//\ Change\ current\ threshold}}
+\DoxyCodeLine{00097\ \textcolor{preprocessor}{\#define\ DEFAULT\_GAUGELOW\ 50\ \ \ \ \ \ }\textcolor{comment}{//\ Gauge\ low\ value}}
+\DoxyCodeLine{00098\ \textcolor{preprocessor}{\#define\ DEFAULT\_GAUGEHIGH\ 255\ \ \ \ }\textcolor{comment}{//\ Gauge\ high\ value}}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ }
+\DoxyCodeLine{00101\ }
+\DoxyCodeLine{00102\ \textcolor{preprocessor}{\#define\ DEFAULT\_UNDERDUR\ 5000\ \ \ \ }\textcolor{comment}{//\ Undervoltage\ duration\ (ms)}}
+\DoxyCodeLine{00103\ \textcolor{preprocessor}{\#define\ DEFAULT\_CURDEAD\ 5\ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Current\ deadband}}
+\DoxyCodeLine{00104\ }
+\DoxyCodeLine{00105\ \textcolor{comment}{//\ Flags\ -\/\ do\ not\ change}}
+\DoxyCodeLine{00106\ \textcolor{preprocessor}{\#define\ DEFAULT\_EXPMESS\ 0\ \ \ \ \ \ \ \ }\textcolor{comment}{//\ Export\ messages\ flag}}
+\DoxyCodeLine{00107\ \textcolor{preprocessor}{\#define\ DEFAULT\_SERIALCAN\ 0\ \ \ \ \ \ }\textcolor{comment}{//\ Serial\ CAN\ flag}}
+\DoxyCodeLine{00108\ \textcolor{preprocessor}{\#define\ DEFAULT\_TRIPCONT\ 1\ \ \ \ \ \ \ }\textcolor{comment}{//\ Trip\ contactor\ flag}}
+\DoxyCodeLine{00109\ }
+\DoxyCodeLine{00110\ }
+\DoxyCodeLine{00111\ \textcolor{comment}{//\ Function\ Prototypes}}
+\DoxyCodeLine{00112\ \textcolor{keywordtype}{void}\ loadSettings();}
+
+\end{DoxyCode}

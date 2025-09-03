@@ -1,0 +1,280 @@
+\doxysection{BMS\+\_\+\+Contactor Class Reference}
+\hypertarget{classBMS__Contactor}{}\label{classBMS__Contactor}\index{BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classBMS__Contactor_aafab7145d3c98853a43f9132c4458ff5}{BMS\+\_\+\+Contactor}} (Contactor\+Name name, Contactor\+Output connection, Economiser economiser)
+\item 
+\Hypertarget{classBMS__Contactor_a3ebdd7288cb942fdeae531f1eb3d76f9}\label{classBMS__Contactor_a3ebdd7288cb942fdeae531f1eb3d76f9} 
+void {\bfseries update} ()
+\item 
+void \mbox{\hyperlink{classBMS__Contactor_a761a32b38da7f5f6f98f3b381f859dd3}{close}} ()
+\begin{DoxyCompactList}\small\item\em Close the contactor and set the state to CLOSED. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classBMS__Contactor_aa7311d87c3a3b3c75e64fbd312769c94}{close}} (unsigned int delay)
+\begin{DoxyCompactList}\small\item\em Schedules the contactor to close after a specified delay. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classBMS__Contactor_ad279e451ff207ba4c9ae1547c4177c45}{open}} ()
+\begin{DoxyCompactList}\small\item\em Opens the contactor and sets the state to OPEN. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classBMS__Contactor_afe2f3d1dced7a509a670c9270c95773b}{open}} (unsigned int delay)
+\begin{DoxyCompactList}\small\item\em Opens the contactor after a specified delay. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classBMS__Contactor_a200768b367f7580d7ae032df952dff2e}{open}} (unsigned int delay, float current\+Threshold)
+\begin{DoxyCompactList}\small\item\em Opens the contactor when the current is below the specified threshold or after the specified timeout. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classBMS__Contactor_a11b2e373900dee5af13f91cb5f243dc2}{set}} (Contactor\+State state)
+\begin{DoxyCompactList}\small\item\em Sets the contactor state to the specified value. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classBMS__Contactor_a0aad63383481efaef587b4e83288aab3}{get\+State}} ()
+\begin{DoxyCompactList}\small\item\em Gets the current state of the contactor. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classBMS__Contactor_a9d7e11a530244e8437b761d462cef8d9}{diagnostic\+Available}} ()
+\begin{DoxyCompactList}\small\item\em Indicates whether diagnostic functions are available for this contactor. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{classBMS__Contactor_a6b00b384b655a5d8d2c5b9a215eea369}{get\+Voltage}} (bool force\+Update)
+\begin{DoxyCompactList}\small\item\em Gets the voltage at the driver. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{classBMS__Contactor_a9b5506ea3e1768b163650f6525686b8b}{get\+Pin\+Current}} (bool force\+Update)
+\begin{DoxyCompactList}\small\item\em Gets the current through the contactor coil. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{classBMS__Contactor_a594f0f5e68ed2b62ff861f0ead4df0ae}{get\+Power}} (bool force\+Update)
+\begin{DoxyCompactList}\small\item\em Gets the power consumption of the contactor coil. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{classBMS__Contactor_a603e506756e5858b4d545205bf5c1bed}{get\+Temperature}} (bool force\+Update)
+\begin{DoxyCompactList}\small\item\em Gets the temperature of the driver casing. \end{DoxyCompactList}\item 
+float \mbox{\hyperlink{classBMS__Contactor_a904d0e7f018f56ae3a319581d7b649c6}{get\+Resistance}} (bool force\+Update)
+\begin{DoxyCompactList}\small\item\em Gets the resistance of the load connected to the contactor. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classBMS__Contactor_aafab7145d3c98853a43f9132c4458ff5}\label{classBMS__Contactor_aafab7145d3c98853a43f9132c4458ff5} 
+\index{BMS\_Contactor@{BMS\_Contactor}!BMS\_Contactor@{BMS\_Contactor}}
+\index{BMS\_Contactor@{BMS\_Contactor}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{BMS\_Contactor()}{BMS\_Contactor()}}
+{\footnotesize\ttfamily BMS\+\_\+\+Contactor\+::\+BMS\+\_\+\+Contactor (\begin{DoxyParamCaption}\item[{Contactor\+Name}]{name,  }\item[{Contactor\+Output}]{connection,  }\item[{Economiser}]{economiser }\end{DoxyParamCaption})}
+
+STILL TODO!
+
+
+\begin{DoxyItemize}
+\item Set fault reset signal to select fault behaviour between latch off or auto restart
+\item Diagnostics for open/short circuit
+\item Diagnostics for over temperature
+\item Diagnostics for checking if contactor is connected or not by current reading. 
+\end{DoxyItemize}
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classBMS__Contactor_a761a32b38da7f5f6f98f3b381f859dd3}\label{classBMS__Contactor_a761a32b38da7f5f6f98f3b381f859dd3} 
+\index{BMS\_Contactor@{BMS\_Contactor}!close@{close}}
+\index{close@{close}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{close()}{close()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void BMS\+\_\+\+Contactor\+::close (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Close the contactor and set the state to CLOSED. 
+
+Checks for potential latch up after setting the control pin high. If the pin is not high, as expected, it logs an error and attempts to return the contactor to a safe (OPEN) state. \Hypertarget{classBMS__Contactor_aa7311d87c3a3b3c75e64fbd312769c94}\label{classBMS__Contactor_aa7311d87c3a3b3c75e64fbd312769c94} 
+\index{BMS\_Contactor@{BMS\_Contactor}!close@{close}}
+\index{close@{close}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{close()}{close()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void BMS\+\_\+\+Contactor\+::close (\begin{DoxyParamCaption}\item[{unsigned int}]{delay }\end{DoxyParamCaption})}
+
+
+
+Schedules the contactor to close after a specified delay. 
+
+Sets the contactor state to WAITING\+\_\+\+TO\+\_\+\+CLOSE and sets the waiting close time to the current millis() plus the specified delay. If the contactor is already closed, this function does nothing.
+
+\begin{DoxyNote}{Note}
+Relies on the BMS\+\_\+\+Contactor\+::update() function to be called regularly
+\end{DoxyNote}
+
+\begin{DoxyParams}{Parameters}
+{\em delay} & The delay in milliseconds to wait before closing the contactor \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classBMS__Contactor_a9d7e11a530244e8437b761d462cef8d9}\label{classBMS__Contactor_a9d7e11a530244e8437b761d462cef8d9} 
+\index{BMS\_Contactor@{BMS\_Contactor}!diagnosticAvailable@{diagnosticAvailable}}
+\index{diagnosticAvailable@{diagnosticAvailable}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{diagnosticAvailable()}{diagnosticAvailable()}}
+{\footnotesize\ttfamily bool BMS\+\_\+\+Contactor\+::diagnostic\+Available (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Indicates whether diagnostic functions are available for this contactor. 
+
+\begin{DoxyReturn}{Returns}
+true if diagnostics are available, false otherwise 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_a9b5506ea3e1768b163650f6525686b8b}\label{classBMS__Contactor_a9b5506ea3e1768b163650f6525686b8b} 
+\index{BMS\_Contactor@{BMS\_Contactor}!getPinCurrent@{getPinCurrent}}
+\index{getPinCurrent@{getPinCurrent}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{getPinCurrent()}{getPinCurrent()}}
+{\footnotesize\ttfamily float BMS\+\_\+\+Contactor\+::get\+Pin\+Current (\begin{DoxyParamCaption}\item[{bool}]{force\+Update }\end{DoxyParamCaption})}
+
+
+
+Gets the current through the contactor coil. 
+
+If the driver has diagnostic capabilities, this function returns the current through the contactor coil.
+
+
+\begin{DoxyParams}{Parameters}
+{\em force\+Update} & If true, a fresh current value will be read from the driver before being returned.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The current through the contactor coil in Amps. If the driver does not have diagnostic capabilities, the function returns -\/1. 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_a594f0f5e68ed2b62ff861f0ead4df0ae}\label{classBMS__Contactor_a594f0f5e68ed2b62ff861f0ead4df0ae} 
+\index{BMS\_Contactor@{BMS\_Contactor}!getPower@{getPower}}
+\index{getPower@{getPower}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{getPower()}{getPower()}}
+{\footnotesize\ttfamily float BMS\+\_\+\+Contactor\+::get\+Power (\begin{DoxyParamCaption}\item[{bool}]{force\+Update }\end{DoxyParamCaption})}
+
+
+
+Gets the power consumption of the contactor coil. 
+
+If the driver has diagnostic capabilities, this function returns the power consumption of the contactor coil. If force\+Update is true, it will first read the latest voltage and current values from the driver. If the driver does not have diagnostic capabilities, the function returns -\/1.
+
+\begin{DoxyReturn}{Returns}
+The power consumption of the contactor coil in Watts. If the driver does not have diagnostic capabilities, the function returns -\/1. 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_a904d0e7f018f56ae3a319581d7b649c6}\label{classBMS__Contactor_a904d0e7f018f56ae3a319581d7b649c6} 
+\index{BMS\_Contactor@{BMS\_Contactor}!getResistance@{getResistance}}
+\index{getResistance@{getResistance}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{getResistance()}{getResistance()}}
+{\footnotesize\ttfamily float BMS\+\_\+\+Contactor\+::get\+Resistance (\begin{DoxyParamCaption}\item[{bool}]{force\+Update }\end{DoxyParamCaption})}
+
+
+
+Gets the resistance of the load connected to the contactor. 
+
+Calculates the resistance of the load connected to the contactor by dividing the voltage by the current. If force\+Update is true, it will first read the latest voltage and current values from the contactor.
+
+
+\begin{DoxyParams}{Parameters}
+{\em force\+Update} & If true, fresh voltage and current values will be read from the driver before calculating the resistance.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The resistance of the load connected to the driver in Ohms. 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_a0aad63383481efaef587b4e83288aab3}\label{classBMS__Contactor_a0aad63383481efaef587b4e83288aab3} 
+\index{BMS\_Contactor@{BMS\_Contactor}!getState@{getState}}
+\index{getState@{getState}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{getState()}{getState()}}
+{\footnotesize\ttfamily bool BMS\+\_\+\+Contactor\+::get\+State (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Gets the current state of the contactor. 
+
+\begin{DoxyReturn}{Returns}
+The current state of the contactor. Will be one of the Contactor\+State enum values. 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_a603e506756e5858b4d545205bf5c1bed}\label{classBMS__Contactor_a603e506756e5858b4d545205bf5c1bed} 
+\index{BMS\_Contactor@{BMS\_Contactor}!getTemperature@{getTemperature}}
+\index{getTemperature@{getTemperature}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{getTemperature()}{getTemperature()}}
+{\footnotesize\ttfamily float BMS\+\_\+\+Contactor\+::get\+Temperature (\begin{DoxyParamCaption}\item[{bool}]{force\+Update }\end{DoxyParamCaption})}
+
+
+
+Gets the temperature of the driver casing. 
+
+If the driver casing driver has diagnostic capabilities, this function returns the temperature of the driver casing. If force\+Update is true, it will first read the latest temperature value from the driver. If the driver does not have diagnostic capabilities, the function returns -\/1.
+
+
+\begin{DoxyParams}{Parameters}
+{\em force\+Update} & If true, a fresh temperature value will be read from the driver before being returned.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The temperature of the driver casing in degrees Celsius. If the driver does not have diagnostic capabilities, the function returns -\/1. 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_a6b00b384b655a5d8d2c5b9a215eea369}\label{classBMS__Contactor_a6b00b384b655a5d8d2c5b9a215eea369} 
+\index{BMS\_Contactor@{BMS\_Contactor}!getVoltage@{getVoltage}}
+\index{getVoltage@{getVoltage}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{getVoltage()}{getVoltage()}}
+{\footnotesize\ttfamily float BMS\+\_\+\+Contactor\+::get\+Voltage (\begin{DoxyParamCaption}\item[{bool}]{force\+Update }\end{DoxyParamCaption})}
+
+
+
+Gets the voltage at the driver. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em force\+Update} & If true, the latest voltage values will be read from the driver before returning the value.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The voltage at the driver in Volts. 
+\end{DoxyReturn}
+\Hypertarget{classBMS__Contactor_ad279e451ff207ba4c9ae1547c4177c45}\label{classBMS__Contactor_ad279e451ff207ba4c9ae1547c4177c45} 
+\index{BMS\_Contactor@{BMS\_Contactor}!open@{open}}
+\index{open@{open}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{open()}{open()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void BMS\+\_\+\+Contactor\+::open (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Opens the contactor and sets the state to OPEN. 
+
+Checks for potential latch up after setting the control pin low. \Hypertarget{classBMS__Contactor_afe2f3d1dced7a509a670c9270c95773b}\label{classBMS__Contactor_afe2f3d1dced7a509a670c9270c95773b} 
+\index{BMS\_Contactor@{BMS\_Contactor}!open@{open}}
+\index{open@{open}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{open()}{open()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void BMS\+\_\+\+Contactor\+::open (\begin{DoxyParamCaption}\item[{unsigned int}]{delay }\end{DoxyParamCaption})}
+
+
+
+Opens the contactor after a specified delay. 
+
+If the contactor is not already open, sets the contactor to the WAITING\+\_\+\+TO\+\_\+\+OPEN state and sets the waiting open time to the current time plus the specified delay. A debug message is logged to indicate that the contactor is opening with the specified delay.
+
+\begin{DoxyNote}{Note}
+Relies on the BMS\+\_\+\+Contactor\+::update() function to be called regularly
+\end{DoxyNote}
+
+\begin{DoxyParams}{Parameters}
+{\em delay} & The delay in milliseconds to wait before opening the contactor \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classBMS__Contactor_a200768b367f7580d7ae032df952dff2e}\label{classBMS__Contactor_a200768b367f7580d7ae032df952dff2e} 
+\index{BMS\_Contactor@{BMS\_Contactor}!open@{open}}
+\index{open@{open}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{open()}{open()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void BMS\+\_\+\+Contactor\+::open (\begin{DoxyParamCaption}\item[{unsigned int}]{timeout,  }\item[{float}]{current\+Threshold }\end{DoxyParamCaption})}
+
+
+
+Opens the contactor when the current is below the specified threshold or after the specified timeout. 
+
+If the contactor is not already open, sets the contactor to the WAITING\+\_\+\+TO\+\_\+\+OPEN\+\_\+\+CURRENT state and sets the waiting open time to the current time plus the specified timeout. A debug message is logged to indicate that the contactor is opening with the specified delay.
+
+\begin{DoxyNote}{Note}
+Relies on the BMS\+\_\+\+Contactor\+::update() function to be called regularly, and current to be updated regularly (Both sub 100ms periodically)
+\end{DoxyNote}
+
+\begin{DoxyParams}{Parameters}
+{\em timeout} & The delay in milliseconds to wait before opening the contactor \\
+\hline
+{\em current\+Threshold} & The current threshold below which the contactor will open \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classBMS__Contactor_a11b2e373900dee5af13f91cb5f243dc2}\label{classBMS__Contactor_a11b2e373900dee5af13f91cb5f243dc2} 
+\index{BMS\_Contactor@{BMS\_Contactor}!set@{set}}
+\index{set@{set}!BMS\_Contactor@{BMS\_Contactor}}
+\doxysubsubsection{\texorpdfstring{set()}{set()}}
+{\footnotesize\ttfamily void BMS\+\_\+\+Contactor\+::set (\begin{DoxyParamCaption}\item[{Contactor\+State}]{state }\end{DoxyParamCaption})}
+
+
+
+Sets the contactor state to the specified value. 
+
+This is a simple wrapper around the \doxylink{classBMS__Contactor_ad279e451ff207ba4c9ae1547c4177c45}{open()} and \doxylink{classBMS__Contactor_a761a32b38da7f5f6f98f3b381f859dd3}{close()} functions, to make it easier to set the contactor state in a single call. If the state is set to OPEN, it calls \doxylink{classBMS__Contactor_ad279e451ff207ba4c9ae1547c4177c45}{open()} to open the contactor. If the state is set to any other value, it calls \doxylink{classBMS__Contactor_a761a32b38da7f5f6f98f3b381f859dd3}{close()} to close the contactor. If the contactor is already in the requested state, this function does nothing.
+
+
+\begin{DoxyParams}{Parameters}
+{\em state} & The desired state for the contactor. Must be either Contactor\+State\+::\+OPEN or Contactor\+State\+::\+CLOSED \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/BMS\+\_\+\+Contactor.\+h\item 
+src/BMS\+\_\+\+Contactor.\+cpp\end{DoxyCompactItemize}

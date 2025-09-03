@@ -1,0 +1,195 @@
+\doxysection{globals.\+h}
+\hypertarget{globals_8h_source}{}\label{globals_8h_source}\index{src/globals.h@{src/globals.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <Arduino.h>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}config.h"{}}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}BMSModuleManager.h"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <ADC.h>}\ \ \ \ \ \ \ \ \textcolor{comment}{//https://github.com/pedvide/ADC}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <FlexCAN\_T4.h>}\ \textcolor{comment}{//https://github.com/collin80/FlexCAN\_Library}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <Filters.h>}\ \textcolor{comment}{//https://github.com/JonHub/Filters}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{extern}\ \mbox{\hyperlink{structEEPROMSettings}{EEPROMSettings}}\ settings;\ \textcolor{comment}{//\ Included\ in\ globals.h.\ Declared\ in\ .ino}}
+\DoxyCodeLine{00011\ \textcolor{keyword}{extern}\ \mbox{\hyperlink{classBMSModuleManager}{BMSModuleManager}}\ bms;\ \ \ \ \textcolor{comment}{//\ Included\ in\ globals.h.Declared\ in.ino}}
+\DoxyCodeLine{00012\ \textcolor{keyword}{extern}\ ADC\ *adc;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ adc\ object}}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ firmver;}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \textcolor{keyword}{extern}\ FlexCAN\_T4<CAN1,\ RX\_SIZE\_256,\ TX\_SIZE\_16>\ Can1;}
+\DoxyCodeLine{00017\ \textcolor{keyword}{extern}\ FlexCAN\_T4<CAN2,\ RX\_SIZE\_256,\ TX\_SIZE\_16>\ Can2;}
+\DoxyCodeLine{00018\ \textcolor{keyword}{extern}\ FlexCAN\_T4<CAN3,\ RX\_SIZE\_256,\ TX\_SIZE\_16>\ Can3;}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \textcolor{comment}{//\ SD\ Card\ Status\ Values}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#define\ SD\_ERROR\ 0}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#define\ SD\_OK\ 1}}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \textcolor{comment}{//\ bms\ status\ values}}
+\DoxyCodeLine{00025\ \textcolor{preprocessor}{\#define\ BMS\_STATUS\_BOOT\ 0}}
+\DoxyCodeLine{00026\ \textcolor{preprocessor}{\#define\ BMS\_STATUS\_READY\ 1}}
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#define\ BMS\_STATUS\_DRIVE\ 2}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#define\ BMS\_STATUS\_CHARGE\ 3}}
+\DoxyCodeLine{00029\ \textcolor{preprocessor}{\#define\ BMS\_STATUS\_PRECHARGE\ 4}}
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#define\ BMS\_STATUS\_ERROR\ 5}}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \textcolor{comment}{//\ Current\ sensor\ values}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#define\ CURR\_SENSE\_UNDEFINED\ 0}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#define\ CURR\_SENSE\_ANALOGUE\_DUAL\ 1}}
+\DoxyCodeLine{00035\ \textcolor{preprocessor}{\#define\ CURR\_SENSE\_CANBUS\ 2}}
+\DoxyCodeLine{00036\ \textcolor{preprocessor}{\#define\ CURR\_SENSE\_ANALOGUE\_GUESSING\ 3}}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \textcolor{comment}{//\ Can\ current\ sensor\ values}}
+\DoxyCodeLine{00039\ \textcolor{preprocessor}{\#define\ LemCAB300\ 1}}
+\DoxyCodeLine{00040\ \textcolor{preprocessor}{\#define\ IsaScale\ 3}}
+\DoxyCodeLine{00041\ \textcolor{preprocessor}{\#define\ VictronLynx\ 4}}
+\DoxyCodeLine{00042\ \textcolor{preprocessor}{\#define\ LemCAB500\ 2}}
+\DoxyCodeLine{00043\ \textcolor{preprocessor}{\#define\ CurCanMax\ 4\ }\textcolor{comment}{//\ max\ value}}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \textcolor{comment}{//\ Charger\ Types}}
+\DoxyCodeLine{00046\ \textcolor{preprocessor}{\#define\ NoCharger\ 0}}
+\DoxyCodeLine{00047\ \textcolor{preprocessor}{\#define\ BrusaNLG5\ 1}}
+\DoxyCodeLine{00048\ \textcolor{preprocessor}{\#define\ ChevyVolt\ 2}}
+\DoxyCodeLine{00049\ \textcolor{preprocessor}{\#define\ Eltek\ 3}}
+\DoxyCodeLine{00050\ \textcolor{preprocessor}{\#define\ Elcon\ 4}}
+\DoxyCodeLine{00051\ \textcolor{preprocessor}{\#define\ Victron\ 5}}
+\DoxyCodeLine{00052\ \textcolor{preprocessor}{\#define\ Coda\ 6}}
+\DoxyCodeLine{00053\ \textcolor{preprocessor}{\#define\ VictronHV\ 7}}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \textcolor{preprocessor}{\#define\ RESTART\_ADDR\ 0xE000ED0C}}
+\DoxyCodeLine{00056\ \textcolor{preprocessor}{\#define\ READ\_RESTART()\ (*(volatile\ uint32\_t\ *)RESTART\_ADDR)}}
+\DoxyCodeLine{00057\ \textcolor{preprocessor}{\#define\ WRITE\_RESTART(val)\ ((*(volatile\ uint32\_t\ *)RESTART\_ADDR)\ =\ (val))}}
+\DoxyCodeLine{00058\ \textcolor{preprocessor}{\#define\ CPU\_REBOOT\ WRITE\_RESTART(0x5FA0004)}}
+\DoxyCodeLine{00059\ }
+\DoxyCodeLine{00060\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ Discharge;}
+\DoxyCodeLine{00061\ }
+\DoxyCodeLine{00062\ \textcolor{comment}{//\ variables\ for\ output\ control}}
+\DoxyCodeLine{00063\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ pulltime;}
+\DoxyCodeLine{00064\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ contctrl,\ contstat;}
+\DoxyCodeLine{00065\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{long}\ conttimer1,\ conttimer2,\ conttimer3,\ Pretimer,\ Pretimer1,\ overtriptimer,\ undertriptimer,\ mainconttimer;}
+\DoxyCodeLine{00066\ \textcolor{keyword}{extern}\ uint16\_t\ pwmfreq;}
+\DoxyCodeLine{00067\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ pwmcurmax;}
+\DoxyCodeLine{00068\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ pwmcurmid;}
+\DoxyCodeLine{00069\ \textcolor{keyword}{extern}\ int16\_t\ pwmcurmin;}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ OutputEnable;}
+\DoxyCodeLine{00072\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ CanOnReq;}
+\DoxyCodeLine{00073\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ CanOnRev;}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \textcolor{comment}{//\ variables\ for\ VE\ can}}
+\DoxyCodeLine{00076\ \textcolor{keyword}{extern}\ uint16\_t\ chargevoltage;}
+\DoxyCodeLine{00077\ \textcolor{keyword}{extern}\ uint16\_t\ chargecurrent,\ tempchargecurrent;}
+\DoxyCodeLine{00078\ \textcolor{keyword}{extern}\ uint16\_t\ disvoltage;}
+\DoxyCodeLine{00079\ \textcolor{keyword}{extern}\ uint16\_t\ discurrent;}
+\DoxyCodeLine{00080\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ batvcal;}
+\DoxyCodeLine{00081\ }
+\DoxyCodeLine{00082\ \textcolor{keyword}{extern}\ uint16\_t\ SOH;}
+\DoxyCodeLine{00083\ }
+\DoxyCodeLine{00084\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ alarm[4];}
+\DoxyCodeLine{00085\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ warning[4];}
+\DoxyCodeLine{00086\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ mes[8];}
+\DoxyCodeLine{00087\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ bmsname[8];}
+\DoxyCodeLine{00088\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ bmsmanu[8];}
+\DoxyCodeLine{00089\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{long}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{int}\ rxId;}
+\DoxyCodeLine{00090\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ len;}
+\DoxyCodeLine{00091\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{byte}\ rxBuf[8];}
+\DoxyCodeLine{00092\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{char}\ msgString[128];}
+\DoxyCodeLine{00093\ \textcolor{keyword}{extern}\ uint32\_t\ inbox;}
+\DoxyCodeLine{00094\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{signed}\ \textcolor{keywordtype}{long}\ CANmilliamps;}
+\DoxyCodeLine{00095\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{signed}\ \textcolor{keywordtype}{long}\ voltage1,\ voltage2,\ voltage3;}
+\DoxyCodeLine{00096\ }
+\DoxyCodeLine{00097\ \textcolor{comment}{//\ variables\ for\ current\ calculation}}
+\DoxyCodeLine{00098\ \textcolor{keyword}{extern}\ uint16\_t\ value;}
+\DoxyCodeLine{00099\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{float}\ currentact;\ \textcolor{comment}{//\ Actual\ Current\ from\ main\ Current\ Sensor\ in\ Amps}}
+\DoxyCodeLine{00100\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{float}\ RawCur;}
+\DoxyCodeLine{00101\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{float}\ ampsecond;}
+\DoxyCodeLine{00102\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{long}\ lasttime;}
+\DoxyCodeLine{00103\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{long}\ nextLoopTime,\ looptime1,\ UnderTimer,\ OverTime,\ cleartime,\ baltimer,\ CanOntimeout;}
+\DoxyCodeLine{00104\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ currentsense;}
+\DoxyCodeLine{00105\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ sensor;}
+\DoxyCodeLine{00106\ }
+\DoxyCodeLine{00107\ \textcolor{comment}{//\ Variables\ for\ SOC\ calc}}
+\DoxyCodeLine{00108\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ SOC;}
+\DoxyCodeLine{00109\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ SOCset;}
+\DoxyCodeLine{00110\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ SOCtest;}
+\DoxyCodeLine{00111\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ SOCmem;}
+\DoxyCodeLine{00112\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ SOCreset;}
+\DoxyCodeLine{00113\ }
+\DoxyCodeLine{00114\ \textcolor{comment}{//\ charger\ variables}}
+\DoxyCodeLine{00115\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ maxac1;}
+\DoxyCodeLine{00116\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ maxac2;}
+\DoxyCodeLine{00117\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ chargerid1;}
+\DoxyCodeLine{00118\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ chargerid2;}
+\DoxyCodeLine{00119\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{float}\ chargerendbulk;}
+\DoxyCodeLine{00120\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{float}\ chargerend;}
+\DoxyCodeLine{00121\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ chargertoggle;}
+\DoxyCodeLine{00122\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ ncharger;}
+\DoxyCodeLine{00123\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ chargecurrentlimit;}
+\DoxyCodeLine{00124\ }
+\DoxyCodeLine{00125\ \textcolor{comment}{//\ serial\ canbus\ expansion}}
+\DoxyCodeLine{00126\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{long}\ id;}
+\DoxyCodeLine{00127\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{char}\ dta[8];}
+\DoxyCodeLine{00128\ }
+\DoxyCodeLine{00129\ \textcolor{comment}{//\ AC\ current\ control}}
+\DoxyCodeLine{00130\ \textcolor{keyword}{extern}\ \textcolor{keyword}{volatile}\ uint32\_t\ pilottimer;}
+\DoxyCodeLine{00131\ \textcolor{keyword}{extern}\ \textcolor{keyword}{volatile}\ uint16\_t\ timehigh,\ duration;}
+\DoxyCodeLine{00132\ \textcolor{keyword}{extern}\ \textcolor{keyword}{volatile}\ uint16\_t\ accurlim;}
+\DoxyCodeLine{00133\ \textcolor{keyword}{extern}\ \textcolor{keyword}{volatile}\ \textcolor{keywordtype}{int}\ dutycycle;}
+\DoxyCodeLine{00134\ \textcolor{keyword}{extern}\ uint16\_t\ chargerpower;}
+\DoxyCodeLine{00135\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ CPdebug;}
+\DoxyCodeLine{00136\ }
+\DoxyCodeLine{00137\ \textcolor{comment}{//\ variables}}
+\DoxyCodeLine{00138\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ outputstate;}
+\DoxyCodeLine{00139\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ incomingByte;}
+\DoxyCodeLine{00140\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ x;}
+\DoxyCodeLine{00141\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ storagemode;}
+\DoxyCodeLine{00142\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ cellspresent;}
+\DoxyCodeLine{00143\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ dashused;}
+\DoxyCodeLine{00144\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ Charged;}
+\DoxyCodeLine{00145\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ renum;}
+\DoxyCodeLine{00146\ }
+\DoxyCodeLine{00147\ \textcolor{comment}{//\ Debugging\ modes}}
+\DoxyCodeLine{00148\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ debug;}
+\DoxyCodeLine{00149\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ inputcheck;}
+\DoxyCodeLine{00150\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ outputcheck;}
+\DoxyCodeLine{00151\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ candebug;}
+\DoxyCodeLine{00152\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ gaugedebug;}
+\DoxyCodeLine{00153\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ debugCur;}
+\DoxyCodeLine{00154\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ CSVdebug;}
+\DoxyCodeLine{00155\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ delim;}
+\DoxyCodeLine{00156\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ menuload;}
+\DoxyCodeLine{00157\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ balancecells;}
+\DoxyCodeLine{00158\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ debugdigits;}
+\DoxyCodeLine{00159\ }
+\DoxyCodeLine{00160\ \textcolor{keyword}{enum}\ errorType}
+\DoxyCodeLine{00161\ \{}
+\DoxyCodeLine{00162\ \ \ \ \ ERROR\_NONE\ =\ 0,}
+\DoxyCodeLine{00163\ \ \ \ \ ERROR\_BATTERY\_COMMS\ =\ 1,}
+\DoxyCodeLine{00164\ \ \ \ \ ERROR\_VOLTAGE\ =\ 2,}
+\DoxyCodeLine{00165\ \ \ \ \ ERROR\_CONTACTORS\_NOT\_CLOSING\ =\ 4,}
+\DoxyCodeLine{00166\ \ \ \ \ ERROR\_CONTACTORS\_OPENED\_EMERGENCY\ =\ 5,}
+\DoxyCodeLine{00167\ \ \ \ \ ERROR\_CURRENT\_READING\ =\ 6,}
+\DoxyCodeLine{00168\ \ \ \ \ ERROR\_OVER\_VOLTAGE\ =\ 7,}
+\DoxyCodeLine{00169\ \ \ \ \ ERROR\_UNDER\_VOLTAGE\ =\ 8,}
+\DoxyCodeLine{00170\ \ \ \ \ ERROR\_OVER\_TEMPERATURE\ =\ 9,}
+\DoxyCodeLine{00171\ \ \ \ \ ERROR\_UNDER\_TEMPERATURE\ =\ 10,}
+\DoxyCodeLine{00172\ \ \ \ \ ERROR\_CAN\ =\ 11,}
+\DoxyCodeLine{00173\ \ \ \ \ ERROR\_CONTACTORS\_NOT\_OPENING\ =\ 12,}
+\DoxyCodeLine{00174\ \};}
+\DoxyCodeLine{00175\ }
+\DoxyCodeLine{00176\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{int}\ testcount;}
+\DoxyCodeLine{00177\ }
+\DoxyCodeLine{00178\ \textcolor{comment}{//\ BMS\ Status\ Variables}}
+\DoxyCodeLine{00179\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{byte}\ bmsstatus;}
+\DoxyCodeLine{00180\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{byte}\ bmsError;}
+\DoxyCodeLine{00181\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ modulesConnected;\ \textcolor{comment}{//\ true\ if\ modules\ are\ connected,\ false\ if\ modules\ are\ not\ responding}}
+\DoxyCodeLine{00182\ }
+\DoxyCodeLine{00183\ \textcolor{comment}{//\ SD\ Card\ Status}}
+\DoxyCodeLine{00184\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{byte}\ sdStatus;}
+\DoxyCodeLine{00185\ }
+\DoxyCodeLine{00186\ \textcolor{comment}{//\ OLED\ Screen\ Status}}
+\DoxyCodeLine{00187\ \textcolor{keyword}{extern}\ \textcolor{keywordtype}{bool}\ oledConnected;}
+\DoxyCodeLine{00188\ }
+\DoxyCodeLine{00189\ \textcolor{keyword}{extern}\ uint32\_t\ lastUpdate;}
+
+\end{DoxyCode}

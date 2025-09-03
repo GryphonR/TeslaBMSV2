@@ -1,0 +1,78 @@
+\doxysection{BMSModule\+Manager.\+h}
+\hypertarget{BMSModuleManager_8h_source}{}\label{BMSModuleManager_8h_source}\index{src/BMSModuleManager.h@{src/BMSModuleManager.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ "{}config.h"{}}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}BMSModule.h"{}}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classBMSModuleManager}{BMSModuleManager}}}
+\DoxyCodeLine{00006\ \{}
+\DoxyCodeLine{00007\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00008\ \ \ \ \ \mbox{\hyperlink{classBMSModuleManager_ae4f84252fb856fcc29c2e3ef9b38ae79}{BMSModuleManager}}();}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSModuleManager_a87213140ff1a6e147670054d563e01bb}{seriescells}}();}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a8c687d2165e47c85efdbbf3a647c6f01}{clearmodules}}();}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a26cca2180eda2fdbf06d91e270027327}{StopBalancing}}();}
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_ab70fe99cb7d77bc4f508f138c5b6d916}{balanceCells}}(\textcolor{keywordtype}{int}\ duration,\ \textcolor{keywordtype}{int}\ debug);}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keywordtype}{void}\ setupBoards();}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a1238e874e527444ae777a3311bff415b}{findBoards}}();}
+\DoxyCodeLine{00015\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a1070d50fa128d714c41306722541a62b}{renumberBoardIDs}}();}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a20a13af385b94d5eefc37541e7f8b897}{clearFaults}}();}
+\DoxyCodeLine{00017\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a845579a1dae6762aec33df84536d5989}{sleepBoards}}();}
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_ac1575352813ec02fb2363b71e86f0bd5}{wakeBoards}}();}
+\DoxyCodeLine{00019\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_aa546531c3975c3de547b7322bff36c76}{getAllVoltTemp}}();}
+\DoxyCodeLine{00020\ \ \ \ \ \textcolor{keywordtype}{void}\ readSetpoints();}
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a1289e9c0e358e9967be57c17ba63b263}{setBatteryID}}(\textcolor{keywordtype}{int}\ \textcolor{keywordtype}{id});}
+\DoxyCodeLine{00022\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a4c0cc66d5245f27d7c8f6adebd8662cb}{setPstrings}}(\textcolor{keywordtype}{int}\ Pstrings);}
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keywordtype}{void}\ setUnderVolt(\textcolor{keywordtype}{float}\ newVal);}
+\DoxyCodeLine{00024\ \ \ \ \ \textcolor{keywordtype}{void}\ setOverVolt(\textcolor{keywordtype}{float}\ newVal);}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keywordtype}{void}\ setOverTemp(\textcolor{keywordtype}{float}\ newVal);}
+\DoxyCodeLine{00026\ \ \ \ \ \textcolor{keywordtype}{void}\ setBalanceV(\textcolor{keywordtype}{float}\ newVal);}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keywordtype}{void}\ setBalanceHyst(\textcolor{keywordtype}{float}\ newVal);}
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keywordtype}{void}\ setSensors(\textcolor{keywordtype}{int}\ sensor,\ \textcolor{keywordtype}{float}\ Ignore);}
+\DoxyCodeLine{00029\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_ae3bfcdc8c70138b7d71e985eb0b18dc6}{getPackVoltage}}();}
+\DoxyCodeLine{00030\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_a04b2bca8d5fff8bcdac99abb355c9cf6}{getAvgTemperature}}();}
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_af02506c84422bbb0a93357971eb9e7dc}{getHighTemperature}}();}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_a2fbf95790c1e73676ae17bd50d75ca96}{getLowTemperature}}();}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_a2e0fca66ad9bc17e8ed94911cef1c862}{getAvgCellVolt}}();}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_a32ead4b99c986e7e0e1bb4cb71457319}{getLowCellVolt}}();}
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_a66602650155eb44462badeb626090904}{getHighCellVolt}}();}
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_a3be69c1d27d947b06d5ae875e4fbc621}{getHighVoltage}}();}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModuleManager_af62af953a74e929e556ebdd40b3c5d86}{getLowVoltage}}();}
+\DoxyCodeLine{00038\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSModuleManager_aa821f4ddb010e8f12c1af7d08c4c61e6}{getBalancing}}();}
+\DoxyCodeLine{00039\ \ \ \ \ uint16\_t\ \mbox{\hyperlink{classBMSModuleManager_a5a468f3d54db986909a6e54e5ef9c6d4}{getcellvolt}}(\textcolor{keywordtype}{int}\ modid,\ \textcolor{keywordtype}{int}\ cellid);}
+\DoxyCodeLine{00040\ \ \ \ \ uint16\_t\ \mbox{\hyperlink{classBMSModuleManager_a53286b6eb68c2e4f7e81f0d10b79bf8d}{gettemp}}(\textcolor{keywordtype}{int}\ modid,\ \textcolor{keywordtype}{int}\ tempid);}
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{comment}{/*}}
+\DoxyCodeLine{00042\ \textcolor{comment}{\ \ \ \ \ \ void\ processCANMsg(CAN\_FRAME\ \&frame);}}
+\DoxyCodeLine{00043\ \textcolor{comment}{\ \ \ \ */}}
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a7cdfccedf187137cf5fc02a7c883e02b}{printAllCSV}}(\textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{long}\ timestamp,\textcolor{keywordtype}{float}\ current,\ \textcolor{keywordtype}{int}\ SOC,\ \textcolor{keywordtype}{int}\ delim);}
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_abe17826b95e88b428f751a508c28a46b}{printPackSummary}}();}
+\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModuleManager_a58ee4f8542ea572a6bc101688df26ba7}{printPackDetails}}(\textcolor{keywordtype}{int}\ digits);}
+\DoxyCodeLine{00047\ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSModuleManager_a1225b56b88689a06fd644286876683a2}{getNumModules}}();}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keywordtype}{float}\ packVolt;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ All\ modules\ added\ together}}
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{keywordtype}{int}\ Pstring;}
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{keywordtype}{float}\ LowCellVolt;}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keywordtype}{float}\ HighCellVolt;}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordtype}{float}\ lowestPackVolt;}
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keywordtype}{float}\ highestPackVolt;}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keywordtype}{float}\ lowestPackTemp;}
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{keywordtype}{float}\ highestPackTemp;}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keywordtype}{float}\ highTemp;}
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keywordtype}{float}\ lowTemp;}
+\DoxyCodeLine{00060\ \ \ \ \ \mbox{\hyperlink{classBMSModule}{BMSModule}}\ modules[MAX\_MODULE\_ADDR\ +\ 1];\ \textcolor{comment}{//\ store\ data\ for\ as\ many\ modules\ as\ we've\ configured\ for.}}
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keywordtype}{int}\ batteryID;}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keywordtype}{int}\ numFoundModules;\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ The\ number\ of\ modules\ that\ seem\ to\ exist}}
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{keywordtype}{bool}\ isFaulted;}
+\DoxyCodeLine{00064\ \ \ \ \ \textcolor{keywordtype}{int}\ spack;}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keywordtype}{int}\ CellsBalancing;}
+\DoxyCodeLine{00066\ \ \ \ \ \textcolor{comment}{/*}}
+\DoxyCodeLine{00067\ \textcolor{comment}{\ \ \ \ \ \ void\ sendBatterySummary();}}
+\DoxyCodeLine{00068\ \textcolor{comment}{\ \ \ \ \ \ void\ sendModuleSummary(int\ module);}}
+\DoxyCodeLine{00069\ \textcolor{comment}{\ \ \ \ \ \ void\ sendCellDetails(int\ module,\ int\ cell);}}
+\DoxyCodeLine{00070\ \textcolor{comment}{\ \ \ \ */}}
+\DoxyCodeLine{00071\ }
+\DoxyCodeLine{00072\ \};}
+
+\end{DoxyCode}

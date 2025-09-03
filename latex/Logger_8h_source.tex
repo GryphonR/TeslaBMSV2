@@ -1,0 +1,83 @@
+\doxysection{Logger.\+h}
+\hypertarget{Logger_8h_source}{}\label{Logger_8h_source}\index{src/Logger.h@{src/Logger.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{/*}}
+\DoxyCodeLine{00002\ \textcolor{comment}{\ *\ Logger.h}}
+\DoxyCodeLine{00003\ \textcolor{comment}{\ *}}
+\DoxyCodeLine{00004\ \textcolor{comment}{\ Copyright\ (c)\ 2013\ Collin\ Kidder,\ Michael\ Neuweiler,\ Charles\ Galpin}}
+\DoxyCodeLine{00005\ \textcolor{comment}{}}
+\DoxyCodeLine{00006\ \textcolor{comment}{\ Permission\ is\ hereby\ granted,\ free\ of\ charge,\ to\ any\ person\ obtaining}}
+\DoxyCodeLine{00007\ \textcolor{comment}{\ a\ copy\ of\ this\ software\ and\ associated\ documentation\ files\ (the}}
+\DoxyCodeLine{00008\ \textcolor{comment}{\ "{}Software"{}),\ to\ deal\ in\ the\ Software\ without\ restriction,\ including}}
+\DoxyCodeLine{00009\ \textcolor{comment}{\ without\ limitation\ the\ rights\ to\ use,\ copy,\ modify,\ merge,\ publish,}}
+\DoxyCodeLine{00010\ \textcolor{comment}{\ distribute,\ sublicense,\ and/or\ sell\ copies\ of\ the\ Software,\ and\ to}}
+\DoxyCodeLine{00011\ \textcolor{comment}{\ permit\ persons\ to\ whom\ the\ Software\ is\ furnished\ to\ do\ so,\ subject\ to}}
+\DoxyCodeLine{00012\ \textcolor{comment}{\ the\ following\ conditions:}}
+\DoxyCodeLine{00013\ \textcolor{comment}{}}
+\DoxyCodeLine{00014\ \textcolor{comment}{\ The\ above\ copyright\ notice\ and\ this\ permission\ notice\ shall\ be\ included}}
+\DoxyCodeLine{00015\ \textcolor{comment}{\ in\ all\ copies\ or\ substantial\ portions\ of\ the\ Software.}}
+\DoxyCodeLine{00016\ \textcolor{comment}{}}
+\DoxyCodeLine{00017\ \textcolor{comment}{\ THE\ SOFTWARE\ IS\ PROVIDED\ "{}AS\ IS"{},\ WITHOUT\ WARRANTY\ OF\ ANY\ KIND,}}
+\DoxyCodeLine{00018\ \textcolor{comment}{\ EXPRESS\ OR\ IMPLIED,\ INCLUDING\ BUT\ NOT\ LIMITED\ TO\ THE\ WARRANTIES\ OF}}
+\DoxyCodeLine{00019\ \textcolor{comment}{\ MERCHANTABILITY,\ FITNESS\ FOR\ A\ PARTICULAR\ PURPOSE\ AND\ NONINFRINGEMENT.}}
+\DoxyCodeLine{00020\ \textcolor{comment}{\ IN\ NO\ EVENT\ SHALL\ THE\ AUTHORS\ OR\ COPYRIGHT\ HOLDERS\ BE\ LIABLE\ FOR\ ANY}}
+\DoxyCodeLine{00021\ \textcolor{comment}{\ CLAIM,\ DAMAGES\ OR\ OTHER\ LIABILITY,\ WHETHER\ IN\ AN\ ACTION\ OF\ CONTRACT,}}
+\DoxyCodeLine{00022\ \textcolor{comment}{\ TORT\ OR\ OTHERWISE,\ ARISING\ FROM,\ OUT\ OF\ OR\ IN\ CONNECTION\ WITH\ THE}}
+\DoxyCodeLine{00023\ \textcolor{comment}{\ SOFTWARE\ OR\ THE\ USE\ OR\ OTHER\ DEALINGS\ IN\ THE\ SOFTWARE.}}
+\DoxyCodeLine{00024\ \textcolor{comment}{}}
+\DoxyCodeLine{00025\ \textcolor{comment}{\ */}}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \textcolor{preprocessor}{\#ifndef\ LOGGER\_H\_}}
+\DoxyCodeLine{00028\ \textcolor{preprocessor}{\#define\ LOGGER\_H\_}}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \textcolor{preprocessor}{\#include\ <Arduino.h>}}
+\DoxyCodeLine{00031\ \textcolor{preprocessor}{\#include\ "{}config.h"{}}}
+\DoxyCodeLine{00032\ \textcolor{preprocessor}{\#include\ "{}BMS\_OLED.h"{}}}
+\DoxyCodeLine{00033\ \textcolor{preprocessor}{\#include\ "{}BMS\_SD.h"{}}}
+\DoxyCodeLine{00034\ \textcolor{preprocessor}{\#include\ "{}BMS\_RTC.h"{}}}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classLogger}{Logger}}}
+\DoxyCodeLine{00037\ \{}
+\DoxyCodeLine{00038\ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keyword}{enum}\ LogLevel}
+\DoxyCodeLine{00040\ \ \ \ \ \{}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ Debug\ =\ 0,}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ Info\ =\ 1,}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ Warn\ =\ 2,}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ Error\ =\ 3,}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ Off\ =\ 4}
+\DoxyCodeLine{00046\ \ \ \ \ \};}
+\DoxyCodeLine{00047\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ debug(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *,\ ...);}
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ info(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *,\ ...);}
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ warn(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *,\ ...);}
+\DoxyCodeLine{00050\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ error(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *,\ ...);}
+\DoxyCodeLine{00051\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ console(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *,\ ...);}
+\DoxyCodeLine{00052\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ setSerialLoglevel(LogLevel);}
+\DoxyCodeLine{00053\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ setOledLoglevel(LogLevel);}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ setSdLoglevel(LogLevel);}
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ \mbox{\hyperlink{classLogger_a29cf35b00bb6cc257618df8f6b15509a}{getLogLevel}}();}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keyword}{static}\ uint32\_t\ getLastLogTime();}
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{boolean}\ isDebug();}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00060\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ logLevel;}
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ serialLogLevel;}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ sdLogLevel;}
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ oledLogLevel;}
+\DoxyCodeLine{00064\ }
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keyword}{static}\ uint32\_t\ lastLogTime;}
+\DoxyCodeLine{00066\ }
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{char}\ *millisToText(\textcolor{keywordtype}{unsigned}\ \textcolor{keywordtype}{long}\ milliseconds);}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00069\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ log(LogLevel,\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *format,\ va\_list);}
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ logMessage(\textcolor{keyword}{const}\ \textcolor{keywordtype}{char}\ *format,\ va\_list\ args);}
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ getSerialLogLevel();}
+\DoxyCodeLine{00072\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ getSdLogLevel();}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keyword}{static}\ LogLevel\ getOledLogLevel();}
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keywordtype}{void}\ printLogs(LogLevel\ level);}
+\DoxyCodeLine{00075\ \};}
+\DoxyCodeLine{00076\ }
+\DoxyCodeLine{00077\ \textcolor{preprocessor}{\#endif\ }\textcolor{comment}{/*\ LOGGER\_H\_\ */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

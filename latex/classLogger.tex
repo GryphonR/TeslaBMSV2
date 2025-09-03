@@ -1,0 +1,74 @@
+\doxysection{Logger Class Reference}
+\hypertarget{classLogger}{}\label{classLogger}\index{Logger@{Logger}}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classLogger_ac744681e23720966b5f430ec2060da36}\label{classLogger_ac744681e23720966b5f430ec2060da36} 
+enum {\bfseries Log\+Level} \{ \newline
+{\bfseries Debug} = 0
+, {\bfseries Info} = 1
+, {\bfseries Warn} = 2
+, {\bfseries Error} = 3
+, \newline
+{\bfseries Off} = 4
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{classLogger_af79b1a617a062ce8daeeef0b60e0faef}\label{classLogger_af79b1a617a062ce8daeeef0b60e0faef} 
+static void {\bfseries debug} (const char \texorpdfstring{$\ast$}{*},...)
+\item 
+\Hypertarget{classLogger_a25e78494bda64fa8868f06cd60c7d4b8}\label{classLogger_a25e78494bda64fa8868f06cd60c7d4b8} 
+static void {\bfseries info} (const char \texorpdfstring{$\ast$}{*},...)
+\item 
+\Hypertarget{classLogger_aa9e55442928179e2f258cc4d1f59e4d9}\label{classLogger_aa9e55442928179e2f258cc4d1f59e4d9} 
+static void {\bfseries warn} (const char \texorpdfstring{$\ast$}{*},...)
+\item 
+\Hypertarget{classLogger_a7c11dc0bb9764e957a59d09d5e29b1da}\label{classLogger_a7c11dc0bb9764e957a59d09d5e29b1da} 
+static void {\bfseries error} (const char \texorpdfstring{$\ast$}{*},...)
+\item 
+\Hypertarget{classLogger_ad5b37c10b8f5e03696050e819c98a324}\label{classLogger_ad5b37c10b8f5e03696050e819c98a324} 
+static void {\bfseries console} (const char \texorpdfstring{$\ast$}{*},...)
+\item 
+\Hypertarget{classLogger_a291a07af445dd799f6fc8000b060bac3}\label{classLogger_a291a07af445dd799f6fc8000b060bac3} 
+static void {\bfseries set\+Serial\+Loglevel} (Log\+Level)
+\item 
+\Hypertarget{classLogger_a2d2f4b02468dc6fd6bd8833f4d8d407c}\label{classLogger_a2d2f4b02468dc6fd6bd8833f4d8d407c} 
+static void {\bfseries set\+Oled\+Loglevel} (Log\+Level)
+\item 
+\Hypertarget{classLogger_a5a512035a5693eb0135d56f1f8b42acb}\label{classLogger_a5a512035a5693eb0135d56f1f8b42acb} 
+static void {\bfseries set\+Sd\+Loglevel} (Log\+Level)
+\item 
+static Log\+Level \mbox{\hyperlink{classLogger_a29cf35b00bb6cc257618df8f6b15509a}{get\+Log\+Level}} ()
+\begin{DoxyCompactList}\small\item\em Returns the lowest log level from the serial, SD, and OLED log levels. \end{DoxyCompactList}\item 
+\Hypertarget{classLogger_a2751fd2106d240971897908d5e197a0d}\label{classLogger_a2751fd2106d240971897908d5e197a0d} 
+static uint32\+\_\+t {\bfseries get\+Last\+Log\+Time} ()
+\item 
+\Hypertarget{classLogger_aee355a6449ddb7a0bd5b3a7437963c17}\label{classLogger_aee355a6449ddb7a0bd5b3a7437963c17} 
+static boolean {\bfseries is\+Debug} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classLogger_a29cf35b00bb6cc257618df8f6b15509a}\label{classLogger_a29cf35b00bb6cc257618df8f6b15509a} 
+\index{Logger@{Logger}!getLogLevel@{getLogLevel}}
+\index{getLogLevel@{getLogLevel}!Logger@{Logger}}
+\doxysubsubsection{\texorpdfstring{getLogLevel()}{getLogLevel()}}
+{\footnotesize\ttfamily Logger\+::\+Log\+Level Logger\+::get\+Log\+Level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Returns the lowest log level from the serial, SD, and OLED log levels. 
+
+This is useful for determining the overall log level of the system.
+
+\begin{DoxyReturn}{Returns}
+The lowest log level from serial\+Log\+Level, sd\+Log\+Level, and oled\+Log\+Level 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/Logger.\+h\item 
+src/Logger.\+cpp\end{DoxyCompactItemize}

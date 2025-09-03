@@ -1,0 +1,89 @@
+\doxysection{BMSModule.\+h}
+\hypertarget{BMSModule_8h_source}{}\label{BMSModule_8h_source}\index{src/BMSModule.h@{src/BMSModule.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ }
+\DoxyCodeLine{00003\ \textcolor{comment}{//\ Register\ addresses\ in\ the\ BMS\ modules}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#define\ REG\_DEV\_STATUS\ 0}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#define\ REG\_GPAI\ 1}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#define\ REG\_VCELL1\ 3}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#define\ REG\_VCELL2\ 5}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#define\ REG\_VCELL3\ 7}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#define\ REG\_VCELL4\ 9}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ REG\_VCELL5\ 0xB}}
+\DoxyCodeLine{00011\ \textcolor{preprocessor}{\#define\ REG\_VCELL6\ 0xD}}
+\DoxyCodeLine{00012\ \textcolor{preprocessor}{\#define\ REG\_TEMPERATURE1\ 0xF}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ REG\_TEMPERATURE2\ 0x11}}
+\DoxyCodeLine{00014\ \textcolor{preprocessor}{\#define\ REG\_ALERT\_STATUS\ 0x20}}
+\DoxyCodeLine{00015\ \textcolor{preprocessor}{\#define\ REG\_FAULT\_STATUS\ 0x21}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#define\ REG\_COV\_FAULT\ 0x22}}
+\DoxyCodeLine{00017\ \textcolor{preprocessor}{\#define\ REG\_CUV\_FAULT\ 0x23}}
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#define\ REG\_ADC\_CTRL\ 0x30}}
+\DoxyCodeLine{00019\ \textcolor{preprocessor}{\#define\ REG\_IO\_CTRL\ 0x31}}
+\DoxyCodeLine{00020\ \textcolor{preprocessor}{\#define\ REG\_BAL\_CTRL\ 0x32}}
+\DoxyCodeLine{00021\ \textcolor{preprocessor}{\#define\ REG\_BAL\_TIME\ 0x33}}
+\DoxyCodeLine{00022\ \textcolor{preprocessor}{\#define\ REG\_ADC\_CONV\ 0x34}}
+\DoxyCodeLine{00023\ \textcolor{preprocessor}{\#define\ REG\_ADDR\_CTRL\ 0x3B}}
+\DoxyCodeLine{00024\ \textcolor{preprocessor}{\#define\ MAX\_MODULE\_ADDR\ 0x3E}}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \textcolor{keyword}{class\ }\mbox{\hyperlink{classBMSModule}{BMSModule}}}
+\DoxyCodeLine{00027\ \{}
+\DoxyCodeLine{00028\ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00029\ \ \ \ \ \mbox{\hyperlink{classBMSModule}{BMSModule}}();}
+\DoxyCodeLine{00030\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_a1eabfb38680869afaf3bc3e07b001bbf}{readStatus}}();}
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_a5013b5712334a0606e36cc2fc1f91874}{clearModule}}();}
+\DoxyCodeLine{00032\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_ae5a50016dcd7df13452d0a8fe13523cb}{stopBalance}}();}
+\DoxyCodeLine{00033\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBMSModule_a34022b491f58c7bac94c5740c6be72cf}{readModuleValues}}();}
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSModule_a4505dbb05df9c97eb11ca420d4ec4c4a}{getscells}}();}
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_aebeceecc8bac5f4fcd634a52811ef7c1}{getCellVoltage}}(\textcolor{keywordtype}{int}\ cell);}
+\DoxyCodeLine{00036\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a49d756ce3d08d18286e8b5ec7ed48617}{getLowCellV}}();}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_afd21c5184d88f8439f0287f48814e080}{getHighCellV}}();}
+\DoxyCodeLine{00038\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a88a09329f1629ff6762a7e94dffdc5da}{getAverageV}}();}
+\DoxyCodeLine{00039\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a5941c0e2d48a702fb9a68a742d88b052}{getLowTemp}}();}
+\DoxyCodeLine{00040\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a3f4e72c2feb0153a8c8c5d0467e2940d}{getHighTemp}}();}
+\DoxyCodeLine{00041\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a771f772bb3e6e80b75b36a75e9a3b428}{getHighestModuleVolt}}();}
+\DoxyCodeLine{00042\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_aa65d43be85aacce615228fe343561ab5}{getLowestModuleVolt}}();}
+\DoxyCodeLine{00043\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a2931811b7b7326d138933ab2adf77340}{getHighestCellVolt}}(\textcolor{keywordtype}{int}\ cell);}
+\DoxyCodeLine{00044\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a893a0420cf941aa474f2ff26b8776203}{getLowestCellVolt}}(\textcolor{keywordtype}{int}\ cell);}
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a534e5759096ec251946d924a0376a314}{getHighestTemp}}();}
+\DoxyCodeLine{00046\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a84fad49db5e313a6d37c5eb169c96d9a}{getLowestTemp}}();}
+\DoxyCodeLine{00047\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a10c1fb84ad8df54ec0754bf0238bef78}{getAvgTemp}}();}
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a0ac3055a18b9705c96c437385daaa1da}{getModuleVoltage}}();}
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keywordtype}{float}\ \mbox{\hyperlink{classBMSModule_a5421584a4902893b122fd12100f97877}{getTemperature}}(\textcolor{keywordtype}{int}\ temp);}
+\DoxyCodeLine{00050\ \ \ \ \ uint8\_t\ \mbox{\hyperlink{classBMSModule_a01e84ed82572bd6bc882818c463e60ab}{getFaults}}();}
+\DoxyCodeLine{00051\ \ \ \ \ uint8\_t\ \mbox{\hyperlink{classBMSModule_a252897f80c1eb242fa9e4e7cf32c252f}{getAlerts}}();}
+\DoxyCodeLine{00052\ \ \ \ \ uint8\_t\ \mbox{\hyperlink{classBMSModule_a26abd0f531677532e566b49b0aa6ef2c}{getCOVCells}}();}
+\DoxyCodeLine{00053\ \ \ \ \ uint8\_t\ \mbox{\hyperlink{classBMSModule_a5910e5ae366cd88bb0f3e1c6c22ae403}{getCUVCells}}();}
+\DoxyCodeLine{00054\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_a01a093082decd5cd1fe7a5dc123d01f6}{setAddress}}(\textcolor{keywordtype}{int}\ newAddr);}
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keywordtype}{int}\ \mbox{\hyperlink{classBMSModule_a407d0e81b5511c4f960947a48cfc1c8b}{getAddress}}();}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classBMSModule_aa6671d5df2ac0085167e4dec7ffcb67a}{isExisting}}();}
+\DoxyCodeLine{00057\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_abfbc119e4e68d211f123d1176d23a62d}{setExists}}(\textcolor{keywordtype}{bool}\ ex);}
+\DoxyCodeLine{00058\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_a96bc3e57956a3a06fef15fe4cdfe4ead}{settempsensor}}(\textcolor{keywordtype}{int}\ tempsensor);}
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classBMSModule_a8c2dec908ce4dc8bbd5d00c6bc2efe68}{setIgnoreCell}}(\textcolor{keywordtype}{float}\ Ignore);}
+\DoxyCodeLine{00060\ \ \ \ \ }
+\DoxyCodeLine{00061\ \ \ \ \ }
+\DoxyCodeLine{00062\ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00063\ \ \ \ \ \textcolor{keywordtype}{float}\ cellVolt[6];\ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ calculated\ as\ 16\ bit\ value\ *\ 6.250\ /\ 16383\ =\ volts}}
+\DoxyCodeLine{00064\ \ \ \ \ \textcolor{keywordtype}{float}\ lowestCellVolt[6];}
+\DoxyCodeLine{00065\ \ \ \ \ \textcolor{keywordtype}{float}\ highestCellVolt[6];}
+\DoxyCodeLine{00066\ \ \ \ \ \textcolor{keywordtype}{float}\ moduleVolt;\ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ summed\ cell\ voltages}}
+\DoxyCodeLine{00067\ \ \ \ \ \textcolor{keywordtype}{float}\ retmoduleVolt;\ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ calculated\ as\ 16\ bit\ value\ *\ 33.333\ /\ 16383\ =\ volts}}
+\DoxyCodeLine{00068\ \ \ \ \ \textcolor{keywordtype}{float}\ temperatures[2];\ \ \ \ \ \textcolor{comment}{//\ Don't\ know\ the\ proper\ scaling\ at\ this\ point}}
+\DoxyCodeLine{00069\ \ \ \ \ \textcolor{keywordtype}{float}\ lowestTemperature;}
+\DoxyCodeLine{00070\ \ \ \ \ \textcolor{keywordtype}{float}\ highestTemperature;}
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keywordtype}{float}\ lowestModuleVolt;}
+\DoxyCodeLine{00072\ \ \ \ \ \textcolor{keywordtype}{float}\ highestModuleVolt;}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keywordtype}{float}\ IgnoreCell;}
+\DoxyCodeLine{00074\ \ \ \ \ \textcolor{keywordtype}{bool}\ exists;}
+\DoxyCodeLine{00075\ \ \ \ \ \textcolor{keywordtype}{int}\ alerts;}
+\DoxyCodeLine{00076\ \ \ \ \ \textcolor{keywordtype}{int}\ faults;}
+\DoxyCodeLine{00077\ \ \ \ \ \textcolor{keywordtype}{int}\ COVFaults;}
+\DoxyCodeLine{00078\ \ \ \ \ \textcolor{keywordtype}{int}\ CUVFaults;}
+\DoxyCodeLine{00079\ \ \ \ \ \textcolor{keywordtype}{int}\ sensor;}
+\DoxyCodeLine{00080\ \ \ \ \ uint8\_t\ moduleAddress;\ \ \ \ \ \textcolor{comment}{//1\ to\ 0x3E}}
+\DoxyCodeLine{00081\ \ \ \ \ \textcolor{keywordtype}{int}\ scells;}
+\DoxyCodeLine{00082\ \ \ \ \ \textcolor{keywordtype}{int}\ smiss;}
+\DoxyCodeLine{00083\ \};}
+
+\end{DoxyCode}

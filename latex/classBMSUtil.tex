@@ -1,0 +1,126 @@
+\doxysection{BMSUtil Class Reference}
+\hypertarget{classBMSUtil}{}\label{classBMSUtil}\index{BMSUtil@{BMSUtil}}
+
+
+A utility class providing static methods for communicating with the Tesla BMS.  
+
+
+
+
+{\ttfamily \#include $<$BMSUtil.\+h$>$}
+
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static uint8\+\_\+t \mbox{\hyperlink{classBMSUtil_a262cfe4e2818a95441002df320587b15}{gen\+CRC}} (uint8\+\_\+t \texorpdfstring{$\ast$}{*}input, int len\+Input)
+\begin{DoxyCompactList}\small\item\em Generates an 8-\/bit CRC (Cyclic Redundancy Check) for a given data buffer. \end{DoxyCompactList}\item 
+static void \mbox{\hyperlink{classBMSUtil_ac1eb9e70215cb3ba74642db3e9da3614}{send\+Data}} (uint8\+\_\+t \texorpdfstring{$\ast$}{*}data, uint8\+\_\+t data\+Len, bool is\+Write)
+\begin{DoxyCompactList}\small\item\em Sends a data frame over the BMS serial port. \end{DoxyCompactList}\item 
+static int \mbox{\hyperlink{classBMSUtil_abce1b51f931ded380e45dc1228e11383}{get\+Reply}} (uint8\+\_\+t \texorpdfstring{$\ast$}{*}data, int max\+Len)
+\begin{DoxyCompactList}\small\item\em Reads a reply from the BMS serial port into a buffer. \end{DoxyCompactList}\item 
+static int \mbox{\hyperlink{classBMSUtil_aeb4da3c5571213d7f62ec7abebe7d556}{send\+Data\+With\+Reply}} (uint8\+\_\+t \texorpdfstring{$\ast$}{*}data, uint8\+\_\+t data\+Len, bool is\+Write, uint8\+\_\+t \texorpdfstring{$\ast$}{*}ret\+Data, int ret\+Len)
+\begin{DoxyCompactList}\small\item\em Sends a command and waits for a reply with an automatic retry mechanism. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A utility class providing static methods for communicating with the Tesla BMS. 
+
+This class encapsulates the low-\/level communication protocol, including CRC generation, sending commands, and receiving replies. It also features a built-\/in retry mechanism to enhance communication reliability, especially when dealing with potential serial timing discrepancies. All methods are static, so this class is not intended to be instantiated. 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classBMSUtil_a262cfe4e2818a95441002df320587b15}\label{classBMSUtil_a262cfe4e2818a95441002df320587b15} 
+\index{BMSUtil@{BMSUtil}!genCRC@{genCRC}}
+\index{genCRC@{genCRC}!BMSUtil@{BMSUtil}}
+\doxysubsubsection{\texorpdfstring{genCRC()}{genCRC()}}
+{\footnotesize\ttfamily static uint8\+\_\+t BMSUtil\+::gen\+CRC (\begin{DoxyParamCaption}\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{input,  }\item[{int}]{len\+Input }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Generates an 8-\/bit CRC (Cyclic Redundancy Check) for a given data buffer. 
+
+This function calculates a CRC-\/8 checksum using the polynomial 0x07. This is used to ensure data integrity during communication with the BMS. 
+\begin{DoxyParams}{Parameters}
+{\em input} & Pointer to the byte array for which to calculate the CRC. \\
+\hline
+{\em len\+Input} & The number of bytes in the input array. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The calculated 8-\/bit CRC value. 
+\end{DoxyReturn}
+\Hypertarget{classBMSUtil_abce1b51f931ded380e45dc1228e11383}\label{classBMSUtil_abce1b51f931ded380e45dc1228e11383} 
+\index{BMSUtil@{BMSUtil}!getReply@{getReply}}
+\index{getReply@{getReply}!BMSUtil@{BMSUtil}}
+\doxysubsubsection{\texorpdfstring{getReply()}{getReply()}}
+{\footnotesize\ttfamily static int BMSUtil\+::get\+Reply (\begin{DoxyParamCaption}\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{data,  }\item[{int}]{max\+Len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Reads a reply from the BMS serial port into a buffer. 
+
+This function reads available bytes from the BMS serial port up to a specified maximum length. If more bytes are available than {\ttfamily max\+Len}, it reads and discards the excess to clear the buffer. The received data is logged for debugging if enabled.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & Pointer to the buffer where the received data will be stored. \\
+\hline
+{\em max\+Len} & The maximum number of bytes to read into the buffer. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The actual number of bytes read from the serial port. 
+\end{DoxyReturn}
+\Hypertarget{classBMSUtil_ac1eb9e70215cb3ba74642db3e9da3614}\label{classBMSUtil_ac1eb9e70215cb3ba74642db3e9da3614} 
+\index{BMSUtil@{BMSUtil}!sendData@{sendData}}
+\index{sendData@{sendData}!BMSUtil@{BMSUtil}}
+\doxysubsubsection{\texorpdfstring{sendData()}{sendData()}}
+{\footnotesize\ttfamily static void BMSUtil\+::send\+Data (\begin{DoxyParamCaption}\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{data,  }\item[{uint8\+\_\+t}]{data\+Len,  }\item[{bool}]{is\+Write }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Sends a data frame over the BMS serial port. 
+
+This function constructs and sends a command frame to the BMS. It takes the module address from the first byte of the data array and sets the read/write flag based on the {\ttfamily is\+Write} parameter. For write operations, it calculates and appends a CRC to the end of the message. The function also provides debug logging of the sent data if enabled.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & Pointer to the byte array containing the data to send. The first byte must be the module address. \\
+\hline
+{\em data\+Len} & The total length of the data array. \\
+\hline
+{\em is\+Write} & A boolean flag indicating if the operation is a write (true) or read (false). \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classBMSUtil_aeb4da3c5571213d7f62ec7abebe7d556}\label{classBMSUtil_aeb4da3c5571213d7f62ec7abebe7d556} 
+\index{BMSUtil@{BMSUtil}!sendDataWithReply@{sendDataWithReply}}
+\index{sendDataWithReply@{sendDataWithReply}!BMSUtil@{BMSUtil}}
+\doxysubsubsection{\texorpdfstring{sendDataWithReply()}{sendDataWithReply()}}
+{\footnotesize\ttfamily static int BMSUtil\+::send\+Data\+With\+Reply (\begin{DoxyParamCaption}\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{data,  }\item[{uint8\+\_\+t}]{data\+Len,  }\item[{bool}]{is\+Write,  }\item[{uint8\+\_\+t \texorpdfstring{$\ast$}{*}}]{ret\+Data,  }\item[{int}]{ret\+Len }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Sends a command and waits for a reply with an automatic retry mechanism. 
+
+This function is a high-\/level wrapper that combines {\ttfamily send\+Data} and {\ttfamily get\+Reply}. It sends a command and then attempts to read a reply of a specific expected length. If the received reply length does not match the expected length, it will automatically retry the entire process up to 3 times. This helps to mitigate communication errors that may occur due to hardware timing imperfections on Arduino Due.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & Pointer to the byte array containing the command to send. \\
+\hline
+{\em data\+Len} & The length of the command data array. \\
+\hline
+{\em is\+Write} & A boolean flag indicating if the operation is a write (true) or read (false). \\
+\hline
+{\em ret\+Data} & Pointer to the buffer where the reply will be stored. \\
+\hline
+{\em ret\+Len} & The expected length of the reply. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The number of bytes received in the reply. If the retries fail, it returns the length of the last unsuccessful attempt. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/BMSUtil.\+h\end{DoxyCompactItemize}

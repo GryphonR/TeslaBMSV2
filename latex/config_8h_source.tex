@@ -1,0 +1,93 @@
+\doxysection{config.\+h}
+\hypertarget{config_8h_source}{}\label{config_8h_source}\index{src/config.h@{src/config.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ }
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <Arduino.h>}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{comment}{//\ \#\#\#\#\#\#\#\#\#\ For\ the\ eChook\ Comms\ Master\ Board,\ Nothing\ here\ should\ need\ to\ be\ changed\ \#\#\#\#\#\#\#\#\#\#\#}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ }
+\DoxyCodeLine{00009\ \textcolor{comment}{//\ Set\ to\ the\ proper\ port\ for\ your\ USB\ connection\ -\/\ SerialUSB\ on\ Due\ (Native)\ or\ Serial\ for\ Due\ (Programming)\ or\ Teensy}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#define\ SERIAL\_CONSOLE\ Serial}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{comment}{//\ Define\ this\ to\ be\ the\ serial\ port\ the\ Tesla\ BMS\ modules\ are\ connected\ to.}}
+\DoxyCodeLine{00013\ \textcolor{preprocessor}{\#define\ SERIALBMS\ Serial2}}
+\DoxyCodeLine{00014\ }
+\DoxyCodeLine{00015\ \textcolor{comment}{//\ Define\ this\ to\ be\ the\ serial\ port\ connected\ to\ 'Serial\ 2'\ on\ the\ J5\ Aux\ Header}}
+\DoxyCodeLine{00016\ \textcolor{preprocessor}{\#define\ SERIAL\_AUX\ Serial7}}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \textcolor{preprocessor}{\#define\ EEPROM\_VERSION\ 0x14\ }\textcolor{comment}{//\ update\ any\ time\ EEPROM\ struct\ below\ is\ changed.}}
+\DoxyCodeLine{00019\ \textcolor{comment}{//\ \#define\ EEPROM\_PAGE\ 0\ //Not\ used?}}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \textcolor{keyword}{typedef}\ \textcolor{keyword}{struct}}
+\DoxyCodeLine{00022\ \{}
+\DoxyCodeLine{00023\ \ \ uint8\_t\ version;}
+\DoxyCodeLine{00024\ \ \ uint8\_t\ checksum;}
+\DoxyCodeLine{00025\ \ \ uint32\_t\ canSpeed;}
+\DoxyCodeLine{00026\ \ \ uint8\_t\ batteryID;\ \textcolor{comment}{//\ which\ battery\ ID\ should\ this\ board\ associate\ as\ on\ the\ CAN\ bus}}
+\DoxyCodeLine{00027\ \ \ uint8\_t\ logLevel;}
+\DoxyCodeLine{00028\ \ \ \textcolor{keywordtype}{float}\ OverVSetpoint;}
+\DoxyCodeLine{00029\ \ \ \textcolor{keywordtype}{float}\ UnderVSetpoint;}
+\DoxyCodeLine{00030\ \ \ \textcolor{keywordtype}{float}\ DischHys;}
+\DoxyCodeLine{00031\ \ \ \textcolor{keywordtype}{float}\ ChargeVsetpoint;}
+\DoxyCodeLine{00032\ \ \ \textcolor{keywordtype}{float}\ DischVsetpoint;}
+\DoxyCodeLine{00033\ \ \ \textcolor{keywordtype}{float}\ ChargeHys;}
+\DoxyCodeLine{00034\ \ \ \textcolor{keywordtype}{float}\ StoreVsetpoint;}
+\DoxyCodeLine{00035\ \ \ \textcolor{keywordtype}{float}\ WarnOff;}
+\DoxyCodeLine{00036\ \ \ \textcolor{keywordtype}{float}\ OverTSetpoint;}
+\DoxyCodeLine{00037\ \ \ \textcolor{keywordtype}{float}\ UnderTSetpoint;}
+\DoxyCodeLine{00038\ \ \ uint16\_t\ triptime;}
+\DoxyCodeLine{00039\ \ \ \textcolor{keywordtype}{float}\ ChargeTSetpoint;}
+\DoxyCodeLine{00040\ \ \ \textcolor{keywordtype}{float}\ DisTSetpoint;}
+\DoxyCodeLine{00041\ \ \ \textcolor{keywordtype}{float}\ WarnToff;}
+\DoxyCodeLine{00042\ \ \ \textcolor{keywordtype}{float}\ CellGap;}
+\DoxyCodeLine{00043\ \ \ uint8\_t\ IgnoreTemp;}
+\DoxyCodeLine{00044\ \ \ \textcolor{keywordtype}{float}\ IgnoreVolt;}
+\DoxyCodeLine{00045\ \ \ \textcolor{keywordtype}{float}\ balanceVoltage;}
+\DoxyCodeLine{00046\ \ \ \textcolor{keywordtype}{float}\ balanceHyst;}
+\DoxyCodeLine{00047\ \ \ \textcolor{keywordtype}{int}\ Scells;}
+\DoxyCodeLine{00048\ \ \ \textcolor{keywordtype}{int}\ Pstrings;}
+\DoxyCodeLine{00049\ \ \ \textcolor{keywordtype}{int}\ CAP;}
+\DoxyCodeLine{00050\ \ \ uint16\_t\ chargecurrentmax;}
+\DoxyCodeLine{00051\ \ \ uint16\_t\ chargecurrent2max;}
+\DoxyCodeLine{00052\ \ \ uint16\_t\ chargecurrentend;}
+\DoxyCodeLine{00053\ \ \ uint16\_t\ discurrentmax;}
+\DoxyCodeLine{00054\ \ \ \textcolor{keywordtype}{int}\ socvolt[4];}
+\DoxyCodeLine{00055\ \ \ \textcolor{keywordtype}{int}\ invertcur;}
+\DoxyCodeLine{00056\ \ \ \textcolor{keywordtype}{int}\ cursens;}
+\DoxyCodeLine{00057\ \ \ \textcolor{keywordtype}{int}\ curcan;}
+\DoxyCodeLine{00058\ \ \ \textcolor{keywordtype}{int}\ voltsoc;}
+\DoxyCodeLine{00059\ \ \ \textcolor{keywordtype}{int}\ Pretime;}
+\DoxyCodeLine{00060\ \ \ \textcolor{keywordtype}{int}\ conthold;\ \textcolor{comment}{//PWM\ Duty\ Cycle\ for\ holding\ extrernally\ economised\ contactor\ in\ closed\ state}}
+\DoxyCodeLine{00061\ \ \ \textcolor{keywordtype}{int}\ Precurrent;}
+\DoxyCodeLine{00062\ \ \ \textcolor{keywordtype}{float}\ convhigh;}
+\DoxyCodeLine{00063\ \ \ \textcolor{keywordtype}{float}\ convlow;}
+\DoxyCodeLine{00064\ \ \ int32\_t\ changecur;}
+\DoxyCodeLine{00065\ \ \ uint16\_t\ offset1;}
+\DoxyCodeLine{00066\ \ \ uint16\_t\ offset2;}
+\DoxyCodeLine{00067\ \ \ \textcolor{keywordtype}{int}\ balanceDuty;}
+\DoxyCodeLine{00068\ \ \ \textcolor{keywordtype}{int}\ ESSmode;}
+\DoxyCodeLine{00069\ \ \ \textcolor{keywordtype}{int}\ gaugelow;}
+\DoxyCodeLine{00070\ \ \ \textcolor{keywordtype}{int}\ gaugehigh;}
+\DoxyCodeLine{00071\ \ \ \textcolor{keywordtype}{int}\ ncur;}
+\DoxyCodeLine{00072\ \ \ \textcolor{keywordtype}{int}\ chargertype;}
+\DoxyCodeLine{00073\ \ \ uint16\_t\ chargerspd;}
+\DoxyCodeLine{00074\ \ \ uint16\_t\ UnderDur;}
+\DoxyCodeLine{00075\ \ \ uint16\_t\ CurDead;}
+\DoxyCodeLine{00076\ \ \ \textcolor{keywordtype}{float}\ DisTaper;}
+\DoxyCodeLine{00077\ \ \ uint8\_t\ ChargerDirect;\ \textcolor{comment}{//\ bool}}
+\DoxyCodeLine{00078\ \ \ uint8\_t\ ExpMess;\ \ \ \ \ \ \ \textcolor{comment}{//\ bool}}
+\DoxyCodeLine{00079\ \ \ uint8\_t\ SerialCan;\ \ \ \ \ \textcolor{comment}{//\ bool}}
+\DoxyCodeLine{00080\ \ \ uint16\_t\ PulseCh;}
+\DoxyCodeLine{00081\ \ \ uint16\_t\ PulseChDur;}
+\DoxyCodeLine{00082\ \ \ uint16\_t\ PulseDi;}
+\DoxyCodeLine{00083\ \ \ uint16\_t\ PulseDiDur;}
+\DoxyCodeLine{00084\ \ \ uint8\_t\ tripcont;}
+\DoxyCodeLine{00085\ \ \ \textcolor{keywordtype}{int}\ chargereff;}
+\DoxyCodeLine{00086\ \ \ \textcolor{keywordtype}{int}\ chargerACv;}
+\DoxyCodeLine{00087\ \}\ \mbox{\hyperlink{structEEPROMSettings}{EEPROMSettings}};}
+
+\end{DoxyCode}
