@@ -26,14 +26,14 @@ jobs:
     - name: Generate Doxygen Documentation
       run: doxygen Doxyfile
 
-    - name: Fix Directory Structure
-      run: |
-        mkdir -p ./docs
-        mv ./html/* ./docs/
+    # - name: Fix Directory Structure
+    #   run: |
+    #     mkdir -p ./docs
+    #     mv ./html/* ./docs/
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs
+        publish_dir: ./docs/html
         publish_branch: gh-pages
