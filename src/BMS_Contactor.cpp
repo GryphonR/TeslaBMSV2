@@ -3,6 +3,7 @@
 /**
  * STILL TODO!
  *
+ * - Calibrations for High Side Diagnostics sensing - readings are all over the place!
  * - Set fault reset signal to select fault behaviour between latch off or auto restart
  * - Diagnostics for open/short circuit
  * - Diagnostics for over temperature
@@ -347,7 +348,7 @@ void BMS_Contactor::_readCurrent()
         uint16_t adc = analogRead(_pinMultisense);
         Logger::debug("Current Read ADC: %d", adc);
         // calculate voltage on current sense resistor
-        float voltage = ((adc * 3.3 ) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset
+        float voltage = ((adc * referenceVoltage3v3) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset
         Logger::debug("Current Reading - Voltage %fV", voltage);
         float senseResistorCurrent = voltage / 680;
         const float K = 1400; // Guestimate from page 16 graph VND7050 datasheet https://www.lcsc.com/datasheet/C443997.pdf
@@ -388,8 +389,8 @@ void BMS_Contactor::_readTemperature()
         // mV per degree = -5.5. Therefore Temp = max temp - (mVoltage/5.5) Max Temp isn't clear?
         // 5.5@5v, 3.63@3.3v?
         // trial and error puts it at 13.5!
-        
-        float voltage = ((adc * (3300)) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
+
+        float voltage = ((adc * (referenceVoltage3v3*1000)) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
         Logger::debug("Temp Reading Voltage: %fmV", voltage);
         float temp = 150 - (voltage / 13.5); 
         _temperature = temp;

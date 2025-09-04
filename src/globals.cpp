@@ -1,5 +1,7 @@
 #include "globals.h"
 
+float referenceVoltage3v3 = 3.298;
+
 int Discharge;
 
 // variables for output control

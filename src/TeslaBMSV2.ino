@@ -37,6 +37,7 @@
 #include "BMS_SD.h"
 #include "BMS_RTC.h"
 #include "BMS_OLED.h"
+#include "BMS_Contactor.h"
 
 // Libraries
 #include <Arduino.h>
@@ -62,6 +63,12 @@ WDT_T4<WDT1> watchdog;
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> Can1;
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
 FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
+
+BMS_Contactor positive(POSITIVE, H1, BuiltIn);
+BMS_Contactor precharge(PRECHARGE, H2, BuiltIn);
+BMS_Contactor charge(CHARGE, H3, BuiltIn);
+BMS_Contactor negative(NEGATIVE, H4, BuiltIn);
+
 
 // These two appear unused
 // Serial_CAN can;
@@ -100,7 +107,7 @@ void isrCP();
 
 void setup()
 {
-  Logger::setSerialLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setSerialLoglevel(Logger::Debug); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
   Logger::setSdLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
   Logger::setOledLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
 
@@ -245,6 +252,8 @@ void setup()
   {
     Logger::info("Setup complete with ERRORS, entering main loop");
   }
+
+  
 }
 
 void loop()
@@ -266,6 +275,19 @@ void loop()
   {
     menu();
   }
+
+  static unsigned long testNext = millis();
+  if (millis() > testNext)
+  {
+    testNext += 1000;
+    // Serial.printf("Contactor Current: %f\n", testContactor.getPinCurrent(1)); 
+    // delay(10);
+    // Serial.printf("Contactor Voltage: %f\n", testContactor.getVoltage(1)); 
+    // Serial.printf("Contactor Temperature: %f\n", testContactor.getTemperature(1)); 
+    
+    
+  }
+  testContactor.update();
 
   if (modulesConnected)
   {
@@ -360,8 +382,8 @@ void pinSetup()
   analogWriteFrequency(PIN_OUT7, pwmfreq);
   analogWriteFrequency(PIN_OUT8, pwmfreq);
 
-  adc->adc0->setAveraging(16);  // set number of averages
-  adc->adc0->setResolution(16); // set bits of resolution
+  // adc->adc0->setAveraging(16);  // set number of averages
+  // adc->adc0->setResolution(16); // set bits of resolution
   adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
   adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);
   adc->adc0->startContinuous(PIN_ACUR_1);
