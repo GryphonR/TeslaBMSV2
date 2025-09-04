@@ -1,3 +1,9 @@
+/**
+ * @file BMS_RTC.cpp
+ * @brief All functions relating to the Real Time Clock.
+ *
+ */
+
 #include "BMS_RTC.h"
 #include <TimeLib.h>
 // #include <DS1307RTC.h> // a basic DS1307 library that returns time as a time_t

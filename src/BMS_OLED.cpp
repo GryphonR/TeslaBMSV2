@@ -1,3 +1,9 @@
+/**
+ * @file BMS_OLED.cpp
+ * @brief Setup and Functions for writing to the on board 0.91" OLED Display.
+ *
+ */
+
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 

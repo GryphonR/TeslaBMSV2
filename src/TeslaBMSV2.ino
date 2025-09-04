@@ -1,3 +1,11 @@
+/**
+ * @file TeslaBMSV2.ino
+ * @brief Entry Point for the project.
+ * 
+ * Adapted from the original SimpBMS Arduino project 
+ * with setup() and loop() functions. * 
+ */
+
 /*
   Copyright (c) 2019 Simp ECO Engineering
   Permission is hereby granted, free of charge, to any person obtaining
@@ -114,13 +122,13 @@ void setup()
   SERIALBMS.begin(612500); // Tesla serial bus
 
   SERIAL_CONSOLE.begin(500000);
-  SERIAL_CONSOLE.println("eChook Comms Master BMS - Tesla");
-  SERIAL_CONSOLE.println("Starting up!");
+  SERIAL_CONSOLE.println(F("eChook Comms Master BMS - Tesla Modules"));
+  SERIAL_CONSOLE.println(F("Starting up!"));
 
   
   SERIAL_AUX.begin(115200); // display and can adpater canbus
   delay(2000);              // just for easy debugging. It takes a few seconds for USB to come up properly on most OS's
-  Serial.println("Serial busses started, plus 2 second delay");
+  Serial.println("Serial busses started");
 
   if (CrashReport)
   {

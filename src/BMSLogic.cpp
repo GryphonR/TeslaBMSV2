@@ -1,3 +1,9 @@
+/**
+ * @file BMSLogic.cpp
+ * @brief Operational Logic for BMS Comms Board functions.
+ *
+ */
+
 #include "BMSLogic.h"
 #include "globals.h"
 #include "Settings.h"

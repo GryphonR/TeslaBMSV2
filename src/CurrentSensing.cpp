@@ -1,5 +1,10 @@
-// This files contains functions related to ANALOGUE current sensing. 
-// If a CAN based current sensor is used, it's handled in the CAN files
+/**
+ * @file CurrentSensing.cpp
+ * @brief Functions for ANALOGUE Current Sensing.
+ *
+ * If a CAN based current sensor is used, it's handled in the CAN files
+ * 
+ */
 
 #include "CurrentSensing.h"
 #include "globals.h"

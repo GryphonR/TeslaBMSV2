@@ -1,3 +1,9 @@
+/**
+ * @file BMSModuleManager.cpp
+ * @brief Contains the BMSModuleManager class, using an array of BMSModules to manage and report pack status.
+ *
+ */
+
 #include "config.h"
 #include "BMSModuleManager.h"
 #include "BMSUtil.h"
