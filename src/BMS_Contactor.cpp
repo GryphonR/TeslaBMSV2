@@ -1,3 +1,9 @@
+/**
+ * @file BMS_Contactor.cpp
+ * @brief Contains the BMS_Contactor class, used for management of each contactor.
+ *
+ */
+
 #include "BMS_Contactor.h"
 
 /**

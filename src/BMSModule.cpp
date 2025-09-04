@@ -1,3 +1,9 @@
+/**
+ * @file BMSModule.cpp
+ * @brief Contains BMSModule class for managing individual Tesla Module controlers.
+ * 
+ */
+
 #include "config.h"
 #include "BMSModule.h"
 #include "BMSUtil.h"

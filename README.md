@@ -51,7 +51,7 @@ Target hardware: Teensy 4.1
 - [ ] Current Reading
 - [ ] Digital Inputs
 - [ ] HSD Outputs
-- [ ] HSD Monitoring
+- [x] HSD Monitoring
 - [ ] LSD outputs
 
 
