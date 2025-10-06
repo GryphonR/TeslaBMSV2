@@ -43,7 +43,7 @@ Target hardware: Teensy 4.1
 - [x] Heartbeat LED
 - [x] Buzzer
 - [x] Oled Display
-- [ ] Isolated Serial
+- [x] Isolated Serial
 - [ ] Isolated CAN (CAN1)
 - [ ] Aux CAN (CAN2)
 - [ ] RJ45 CAN (CAN3)
