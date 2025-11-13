@@ -1528,38 +1528,6 @@ void pwmcomms()
   */
 }
 
-/**
- * @brief Manages cell balancing based on the balancecells setting.
- *
- * This function checks the `balancecells` setting to determine whether
- * cell balancing should be enabled or disabled. If balancing is enabled
- * (i.e., `balancecells` is set to 1), it calls the `balanceCells` method
- * of the BMS object with the specified balance duty cycle. If balancing
- * is disabled, it stops the balancing process by calling the `StopBalancing`
- * method of the BMS object.
- *
- * The function includes a debug mode that can be activated by setting
- * the `debug` variable to 1, although in this implementation, both
- * debug and non-debug modes perform the same action.
- */
-void balancing()
-{
-  if (balancecells == 1)
-  {
-    if (debug == 1)
-    {
-      bms.balanceCells(settings.balanceDuty, 0);
-    }
-    else
-    {
-      bms.balanceCells(settings.balanceDuty, 0);
-    }
-  }
-  else
-  {
-    bms.StopBalancing();
-  }
-}
 
 /**
  * @brief Communicates with the charger via CAN bus to set charging parameters.
