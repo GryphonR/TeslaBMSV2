@@ -4,6 +4,7 @@
 #include "BMSModuleManager.h"
 #include <ADC.h>        //https://github.com/pedvide/ADC
 #include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
+#include "BMS_Contactor.h"
 
 #include <Filters.h> //https://github.com/JonHub/Filters
 
@@ -18,6 +19,18 @@ extern FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> Can2;
 extern FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
 
 extern float referenceVoltage3v3;
+
+struct Contactors
+{
+    BMS_Contactor positive;
+    BMS_Contactor precharge;
+    BMS_Contactor charge;
+    BMS_Contactor negative;
+    BMS_Contactor trip;
+};
+
+extern struct Contactors contactors; // Included in globals.h. Declared in .ino
+
 // SD Card Status Values
 #define SD_ERROR 0
 #define SD_OK 1

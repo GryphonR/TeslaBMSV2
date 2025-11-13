@@ -76,7 +76,9 @@ BMS_Contactor positive(POSITIVE, H1, BuiltIn);
 BMS_Contactor precharge(PRECHARGE, H2, BuiltIn);
 BMS_Contactor charge(CHARGE, H3, BuiltIn);
 BMS_Contactor negative(NEGATIVE, H4, BuiltIn);
+BMS_Contactor trip(0); //Unconfigured
 
+struct Contactors contactors = {positive, precharge, charge, negative, trip};
 
 // These two appear unused
 // Serial_CAN can;
@@ -295,7 +297,7 @@ void loop()
     
     
   }
-  testContactor.update();
+  
 
   if (modulesConnected)
   {

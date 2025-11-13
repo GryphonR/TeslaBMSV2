@@ -48,6 +48,7 @@ class BMS_Contactor
 
 public:
     BMS_Contactor(ContactorName name, ContactorOutput connection, Economiser economiser);
+    BMS_Contactor(int ignored);
     void update();
     void close();
     void close(unsigned int delay);
@@ -56,6 +57,8 @@ public:
     void open(unsigned int delay, float currentThreshold);
     void set(ContactorState state);
     bool getState();
+    bool isOpen();
+    bool isClosed();
     bool diagnosticAvailable();
     float getVoltage(bool forceUpdate);
     float getPinCurrent(bool forceUpdate);
@@ -64,7 +67,8 @@ public:
     float getResistance(bool forceUpdate);
 
 private:
-    float _gndOffsetV = 0.262; // Measured on bench, nothing connected.
+    bool _isConfigured = false;
+    float _gndOffsetV = 0.262; // Measured on bench, nothing connected. TODO - shouldn't be defined here
     ContactorState _state;
     ContactorOutput _connection;
     Economiser _economiser;

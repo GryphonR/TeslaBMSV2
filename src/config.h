@@ -18,6 +18,8 @@
 #define EEPROM_VERSION 0x14 // update any time EEPROM struct below is changed.
 // #define EEPROM_PAGE 0 //Not used?
 
+
+// Values for these are defined in settings.h
 typedef struct
 {
   uint8_t version;
@@ -56,9 +58,9 @@ typedef struct
   int cursens;
   int curcan;
   int voltsoc;
-  int Pretime;
-  int conthold; //PWM Duty Cycle for holding extrernally economised contactor in closed state
-  int Precurrent;
+  int Pretime; //< Time in ms for the Precharge contactor to stay open
+  int conthold; //< PWM Duty Cycle for holding extrernally economised contactor in closed state
+  int Precurrent; //< Current threshold in A below which precharge will finish 
   float convhigh;
   float convlow;
   int32_t changecur;
@@ -81,7 +83,7 @@ typedef struct
   uint16_t PulseChDur;
   uint16_t PulseDi;
   uint16_t PulseDiDur;
-  uint8_t tripcont;
+  uint8_t tripcont; //< ESS Mode, A trip breaker is expected. Set this to use the positive contactor for fault trip instead.
   int chargereff;
   int chargerACv;
 } EEPROMSettings;

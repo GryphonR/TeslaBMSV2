@@ -18,6 +18,8 @@
  */
 BMS_Contactor::BMS_Contactor(ContactorName name, ContactorOutput connection, Economiser economiser)
 {
+    _isConfigured = true;
+
     _connection = connection;
     _economiser = economiser;
 
@@ -82,6 +84,15 @@ BMS_Contactor::BMS_Contactor(ContactorName name, ContactorOutput connection, Eco
         pinMode(_pinSel1, OUTPUT);
         pinMode(_pinMultisense, INPUT); // Not actually needed for ADC
     }
+}
+
+/**
+ * Default constructor for BMS_Contactor. This constructor doesn't do anything other than
+ * set `_isConfigured` to `false`.
+ */
+BMS_Contactor::BMS_Contactor(int ignored)
+{
+    _isConfigured = false;
 }
 
 void BMS_Contactor::update()
@@ -274,6 +285,34 @@ bool BMS_Contactor::getState()
 }
 
 /**
+ * @brief Contactor Open Check
+ *
+ * @note This function returns false if the contactor state is FAULT
+ *
+ * @return True if the contactor state is OPEN or WAITING_TO_CLOSE, false otherwise
+ */
+bool BMS_Contactor::isOpen()
+{
+    return (_state == ContactorState::OPEN ||
+            _state == ContactorState::WAITING_TO_CLOSE);
+}
+
+/**
+ * @brief Contactor Closed Check
+ *
+ * @note This function returns false if the contactor state is FAULT
+ *
+ * @return True if the contactor state is CLOSED, CLOSED_PULLIN, WAITING_TO_OPEN or WAITING_TO_OPEN_CURRENT, false otherwise
+ */
+bool BMS_Contactor::isClosed()
+{
+    return _state == ContactorState::CLOSED ||
+           _state == ContactorState::CLOSED_PULLIN ||
+           _state == ContactorState::WAITING_TO_OPEN ||
+           _state == ContactorState::WAITING_TO_OPEN_CURRENT;
+}
+
+/**
  * @brief Indicates whether diagnostic functions are available for this contactor.
  *
  * @return true if diagnostics are available, false otherwise
@@ -306,10 +345,10 @@ void BMS_Contactor::_readVoltage()
         digitalWrite(_pinSel1, HIGH);
         delay(2);
         uint16_t adc = analogRead(_pinMultisense);
-        float voltage = (((adc * 3.3) / 1023) - _gndOffsetV);// * 8.0; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
+        float voltage = (((adc * 3.3) / 1023) - _gndOffsetV); // * 8.0; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
         Logger::debug("Voltage Read ADC: %d", adc);
         Logger::debug("Voltage Pre Conversion: %fV", voltage);
-        voltage = voltage *8.0;
+        voltage = voltage * 8.0;
         Logger::debug("Voltage: %fV", voltage);
         _voltage = voltage;
     }
@@ -396,9 +435,9 @@ void BMS_Contactor::_readTemperature()
         // 5.5@5v, 3.63@3.3v?
         // trial and error puts it at 13.5!
 
-        float voltage = ((adc * (referenceVoltage3v3*1000)) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
+        float voltage = ((adc * (referenceVoltage3v3 * 1000)) / 1023) - _gndOffsetV; // 3.3 for reference voltage, -0.37 for ground network offset, 8 for VND7050 IC multiplier
         Logger::debug("Temp Reading Voltage: %fmV", voltage);
-        float temp = 150 - (voltage / 13.5); 
+        float temp = 150 - (voltage / 13.5);
         _temperature = temp;
     }
     else

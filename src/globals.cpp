@@ -13,6 +13,7 @@ int pwmcurmax = 50;
 int pwmcurmid = 50;
 int16_t pwmcurmin = 0;
 
+
 bool OutputEnable = 0;
 bool CanOnReq = false;
 bool CanOnRev = false;
@@ -82,7 +83,7 @@ bool CPdebug = 0;
 int outputstate = 0;
 int incomingByte = 0;
 int x = 0;
-int storagemode = 0;
+int storagemode = 0; //< If storage Mode is set, Batteries charge to the StoreVsetpoint, 
 int cellspresent = 0;
 int dashused = 1;
 int Charged = 0;
