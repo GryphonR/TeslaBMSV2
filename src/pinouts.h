@@ -10,10 +10,10 @@ const uint8_t PIN_ACUR_1 = 15; // A1 current 2
 // ==========================
 // Digital Inputs
 // ==========================
-const uint8_t PIN_IN1 = 16; // input 1 - high active
-const uint8_t PIN_IN2 = 17; // input 2 - high active
-const uint8_t PIN_IN3 = 18; // input 3 - high active
-const uint8_t PIN_IN4 = 19; // input 4 - high active
+const uint8_t PIN_IN1 = 16, PIN_IGNITION = 16; // input 1 - high active
+const uint8_t PIN_IN2 = 17, PIN_ESS_ENABLE = 17; // input 2 - high active
+const uint8_t PIN_IN3 = 18, PIN_CHARGE = 18; // input 3 - high active
+const uint8_t PIN_IN4 = 19, PIN_EVSE_PILOT = 19; // input 4 - high active
 
 // ==========================
 // Digital Outputs (Contactors, Relays, etc.)

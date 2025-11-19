@@ -24,37 +24,60 @@
  */
 void bmsLoop()
 {
-    if (millis() > nextLoopTime)
+    static unsigned long nextBmsLogicLoopTime = millis();
+    if (millis() > nextBmsLogicLoopTime)
     {
-        nextLoopTime = millis() + 500; // Every 500ms
-        Logger::debug("Before bms.getAllVoltTemp()");
-
-        // Update BMS data
+        nextBmsLogicLoopTime = millis() + 500; // Every 500ms
+       
+        // Update the Voltage and temerature readings directly from the battery pack.
         bms.getAllVoltTemp();
 
-        Logger::debug("After bms.getAllVoltTemp()");
-        // Cell Voltage  check
+        /**
+         * Logic for ESS Mode
+         */
         if (settings.ESSmode == 1) // ESS Mode
         {
             Logger::debug("Entering ESS Mode Loop");
-            // Check if Lowest cell or highest cell is below the Undervoltage setpoint. (Why lowest and highest??)
+
+            /**
+             * Under Voltage Test
+             *
+             * Check if Lowest cell or highest cell is below the Undervoltage setpoint. 
+             * 
+             * TODO: Why lowest and highest? As there is no different behaviour as a result, surely if high 
+             * is under, low will ALWAYS be under, and if low is under, that's the value that matters...
+             *
+             */
+            static unsigned long underVoltageTripTimer = millis();
             if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getHighCellVolt() < settings.UnderVSetpoint)
             {
-                if (undertriptimer > millis()) // check is last time not undervoltage is longer than UnderDur ago
+                // Only action if the undervoltage condition has existed for longer than settings.triptime
+                if (underVoltageTripTimer > millis()) 
                 {
-                    // bmsstatus = BMS_STATUS_ERROR;
                     setBMSstatus(BMS_STATUS_ERROR, "Undervoltage detected in ESS mode");
                     bmsError = ERROR_VOLTAGE; // TODO - refine error state
                 }
             }
             else
             {
-                undertriptimer = millis() + settings.triptime;
+                // Updates the UnderVoltage Timer if all OK.
+                underVoltageTripTimer = millis() + settings.triptime;
             }
 
+            /**
+             * Over Voltage Test
+             *
+             * Check if Lowest cell or highest cell is over the Overvoltage setpoint.
+             *
+             * TODO: Why lowest and highest? As there is no different behaviour as a result, surely if low
+             * is over, high will ALWAYS be over, and if high is over, that's the value that matters...
+             *
+             * 
+             */
+            static unsigned long overVoltageTripTimer = millis();
             if (bms.getLowCellVolt() > settings.OverVSetpoint || bms.getHighCellVolt() > settings.OverVSetpoint)
             {
-                if (overtriptimer > millis()) // check is last time not undervoltage is longer thatn UnderDur ago
+                if (overVoltageTripTimer > millis()) // check is last time not undervoltage is longer thatn UnderDur ago
                 {
                     // bmsstatus = BMS_STATUS_ERROR;
                     setBMSstatus(BMS_STATUS_ERROR, "Overvoltage detected in ESS mode");
@@ -63,14 +86,15 @@ void bmsLoop()
             }
             else
             {
-                overtriptimer = millis() + settings.triptime;
+                overVoltageTripTimer = millis() + settings.triptime;
             }
-        }
-        else // In 'vehicle' mode
+        } // End of logic for ESS Mode
+        else // Logic for Vehicle Mode
         {
+            static unsigned long underVoltageTripTimer = millis();
             if (bms.getLowCellVolt() < settings.UnderVSetpoint)
             {
-                if (UnderTimer < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
+                if (underVoltageTripTimer < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
                 {
                     // bmsstatus = BMS_STATUS_ERROR;
                     setBMSstatus(BMS_STATUS_ERROR, "Undervoltage detected in vehicle mode");
@@ -79,7 +103,7 @@ void bmsLoop()
             }
             else
             {
-                UnderTimer = millis() + settings.triptime;
+                underVoltageTripTimer = millis() + settings.triptime;
             }
 
             if (bms.getHighCellVolt() < settings.UnderVSetpoint || bms.getHighTemperature() > settings.OverTSetpoint)
@@ -89,9 +113,10 @@ void bmsLoop()
                 bmsError = ERROR_VOLTAGE; // TODO - refine error state
             }
 
+            static unsigned long overVoltageTripTimer = millis();
             if (bms.getHighCellVolt() > settings.OverVSetpoint)
             {
-                if (OverTime < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
+                if (overVoltageTripTimer < millis()) // check is last time not undervoltage is longer thatn UnderDur ago
                 {
                     bmsstatus = BMS_STATUS_ERROR;
                     setBMSstatus(BMS_STATUS_ERROR, "Overvoltage detected in vehicle mode");
@@ -100,7 +125,7 @@ void bmsLoop()
             }
             else
             {
-                OverTime = millis() + settings.triptime;
+                overVoltageTripTimer = millis() + settings.triptime;
             }
         }
 
@@ -174,7 +199,7 @@ void bmsLoop()
 
     } // end of 500ms loop
 
-    // Why are modules cleared every 5 seconds?
+// Why are modules cleared every 5 seconds?
     if (millis() - cleartime > 5000)
     {
         Logger::debug("Clearing modules");
@@ -389,7 +414,7 @@ void outputCheck()
                     // Overvoltage Check
                     if (bms.getHighCellVolt() > settings.OverVSetpoint || bms.getHighCellVolt() > settings.ChargeVsetpoint || chargecurrent == 0)
                     {
-                        if ((millis() - overtriptimer) > settings.triptime)
+                        if ((millis() - overVoltTripTimer) > settings.triptime)
                         {
                             // if (digitalRead(PIN_OUT3) == 1)
                             if (contactors.charge.isClosed())
@@ -409,7 +434,7 @@ void outputCheck()
                     else // Not overvoltage
                     {
                         // overtriptimer set to curretnt time every time no overvoltage is detected - TODO can definitely optimise
-                        overtriptimer = millis();
+                        overVoltTripTimer = millis();
                         if (Charged == 1)
                         {
 
@@ -462,7 +487,7 @@ void outputCheck()
                     if(contactors.positive.isClosed())
                     {
 
-                        if ((millis() - undertriptimer) > settings.triptime)
+                        if ((millis() - underVoltTripTimer) > settings.triptime)
                         {
                             Serial.println();
                             Serial.println("Under Voltage Trip");
@@ -478,7 +503,7 @@ void outputCheck()
                 }
                 else // Not undervoltage
                 {
-                    undertriptimer = millis();
+                    underVoltTripTimer = millis();
 
                     if (bms.getLowCellVolt() > settings.DischVsetpoint + settings.DischHys)
                     {

@@ -40,7 +40,7 @@
 #include "CurrentSensing.h"
 #include "PhysicalGauges.h"
 #include "NextionDisplay.h"
-#include "BMSLogic.h"
+#include "BMSLogicV2.h"
 #include "StatusAndLogging.h"
 #include "BMS_SD.h"
 #include "BMS_RTC.h"
@@ -97,8 +97,6 @@ void alarmupdate();
 void printbmsstat();
 void updateSOC();
 void SOCcharged(int y);
-void Prechargecon();
-void contactorControl();
 void VEcan();
 int pgnFromCANId(int canId);
 bool canRead();
@@ -219,7 +217,7 @@ void setup()
     }
     else if (SOC > 1)
     {
-      // SOCmem = 1;
+      SOCmem = 1;
     }
   }
 
@@ -237,7 +235,7 @@ void setup()
 
   // setup interrupts
   // RISING/HIGH/CHANGE/LOW/FALLING
-  attachInterrupt(PIN_IN4, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 21 ]
+  attachInterrupt(PIN_EVSE_PILOT, isrCP, CHANGE); // attach BUTTON 1 interrupt handler [ pin# 21 ]
 
   // TODO Low/High Voltage Interrupt disabled for T4
   // PMC_LVDSC1 = PMC_LVDSC1_LVDV(1);                    // enable hi v
@@ -286,10 +284,10 @@ void loop()
     menu();
   }
 
-  static unsigned long testNext = millis();
-  if (millis() > testNext)
+  static unsigned long nextContactorCheck = millis();
+  if (millis() > nextContactorCheck)
   {
-    testNext += 1000;
+    nextContactorCheck += 1000;
     // Serial.printf("Contactor Current: %f\n", testContactor.getPinCurrent(1)); 
     // delay(10);
     // Serial.printf("Contactor Voltage: %f\n", testContactor.getVoltage(1)); 
@@ -339,12 +337,18 @@ void moduleSetup()
   {
     Logger::error("No modules found - Check connections to pack");
     setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "No modules found - Check connections to pack");
-    modulesConnected = 0;
+    modulesConnected = false;
   } else if (bms.seriescells() != settings.Scells)
   {
     Logger::error("Number of cells in pack does not match settings");
     Logger::error("Detected: %d, Expected: %d", bms.seriescells(), settings.Scells);
     setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "Number of cells in pack does not match settings");
+    modulesConnected = false;
+  }
+  else{
+    Logger::debug("BMS initialised correctly", bms.getNumModules());
+    setBMSstatus(BMS_STATUS_READY, ERROR_NONE, "BMS initialised correctly");
+    modulesConnected = true;
   }
 }
 
@@ -363,10 +367,10 @@ void pinSetup()
   // ------------- Pin Mode Assignments -------------
   // pinMode(ACUR1, INPUT);//Not required for Analogue Pins
   // pinMode(ACUR2, INPUT);//Not required for Analogue Pins
-  pinMode(PIN_IN1, INPUT_PULLDOWN);
+  pinMode(PIN_IGNITION, INPUT_PULLDOWN);
   pinMode(PIN_IN2, INPUT_PULLDOWN);
-  pinMode(PIN_IN3, INPUT_PULLDOWN);
-  pinMode(PIN_IN4, INPUT_PULLDOWN);
+  pinMode(PIN_CHARGE, INPUT_PULLDOWN);
+  pinMode(PIN_EVSE_PILOT, INPUT_PULLDOWN);
   pinMode(PIN_OUT1, OUTPUT); // Positive contactor
   pinMode(PIN_OUT2, OUTPUT); // precharge
   pinMode(PIN_OUT3, OUTPUT); // charge relay
@@ -539,183 +543,6 @@ void SOCcharged(int y)
     SOC = 100;
     ampsecond = (settings.CAP * settings.Pstrings * 1000) / 0.27777777777778; // reset to full, dependant on given capacity. Need to improve with auto correction for capcity.
   }
-}
-
-/**
- * @brief Handles the precharge state of the BMS.
- *
- * This function checks the states of the key switch and AC present inputs and controls the contactors
- * accordingly. If the key switch is ON or AC is present, it enables the precharge contactor and then the
- * main contactor. If the charger is set to direct mode, it goes to the drive state after precharge.
- * Otherwise, it goes to the charge or drive state depending on whether AC is present or the key switch is
- * ON.
- *
- * If the inputs are not active, it disables all contactors and sets the BMS status to READY.
- */
-void Prechargecon()
-{
-  if (digitalRead(PIN_IN1) == HIGH || digitalRead(PIN_IN3) == HIGH) // detect Key ON or AC present
-  {
-    digitalWrite(PIN_OUT4, HIGH); // Negative Contactor Close
-    contctrl = 2;
-    if (Pretimer + settings.Pretime > millis() || currentact > settings.Precurrent)
-    {
-      digitalWrite(PIN_OUT2, HIGH); // precharge
-    }
-    else // close main contactor
-    {
-      digitalWrite(PIN_OUT1, HIGH); // Positive Contactor Close
-      contctrl = 3;
-      if (settings.ChargerDirect == 1)
-      {
-        // bmsstatus = BMS_STATUS_DRIVE;
-        setBMSstatus(BMS_STATUS_DRIVE, "ChargerDirect=1 so going to DRIVE state after precharge");
-      }
-      else
-      {
-        if (digitalRead(PIN_IN3) == HIGH)
-        {
-          // bmsstatus = BMS_STATUS_CHARGE;
-          setBMSstatus(BMS_STATUS_CHARGE, "AC detected so going to CHARGE state after precharge");
-        }
-        if (digitalRead(PIN_IN1) == HIGH)
-        {
-          // bmsstatus = BMS_STATUS_DRIVE;
-          setBMSstatus(BMS_STATUS_DRIVE, "Key ON detected so going to DRIVE state after precharge");
-        }
-      }
-      digitalWrite(PIN_OUT2, LOW);
-    }
-  }
-  else
-  {
-    digitalWrite(PIN_OUT1, LOW);
-    digitalWrite(PIN_OUT2, LOW);
-    digitalWrite(PIN_OUT4, LOW);
-    // bmsstatus = BMS_STATUS_READY;
-    setBMSstatus(BMS_STATUS_READY, "Key OFF and AC not detected during PRECHARGE state");
-    contctrl = 0;
-  }
-}
-
-/**
- * @brief Controls the contactors based on the desired state.
- *
- * This function manages the state of the contactors by comparing the desired
- * control state (`contctrl`) with the current status (`contstat`). It handles
- * the activation and deactivation of contactors with appropriate timing to ensure
- * safe operation.
- *
- * The function uses timers (`conttimer1`, `conttimer2`, `conttimer3`) to manage
- * the pull-in time for each contactor, ensuring that they are energized for a
- * specified duration (`pulltime`) before switching to a holding current defined
- * in the settings.
- *
- * Contactors are controlled via PWM signals on specific output pins:
- * - PIN_OUT5 for contactor 1
- * - PIN_OUT6 for contactor 2
- * - PIN_OUT7 for contactor 3
- *
- * The function also ensures that if no contactors are requested (`contctrl` is 0),
- * all contactors are de-energized.
- */
-void contactorControl()
-{
-  Logger::debug("Entering contactorControl with contctrl=%d, contstat=%d", contctrl, contstat);
-  if (contctrl != contstat) // check for contactor request change
-  {
-    if ((contctrl & 1) == 0)
-    {
-      analogWrite(PIN_OUT5, 0);
-      contstat = contstat & 254;
-    }
-    if ((contctrl & 2) == 0)
-    {
-      analogWrite(PIN_OUT6, 0);
-      contstat = contstat & 253;
-    }
-    if ((contctrl & 4) == 0)
-    {
-      analogWrite(PIN_OUT7, 0);
-      contstat = contstat & 251;
-    }
-
-    if ((contctrl & 1) == 1)
-    {
-      if ((contstat & 1) != 1)
-      {
-        if (conttimer1 == 0)
-        {
-          // start pull-in timer for contactor 1
-          analogWrite(PIN_OUT5, 255);
-          conttimer1 = millis() + pulltime;
-        }
-        if (conttimer1 < millis())
-        {
-          // switch to holding current after pull-in timer expires
-          analogWrite(PIN_OUT5, settings.conthold);
-          contstat = contstat | 1;
-          conttimer1 = 0;
-        }
-      }
-    }
-
-    if ((contctrl & 2) == 2)
-    {
-      if ((contstat & 2) != 2)
-      {
-        if (conttimer2 == 0)
-        {
-          // start pull-in timer for contactor 2
-          if (debug != 0)
-          {
-            Serial.println();
-            Serial.println("pull in OUT6");
-          }
-          analogWrite(PIN_OUT6, 255);
-          conttimer2 = millis() + pulltime;
-        }
-        if (conttimer2 < millis())
-        {
-          // switch to holding current after pull-in timer expires
-          analogWrite(PIN_OUT6, settings.conthold);
-          contstat = contstat | 2;
-          conttimer2 = 0;
-        }
-      }
-    }
-    if ((contctrl & 4) == 4)
-    {
-      if ((contstat & 4) != 4)
-      {
-        if (conttimer3 == 0)
-        {
-          // start pull-in timer for contactor 3
-          if (debug != 0)
-          {
-            Serial.println();
-            Serial.println("pull in OUT7");
-          }
-          analogWrite(PIN_OUT7, 255);
-          conttimer3 = millis() + pulltime;
-        }
-        if (conttimer3 < millis())
-        {
-          // switch to holding current after pull-in timer expires
-          analogWrite(PIN_OUT7, settings.conthold);
-          contstat = contstat | 4;
-          conttimer3 = 0;
-        }
-      }
-    }
-  }
-  if (contctrl == 0)
-  {
-    // de-energize all contactors if no contactors are requested
-    analogWrite(PIN_OUT5, 0);
-    analogWrite(PIN_OUT6, 0);
-  }
-  Logger::debug("Leaving contactorControl with contctrl=%d, contstat=%d", contctrl, contstat);
 }
 
 /**
@@ -1374,93 +1201,6 @@ void currentlimit()
 }
 
 /**
- * @brief Debugging function to print the state of input pins.
- *
- * This function reads the state of four input pins (PIN_IN1, PIN_IN2, PIN_IN3, PIN_IN4)
- * and prints their status (ON or OFF) to the serial console. It is useful for
- * debugging purposes to verify the state of these inputs during operation.
- */
-void inputdebug()
-{
-  Serial.println();
-  Serial.print("Input : ");
-  if (digitalRead(PIN_IN1))
-  {
-    Serial.print("1 ON  ");
-  }
-  else
-  {
-    Serial.print("1 OFF ");
-  }
-  if (digitalRead(PIN_IN3))
-  {
-    Serial.print("2 ON  ");
-  }
-  else
-  {
-    Serial.print("2 OFF ");
-  }
-  if (digitalRead(PIN_IN3))
-  {
-    Serial.print("3 ON  ");
-  }
-  else
-  {
-    Serial.print("3 OFF ");
-  }
-  if (digitalRead(PIN_IN4))
-  {
-    Serial.print("4 ON  ");
-  }
-  else
-  {
-    Serial.print("4 OFF ");
-  }
-  Serial.println();
-}
-
-/**
- * @brief Debugging function to toggle output pins in a specific pattern.
- *
- * This function toggles the state of eight output pins (PIN_OUT1 to PIN_OUT8)
- * in a specific pattern for debugging purposes. It uses a static variable
- * `outputstate` to track the current state and changes the pin states
- * accordingly. The function increments the `outputstate` variable and resets
- * it after reaching a certain threshold to create a repeating pattern.
- */
-void outputdebug()
-{
-  if (outputstate < 5)
-  {
-    digitalWrite(PIN_OUT1, HIGH);
-    digitalWrite(PIN_OUT2, HIGH);
-    digitalWrite(PIN_OUT3, HIGH);
-    digitalWrite(PIN_OUT4, HIGH);
-    analogWrite(PIN_OUT5, 255);
-    analogWrite(PIN_OUT6, 255);
-    analogWrite(PIN_OUT7, 255);
-    analogWrite(PIN_OUT8, 255);
-    outputstate++;
-  }
-  else
-  {
-    digitalWrite(PIN_OUT1, LOW);
-    digitalWrite(PIN_OUT2, LOW);
-    digitalWrite(PIN_OUT3, LOW);
-    digitalWrite(PIN_OUT4, LOW);
-    analogWrite(PIN_OUT5, 0);
-    analogWrite(PIN_OUT6, 0);
-    analogWrite(PIN_OUT7, 0);
-    analogWrite(PIN_OUT8, 0);
-    outputstate++;
-  }
-  if (outputstate > 10)
-  {
-    outputstate = 0;
-  }
-}
-
-/**
  * @brief Resets the watchdog timer to prevent system reset.
  *
  * This function feeds the watchdog timer to prevent it from expiring
@@ -1715,7 +1455,7 @@ void chargercomms()
  */
 void isrCP()
 {
-  if (digitalRead(PIN_IN4) == LOW)
+  if (digitalRead(PIN_EVSE_PILOT) == LOW)
   {
     duration = micros() - pilottimer;
     pilottimer = micros();

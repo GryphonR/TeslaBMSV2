@@ -76,11 +76,12 @@ extern int Discharge;
 // variables for output control
 extern int pulltime;
 extern int contctrl, contstat;
-extern unsigned long conttimer1, conttimer2, conttimer3, Pretimer, Pretimer1, overtriptimer, undertriptimer, mainconttimer;
+extern unsigned long conttimer1, conttimer2, conttimer3, Pretimer, Pretimer1, overVoltTripTimer, underVoltTripTimer, overCurrentTripTimer, mainconttimer;
 extern uint16_t pwmfreq;
 extern int pwmcurmax;
 extern int pwmcurmid;
 extern int16_t pwmcurmin;
+extern bool gaugeEnabled;
 
 extern bool OutputEnable;
 extern bool CanOnReq;
@@ -149,13 +150,11 @@ extern uint16_t chargerpower;
 extern bool CPdebug;
 
 // variables
-extern int outputstate;
 extern int incomingByte;
 extern int x;
 extern int storagemode;
 extern int cellspresent;
 extern int dashused;
-extern int Charged;
 extern int renum;
 
 // Debugging modes
@@ -176,6 +175,7 @@ enum errorType
     ERROR_NONE = 0,
     ERROR_BATTERY_COMMS = 1,
     ERROR_VOLTAGE = 2,
+    ERROR_PRECHARGE_TIMEOUT = 3,
     ERROR_CONTACTORS_NOT_CLOSING = 4,
     ERROR_CONTACTORS_OPENED_EMERGENCY = 5,
     ERROR_CURRENT_READING = 6,
@@ -185,6 +185,8 @@ enum errorType
     ERROR_UNDER_TEMPERATURE = 10,
     ERROR_CAN = 11,
     ERROR_CONTACTORS_NOT_OPENING = 12,
+    ERROR_DISCHARGE_CURRENT = 13,
+    ERROR_CHARGE_CURRENT = 14
 };
 
 extern int testcount;

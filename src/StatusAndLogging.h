@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pinouts.h"
-#include "globals.h"
 #include "Logger.h"
 
 void setBMSstatus(int newStatus, const char *message = nullptr);

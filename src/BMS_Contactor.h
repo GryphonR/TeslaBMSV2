@@ -2,7 +2,6 @@
 
 #include "pinouts.h"
 #include "Logger.h"
-#include "globals.h"
 #include "StatusAndLogging.h"
 
 enum ContactorState

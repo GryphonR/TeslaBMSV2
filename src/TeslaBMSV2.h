@@ -11,7 +11,6 @@ void outputdebug();
 void gaugeUpdate();
 void updateSOC();
 void SOCcharged(int y);
-void Prechargecon();
 void currentlimit();
 void getcurrent();
 void alarmupdate();
@@ -20,7 +19,6 @@ void resetwdog();
 void VEcan();
 void chargercomms();
 void setBMSstatus(int status, const char *message);
-void contactorControl();
 
     // Variable declarations
     // extern int firmver;

@@ -9,6 +9,7 @@
  */
 
 #include "StatusAndLogging.h"
+#include "globals.h"
 #include "pinouts.h"
 
 /**
@@ -327,11 +328,11 @@ void printbmsstat()
         }
     }
     SERIAL_CONSOLE.print("  ");
-    if (digitalRead(PIN_IN3) == HIGH)
+    if (digitalRead(PIN_CHARGE) == HIGH)
     {
         SERIAL_CONSOLE.print("| AC Present |");
     }
-    if (digitalRead(PIN_IN1) == HIGH)
+    if (digitalRead(PIN_IGNITION) == HIGH)
     {
         SERIAL_CONSOLE.print("| Key ON |");
     }

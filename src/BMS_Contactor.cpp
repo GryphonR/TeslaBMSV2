@@ -5,6 +5,7 @@
  */
 
 #include "BMS_Contactor.h"
+#include "globals.h"
 
 /**
  * STILL TODO!

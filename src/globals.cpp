@@ -7,11 +7,12 @@ int Discharge;
 // variables for output control
 int pulltime = 100;
 int contctrl = 0, contstat = 0;
-unsigned long conttimer1 = 0, conttimer2 = 0, conttimer3 = 0, Pretimer = 0, Pretimer1 = 0, overtriptimer = 0, undertriptimer = 0, mainconttimer = 0;
+unsigned long conttimer1 = 0, conttimer2 = 0, conttimer3 = 0, Pretimer = 0, Pretimer1 = 0, overVoltTripTimer = 0, underVoltTripTimer = 0, overCurrentTripTimer = 0, mainconttimer = 0;
 uint16_t pwmfreq = 18000;
 int pwmcurmax = 50;
 int pwmcurmid = 50;
 int16_t pwmcurmin = 0;
+bool gaugeEnabled = 0;
 
 
 bool OutputEnable = 0;
@@ -80,13 +81,11 @@ uint16_t chargerpower = 0;
 bool CPdebug = 0;
 
 // variables
-int outputstate = 0;
 int incomingByte = 0;
 int x = 0;
 int storagemode = 0; //< If storage Mode is set, Batteries charge to the StoreVsetpoint, 
 int cellspresent = 0;
 int dashused = 1;
-int Charged = 0;
 int renum = 0;
 
 // Debugging modes

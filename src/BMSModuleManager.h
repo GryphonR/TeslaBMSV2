@@ -51,8 +51,6 @@ int getNumModules();
     int Pstring;
     float LowCellVolt;
     float HighCellVolt;
-    float lowestPackVolt;
-    float highestPackVolt;
     float lowestPackTemp;
     float highestPackTemp;
     float highTemp;

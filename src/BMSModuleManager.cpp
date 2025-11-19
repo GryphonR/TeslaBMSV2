@@ -23,8 +23,7 @@ BMSModuleManager::BMSModuleManager()
     modules[i].setExists(false);
     modules[i].setAddress(i);
   }
-  lowestPackVolt = 1000.0f;
-  highestPackVolt = 0.0f;
+
   lowestPackTemp = 200.0f;
   highestPackTemp = -100.0f;
   isFaulted = false;
@@ -395,9 +394,11 @@ void BMSModuleManager::StopBalancing()
  */
 void BMSModuleManager::getAllVoltTemp()
 {
-  packVolt = 0.0f;
-  //lowTemp = 999.0f;
-  //highTemp = -999.0f;
+  float localPackVolt = 0.0f;
+  float LocalHighCellVolt = 0.0;
+  float LocalLowCellVolt = 5.0;
+
+  // Why do we stop balancing?
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
@@ -406,17 +407,6 @@ void BMSModuleManager::getAllVoltTemp()
     }
   }
 
-  if (numFoundModules < 8)
-  {
-    delay(200);
-  }
-  else
-  {
-    delay(50);
-  }
-  /*
-    delay(200);
-  */
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
@@ -427,47 +417,41 @@ void BMSModuleManager::getAllVoltTemp()
       Logger::debug("Module voltage: %f", modules[x].getModuleVoltage());
       Logger::debug("Lowest Cell V: %f     Highest Cell V: %f", modules[x].getLowCellV(), modules[x].getHighCellV());
       Logger::debug("Temp1: %f       Temp2: %f", modules[x].getTemperature(0), modules[x].getTemperature(1));
-      packVolt += modules[x].getModuleVoltage();
-      if (modules[x].getLowTemp() < lowestPackTemp && modules[x].getLowTemp() > -70) lowestPackTemp = modules[x].getLowTemp();
-      if (modules[x].getHighTemp() > highestPackTemp && modules[x].getLowTemp() > -70) highestPackTemp = modules[x].getHighTemp();
+
+      // Accumulate the module voltages to get the total battery pack voltage
+      localPackVolt += modules[x].getModuleVoltage();
+      
+      // Check if this module has the lowest temperature
+      if (modules[x].getLowTemp() < lowestPackTemp && modules[x].getLowTemp() > -70)
+      {
+        lowestPackTemp = modules[x].getLowTemp();
+      }
+      
+      // Check if this module has the highest temperature
+      if (modules[x].getHighTemp() > highestPackTemp && modules[x].getLowTemp() > -70)
+      {
+        highestPackTemp = modules[x].getHighTemp();
+      }
+
+
+      // Check if this module has the highest voltage
+      if (modules[x].getLowCellV() <  LocalLowCellVolt)
+      {
+        LocalLowCellVolt = modules[x].getLowCellV();
+      }  
+
+      // Check if this module has the lowest voltage
+      if (modules[x].getHighCellV() >  LocalHighCellVolt)
+      {
+        LocalHighCellVolt = modules[x].getHighCellV();
+      }
     }
   }
 
-  packVolt = packVolt / Pstring;
-  if (packVolt > highestPackVolt) highestPackVolt = packVolt;
-  if (packVolt < lowestPackVolt) lowestPackVolt = packVolt;
-
-
-  // TODO - why is there a digital read here? Should be less application specific, also
-  // don't understand why a contactor being open would indicate a fault.
-  if (digitalRead(PIN_OUT1) == LOW)
-  {
-    // TODO Remove debug line!!
-    Serial.println("Setting is faulted after digital read");
-    if (!isFaulted) Logger::error("One or more BMS modules have entered the fault state!");
-    isFaulted = true;
-  }
-  else
-  {
-    if (isFaulted) Logger::info("All modules have exited a faulted state");
-    isFaulted = false;
-  }
-  HighCellVolt = 0.0;
-  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
-  {
-    if (modules[x].isExisting())
-    {
-      if (modules[x].getHighCellV() >  HighCellVolt)  HighCellVolt = modules[x].getHighCellV();
-    }
-  }
-  LowCellVolt = 5.0;
-  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
-  {
-    if (modules[x].isExisting())
-    {
-      if (modules[x].getLowCellV() <  LowCellVolt)  LowCellVolt = modules[x].getLowCellV();
-    }
-  }
+  // Commit the local battery stats to the BMSModuleManager members
+  packVolt = localPackVolt;
+  LowCellVolt = LocalLowCellVolt;
+  HighCellVolt = LocalHighCellVolt;
 }
 
 /**
@@ -520,26 +504,6 @@ float BMSModuleManager::getPackVoltage()
   return packVolt;
 }
 
-/**
- * @brief Gets the lowest voltage of the pack that has been seen
- *
- * @return The lowest voltage of the pack in Volts
- */
-float BMSModuleManager::getLowVoltage()
-{
-  return lowestPackVolt;
-}
-
-
-/**
- * @brief Gets the highest voltage of the pack that has been seen
- *
- * @return The highest voltage of the pack in Volts
- */
-float BMSModuleManager::getHighVoltage()
-{
-  return highestPackVolt;
-}
 /**
  * @brief Sets the battery ID of the pack
  *
