@@ -16,7 +16,7 @@ void gaugeUpdate()
             SOCtest = 0;
         }
         analogWrite(PIN_OUT8, map(SOCtest * 0.1, 0, 100, settings.gaugelow, settings.gaugehigh));
-        if (debug != 0)
+        if (debugMode != 0)
         {
             SERIAL_CONSOLE.println("  ");
             SERIAL_CONSOLE.print("SOC : ");

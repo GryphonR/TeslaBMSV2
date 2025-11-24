@@ -200,7 +200,7 @@ bool BMSModule::readModuleValues()
   payload[0] = moduleAddress << 1;
 
   readStatus();
-  Logger::debug("Module %i   alerts=%X   faults=%X   COV=%X   CUV=%X", moduleAddress, alerts, faults, COVFaults, CUVFaults);
+  // Logger::debug("Module %i   alerts=%X   faults=%X   COV=%X   CUV=%X", moduleAddress, alerts, faults, COVFaults, CUVFaults);
 
   payload[1] = REG_ADC_CTRL;
   payload[2] = 0b00111101; //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
@@ -219,7 +219,7 @@ bool BMSModule::readModuleValues()
   retLen = BMSUtil::sendDataWithReply(payload, 3, false, buff, 22);
 
   calcCRC = BMSUtil::genCRC(buff, retLen - 1);
-  Logger::debug("Sent CRC: %x     Calculated CRC: %x", buff[21], calcCRC);
+  // Logger::debug("Sent CRC: %x     Calculated CRC: %x", buff[21], calcCRC);
 
   //18 data bytes, address, command, length, and CRC = 22 bytes returned
   //Also validate CRC to ensure we didn't get garbage data.
@@ -334,31 +334,25 @@ float BMSModule::getAverageV()
   // TODO - Should this be hard coded to 6?
   for (int i = 0; i < 6; i++)
   {
+    Logger::debug("Cell %i raw voltage: %f", i, cellVolt[i]);
     if (cellVolt[i] > IgnoreCell && cellVolt[i] < 60.0)
     {
       x++;
       avgVal += cellVolt[i];
+      Logger::debug("Accepted cell");
     }
   }
   
-  if (scells != x)
-  {
-    if (smiss > 2)
-    {
-      scells = x;
-    }
-    else
-    {
-      smiss++;
-    }
+  scells = x;
+
+  Logger::debug("Module series cells: %i", scells);
+
+  if(scells > 0){
+    avgVal /= scells;
   }
-  else
-  {
-    scells = x;
-    smiss = 0;
+  else{
+    avgVal = 0.0f;
   }
-  
-  avgVal /= x;
   return avgVal;
 }
 

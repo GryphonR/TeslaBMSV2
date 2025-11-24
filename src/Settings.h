@@ -10,12 +10,12 @@
 #define DEFAULT_LOG_LEVEL 2 // Log level
 
 // Operation Mode
-#define DEFAULT_ESSMODE 1 // ESS mode
+#define DEFAULT_ESSMODE 0 // ESS mode
 
 // Battery Settings
 #define DEFAULT_CAP 100     // Capacity (Ah)
 #define DEFAULT_PSTRINGS 1  // Parallel strings
-#define DEFAULT_SCELLS 12   // Series cells
+#define DEFAULT_SCELLS 6   // Series cells
 
 // CAN
 #define DEFAULT_CHECKSUM 2

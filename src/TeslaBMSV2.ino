@@ -49,6 +49,7 @@
 
 // Libraries
 #include <Arduino.h>
+#include "TeensyDebug.h"
 #include <ADC.h> //https://github.com/pedvide/ADC
 #include <EEPROM.h>
 #include <FlexCAN_T4.h> //https://github.com/collin80/FlexCAN_Library
@@ -74,8 +75,8 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
 
 BMS_Contactor positive(POSITIVE, H1, BuiltIn);
 BMS_Contactor precharge(PRECHARGE, H2, BuiltIn);
-BMS_Contactor charge(CHARGE, H3, BuiltIn);
-BMS_Contactor negative(NEGATIVE, H4, BuiltIn);
+BMS_Contactor negative(NEGATIVE, H3, BuiltIn);
+BMS_Contactor charge(CHARGE, H4, BuiltIn);
 BMS_Contactor trip(0); //Unconfigured
 
 struct Contactors contactors = {positive, precharge, charge, negative, trip};
@@ -115,6 +116,7 @@ void isrCP();
 
 void setup()
 {
+  debug.begin(SerialUSB1);
   Logger::setSerialLoglevel(Logger::Debug); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
   Logger::setSdLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
   Logger::setOledLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
@@ -193,11 +195,11 @@ void setup()
   configewm.timeout = 5; // seconds
   configewm.pin = PIN_ERROR_LED;
   configewm.callback = watchdogCallback;
-  watchdog.begin(configewm);
+  // watchdog.begin(configewm);
   delay(100);
-  watchdog.feed();
+  // watchdog.feed();
 
-  delay(100); /* <-- not keeping this here would cause resets by Callback */
+  delay(5000); /* <-- not keeping this here would cause resets by Callback */
 
   // VE.begin(19200); //Victron VE direct bus
 
@@ -261,52 +263,64 @@ void setup()
     Logger::info("Setup complete with ERRORS, entering main loop");
   }
 
-  
+  // End of setup()
+    Logger::info("Setup complete, entering main loop");
+    SERIAL_CONSOLE.flush(); // <--- FORCE THE DATA OUT
+    delay(2000); // Give the USB host a breather
 }
 
 void loop()
 {
-
-  resetwdog();
-
+  // Add this temporarily
+  digitalWrite(PIN_LED_BUILTIN, !digitalRead(PIN_LED_BUILTIN)); 
+  
+  // Use raw Serial first to rule out Logger class issues
+  SERIAL_CONSOLE.println("INSIDE LOOP - FIRST LINE"); 
+  SERIAL_CONSOLE.flush();
+  // // resetwdog();
+  // Logger::debug("Entering indicators loop");
   indicatorsLoop(); // Call the indicators loop to handle LED and buzzer state
 
-  // TODO - CANx.available not implemented for T4 - need to read CAN here
-  // On message recieve.
-  // while (CAN1.available())
-  // {
-  //   canread();
-  // }
+  // // TODO - CANx.available not implemented for T4 - need to read CAN here
+  // // On message recieve.
+  // // while (CAN1.available())
+  // // {
+  // //   canread();
+  // // }
 
   // Check if serial menu is requested
+  Logger::debug("Checking serial input");
   if (SERIAL_CONSOLE.available() > 0)
   {
     menu();
   }
 
+  
   static unsigned long nextContactorCheck = millis();
   if (millis() > nextContactorCheck)
   {
+    Logger::debug("Checking contactors");
     nextContactorCheck += 1000;
-    // Serial.printf("Contactor Current: %f\n", testContactor.getPinCurrent(1)); 
-    // delay(10);
-    // Serial.printf("Contactor Voltage: %f\n", testContactor.getVoltage(1)); 
-    // Serial.printf("Contactor Temperature: %f\n", testContactor.getTemperature(1)); 
-    
-    
+    Serial.printf("Contactor Current: %f\n", negative.getPinCurrent(1)); 
+    delay(10);
+    Serial.printf("Contactor Voltage: %f\n", negative.getVoltage(1)); 
+    Serial.printf("Contactor Temperature: %f\n", negative.getTemperature(1));     
   }
   
 
   if (modulesConnected)
   {
+    Logger::debug("Entering BMS loop");
+    delay(500); // Give the USB host a breather
     // Runs Periodic checks and updates BMS readings every 500ms
     bmsLoop();
 
-    // Serial.printf("Loop: If output check. Outputcheck: %d, bmsStatus: %d\n", outputcheck, bmsstatus);
+    Logger::debug("Entering output check");
     outputCheck();
   }
   else
   {
+    Logger::debug("No modules connected, trying to find them");
     // Try to reconnect to modules periodically
     static unsigned long nextModuleCheck = millis();
     if (millis() > nextModuleCheck)
@@ -330,6 +344,9 @@ void moduleSetup()
 
   bms.setPstrings(settings.Pstrings);
   bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+  
+  bms.getAllVoltTemp();
+  bms.getAvgCellVolt();
 
   Logger::debug("Number of Modules Found: %i", bms.getNumModules());
 
@@ -439,7 +456,7 @@ void updateSOC()
 
       ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778;
       SOCset = 1;
-      if (debug != 0)
+      if (debugMode != 0)
       {
         SERIAL_CONSOLE.println("  ");
         SERIAL_CONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
@@ -458,7 +475,7 @@ void updateSOC()
     if (millis() > 5000)
     {
       SOCset = 1;
-      if (debug != 0)
+      if (debugMode != 0)
       {
         SERIAL_CONSOLE.println("  ");
         SERIAL_CONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
@@ -491,7 +508,7 @@ void updateSOC()
     SOC = 0; // reset SOC this way the can messages remain in range for other devices. Ampseconds will keep counting.
   }
 
-  if (debug != 0)
+  if (debugMode != 0)
   {
     if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
     {
@@ -847,7 +864,7 @@ bool canRead()
       Rx309();
     }
 
-    if (debug == 1)
+    if (debugMode == 1)
     {
       if (candebug == 1)
       {

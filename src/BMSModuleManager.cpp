@@ -9,6 +9,7 @@
 #include "BMSUtil.h"
 #include "Logger.h"
 #include "pinouts.h"
+#include "globals.h"
 
 extern EEPROMSettings settings;
 
@@ -86,7 +87,7 @@ void BMSModuleManager::balanceCells(int duration, int debug)
   uint8_t buff[30];
   uint8_t balance = 0;//bit 0 - 5 are to activate cell balancing 1-6
   CellsBalancing = 0;
-  if (debug == 1)
+  if (debugMode == 1)
   {
     Serial.println();
   }
@@ -102,7 +103,7 @@ void BMSModuleManager::balanceCells(int duration, int debug)
           balance = balance | (1 << i);
         }
       }
-      if (debug == 1)
+      if (debugMode == 1)
       {
         Serial.print(y);
         Serial.print(" - ");
@@ -117,7 +118,7 @@ void BMSModuleManager::balanceCells(int duration, int debug)
         BMSUtil::sendData(payload, 3, true);
         delay(2);
         BMSUtil::getReply(buff, 30);
-        if (debug == 1)
+        if (debugMode == 1)
         {
           for (int z = 0; z < 4; z++)
           {
@@ -132,7 +133,7 @@ void BMSModuleManager::balanceCells(int duration, int debug)
         BMSUtil::sendData(payload, 3, true);
         delay(2);
         BMSUtil::getReply(buff, 30);
-        if (debug == 1)
+        if (debugMode == 1)
         {
           for (int z = 0; z < 4; z++)
           {
@@ -142,7 +143,7 @@ void BMSModuleManager::balanceCells(int duration, int debug)
         }
         CellsBalancing = CellsBalancing + balance;
       }
-      if (debug == 1)
+      if (debugMode == 1)
       {
         Serial.println();
       }
@@ -552,13 +553,14 @@ float BMSModuleManager::getAvgTemperature()
   float avg = 0.0f;
   lowTemp = 999.0f;
   highTemp = -999.0f;
-  int y = 0; //counter for modules below -70 (no sensors connected)
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
     if (modules[x].isExisting())
     {
+#ifndef ALLOW_UNCONNECTED_TEMP_SENSORS
       if (modules[x].getAvgTemp() > -70)
       {
+#endif
         avg += modules[x].getAvgTemp();
         if (modules[x].getHighTemp() > highTemp)
         {
@@ -568,15 +570,20 @@ float BMSModuleManager::getAvgTemperature()
         {
           lowTemp = modules[x].getLowTemp();
         }
+#ifndef ALLOW_UNCONNECTED_TEMP_SENSORS
       }
-      else
-      {
-        y++;
-      }
+#endif
     }
   }
-  avg = avg / (float)(numFoundModules - y);
 
+  if(numFoundModules > 0)
+  {
+    avg = avg / (float)(numFoundModules);
+  }
+  else{
+    avg = 0.0f;
+  }
+  
   return avg;
 }
 
@@ -614,10 +621,16 @@ float BMSModuleManager::getAvgCellVolt()
   float avg = 0.0f;
   for (int x = 1; x <= MAX_MODULE_ADDR; x++)
   {
-    if (modules[x].isExisting()) avg += modules[x].getAverageV();
+    if (modules[x].isExisting()){
+      float moduleAvg = modules[x].getAverageV();
+      avg += moduleAvg;
+      Logger::debug("Module %i exists. Module avg voltage of %f", x, moduleAvg);
+      Logger::debug("Module series cells: %i", modules[x].getscells());
+
+    }
   }
   avg = avg / (float)numFoundModules;
-
+  Logger::debug("Total avg voltage of %f", avg);
   return avg;
 }
 

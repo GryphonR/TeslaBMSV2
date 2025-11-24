@@ -17,25 +17,25 @@
  */
 void bmsLoop()
 {
-    // -------------------------
-    // Communication loop
-    // -------------------------
-    static unsigned long nextChargerCommsLoop = 0;
-    if (millis() > nextChargerCommsLoop)
-    {
-        nextChargerCommsLoop = millis() + settings.chargerspd;
+    // // -------------------------
+    // // Communication loop
+    // // -------------------------
+    // static unsigned long nextChargerCommsLoop = 0;
+    // if (millis() > nextChargerCommsLoop)
+    // {
+    //     nextChargerCommsLoop = millis() + settings.chargerspd;
 
-        // 1. Victron / External Comms
-        VEcan(); 
+    //     // 1. Victron / External Comms
+    //     VEcan(); 
 
-        // 2. Charger Control Comms
-        // Only talk to charger if we are actually in a state that allows charging
-        // OR if we are in ESS mode (always connected)
-        if (settings.ESSmode == 1 || bmsstatus == BMS_STATUS_CHARGE)
-        {
-            chargercomms();
-        }
-    }
+    //     // 2. Charger Control Comms
+    //     // Only talk to charger if we are actually in a state that allows charging
+    //     // OR if we are in ESS mode (always connected)
+    //     if (settings.ESSmode == 1 || bmsstatus == BMS_STATUS_CHARGE)
+    //     {
+    //         chargercomms();
+    //     }
+    // }
 
     if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL || settings.cursens == CURR_SENSE_ANALOGUE_GUESSING) {
         getcurrent();
@@ -50,26 +50,32 @@ void bmsLoop()
 
         // 1. PAUSE Balancing to get a clean reading
         // (We don't want the voltage drop from the bleed resistors affecting the reading)
-        bms.StopBalancing(); 
-        
+        Logger::debug("Stop balancing");
+        bms.StopBalancing();
+
+        Logger::debug("Reading volt and temp");
         // 2. Read Data
         bms.getAllVoltTemp();
         
+        Logger::debug("Checking voltages and temps");
         // 3. Checks
         checkCellVoltages();
         checkCellTemps();
         
+        Logger::debug("Updating SOC");
         // 4. Update Logic
         updateSOC();
+        Logger::debug("Updating current limit");
         currentlimit();
         
         // 5. RESUME Balancing (if required)
         // The 'balancing()' function checks the settings and voltages 
         // and re-enables balancing if needed.
+        Logger::debug("Enable balancing");
         balancing(); 
 
         // 6. Debugging & Housekeeping
-        if (debug != 0) {
+        if (debugMode != 0) {
             printbmsstat();
             bms.printPackDetails(debugdigits);
         }
@@ -82,7 +88,7 @@ void bmsLoop()
         
         // 7. Module Management
         // Check if cell count matches expected
-        if (cellspresent != bms.seriescells() || cellspresent != (settings.Scells * settings.Pstrings))
+        if (bms.seriescells() != settings.Scells)
         {
              setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "Cell Count Mismatch");
         }
@@ -143,13 +149,25 @@ void checkCellVoltages()
  * @brief Checks for Over Temperature events
  */
 void checkCellTemps()
-{
-     if (bms.getHighTemperature() > settings.OverTSetpoint)
+{   
+    float avg_temp = bms.getAvgTemperature();
+    float max_temp = bms.getHighTemperature();
+    float min_temp = bms.getLowTemperature();
+    Logger::debug("Avg temp: %f", avg_temp); // TODO: this is another completely stupid thing, temps (also high & low) are only processed in this function call
+    Logger::debug("Low temp: %f", min_temp);
+    Logger::debug("High temp: %f", max_temp);
+
+    if (max_temp> settings.OverTSetpoint)
     {
         char errBuf[64];
-        snprintf(errBuf, sizeof(errBuf), "Over Temp: %.1fC", bms.getHighTemperature());
+        snprintf(errBuf, sizeof(errBuf), "Over Temp: %.1fC", max_temp);
         
         setBMSstatus(BMS_STATUS_ERROR, ERROR_OVER_TEMPERATURE, errBuf);
+    }
+    else if(min_temp < settings.UnderTSetpoint){
+        char errBuf[64];
+        snprintf(errBuf, sizeof(errBuf), "Under Temp: %.1fC", min_temp);
+        setBMSstatus(BMS_STATUS_ERROR, ERROR_UNDER_TEMPERATURE, errBuf);
     }
 }
 
@@ -268,7 +286,7 @@ void outputCheck()
             // -- Vehicle Mode Start Logic --
             else 
             {
-                if (digitalRead(PIN_IGNITION) == HIGH && bms.getLowCellVolt() > settings.DischVsetpoint) 
+                if (bms.getLowCellVolt() > settings.DischVsetpoint) // && digitalRead(PIN_IGNITION) == HIGH)  //ADD BACK IN
                 {
                     setBMSstatus(BMS_STATUS_PRECHARGE, "Key ON detected");
                     Pretimer = millis();
@@ -296,7 +314,7 @@ void outputCheck()
 
             // 3. Check Precharge Completion Conditions
             // Time passed AND Current is low enough (Capacitors charged)
-            if (millis() > (Pretimer + settings.Pretime) && abs(currentact) < settings.Precurrent)
+            if (millis() > (Pretimer + settings.Pretime)) //ADD BACK IN && abs(currentact) < settings.Precurrent)
             {
                 // Close Main Positive
                 contactors.positive.close();
@@ -326,9 +344,9 @@ void outputCheck()
             // -- VEHICLE MODE --
             if (settings.ESSmode == 0)
             {
-                if (digitalRead(PIN_IGNITION) == LOW) {
-                    setBMSstatus(BMS_STATUS_READY, "Key OFF detected");
-                }
+                // if (digitalRead(PIN_IGNITION) == LOW) {  //ADD BACK IN
+                //     setBMSstatus(BMS_STATUS_READY, "Key OFF detected");
+                // }
                 if (digitalRead(PIN_CHARGE) == HIGH) {
                     setBMSstatus(BMS_STATUS_CHARGE, "AC detected during Drive");
                 }
@@ -421,7 +439,7 @@ void balancing()
 {
     if (balancecells == 1)
     {
-        bms.balanceCells(settings.balanceDuty, debug);
+        bms.balanceCells(settings.balanceDuty, debugMode);
     }
     else
     {

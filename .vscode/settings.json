@@ -2,6 +2,7 @@
     "files.associations": {
         "*.ts": "typescript",
         "*.tpp": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "*.cpp_old": "cpp"
     }
 }

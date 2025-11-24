@@ -71,20 +71,20 @@ public:
         if (isWrite)
             SERIALBMS.write(genCRC(data, dataLen));
 
-        if (Logger::isDebug())
-        {
-            SERIAL_CONSOLE.print("Sending: ");
-            SERIAL_CONSOLE.print(addrByte, HEX);
-            SERIAL_CONSOLE.print(" ");
-            for (int x = 1; x < dataLen; x++)
-            {
-                SERIAL_CONSOLE.print(data[x], HEX);
-                SERIAL_CONSOLE.print(" ");
-            }
-            if (isWrite)
-                SERIAL_CONSOLE.print(genCRC(data, dataLen), HEX);
-            SERIAL_CONSOLE.println();
-        }
+        // if (Logger::isDebug())
+        // {
+        //     SERIAL_CONSOLE.print("Sending: ");
+        //     SERIAL_CONSOLE.print(addrByte, HEX);
+        //     SERIAL_CONSOLE.print(" ");
+        //     for (int x = 1; x < dataLen; x++)
+        //     {
+        //         SERIAL_CONSOLE.print(data[x], HEX);
+        //         SERIAL_CONSOLE.print(" ");
+        //     }
+        //     if (isWrite)
+        //         SERIAL_CONSOLE.print(genCRC(data, dataLen), HEX);
+        //     SERIAL_CONSOLE.println();
+        // }
 
         data[0] = orig;
     }
@@ -103,16 +103,16 @@ public:
     static int getReply(uint8_t *data, int maxLen)
     {
         int numBytes = 0;
-        if (Logger::isDebug())
-            SERIAL_CONSOLE.print("Reply: ");
+        // if (Logger::isDebug())
+        //     SERIAL_CONSOLE.print("Reply: ");
         while (SERIALBMS.available() && numBytes < maxLen)
         {
             data[numBytes] = SERIALBMS.read();
-            if (Logger::isDebug())
-            {
-                SERIAL_CONSOLE.print(data[numBytes], HEX);
-                SERIAL_CONSOLE.print(" ");
-            }
+            // if (Logger::isDebug())
+            // {
+            //     SERIAL_CONSOLE.print(data[numBytes], HEX);
+            //     SERIAL_CONSOLE.print(" ");
+            // }
             numBytes++;
         }
         if (maxLen == numBytes)
@@ -120,8 +120,8 @@ public:
             while (SERIALBMS.available())
                 SERIALBMS.read();
         }
-        if (Logger::isDebug())
-            SERIAL_CONSOLE.println();
+        // if (Logger::isDebug())
+        //     SERIAL_CONSOLE.println();
         return numBytes;
     }
 

@@ -245,6 +245,9 @@ void printbmsstat()
     SERIAL_CONSOLE.println();
     SERIAL_CONSOLE.println(testcount);
     SERIAL_CONSOLE.print("BMS Status : ");
+    SERIAL_CONSOLE.print(getBMSStatusString(bmsstatus));
+    SERIAL_CONSOLE.println();
+    
     if (settings.ESSmode == 1)
     {
         SERIAL_CONSOLE.print("ESS Mode ");

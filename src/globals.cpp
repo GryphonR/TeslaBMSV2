@@ -89,7 +89,7 @@ int dashused = 1;
 int renum = 0;
 
 // Debugging modes
-int debug = 1;
+int debugMode = 1;
 int inputcheck = 0;
 int outputcheck = 1; 
 int candebug = 0;

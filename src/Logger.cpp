@@ -380,6 +380,7 @@ void Logger::printLogs(LogLevel level)
 {
   if(level >= serialLogLevel) {
     Serial.write(logBuffer, sizeof(logBuffer));
+    Serial.flush();
   }
   if (level >= sdLogLevel && sdStatus == SD_OK)
   {

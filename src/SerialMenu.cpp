@@ -1026,7 +1026,7 @@ void menu()
         case 113:                    // q to go back to main menu
             EEPROM.put(0, settings); // save all change to eeprom
             menuload = 0;
-            debug = 1;
+            debugMode = 1;
             break;
         case 'd': // d for debug settings
             while (Serial.available())
@@ -1274,7 +1274,7 @@ void menu()
         SERIAL_CONSOLE.println("x - Experimental Settings");
         SERIAL_CONSOLE.println("R - Restart BMS");
         SERIAL_CONSOLE.println("q - exit menu");
-        debug = 0;
+        debugMode = 0;
         menuload = 1;
     }
 }

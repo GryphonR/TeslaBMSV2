@@ -8,6 +8,8 @@
 
 #include <Filters.h> //https://github.com/JonHub/Filters
 
+// #define ALLOW_UNCONNECTED_TEMP_SENSORS
+
 extern EEPROMSettings settings; // Included in globals.h. Declared in .ino
 extern BMSModuleManager bms;    // Included in globals.h.Declared in.ino
 extern ADC *adc;                // adc object
@@ -158,7 +160,7 @@ extern int dashused;
 extern int renum;
 
 // Debugging modes
-extern int debug;
+extern int debugMode;
 extern int inputcheck;
 extern int outputcheck;
 extern int candebug;
