@@ -16,233 +16,155 @@
 float filterFrequency = 5.0;
 FilterOnePole lowpassFilter(LOWPASS, filterFrequency);
 
-void getcurrent()
-{
-    if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL || settings.cursens == CURR_SENSE_ANALOGUE_GUESSING)
-    {
-        if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
-        {
-            if (currentact < settings.changecur && currentact > (settings.changecur * -1))
-            {
-                sensor = 1;
-                adc->adc0->startContinuous(PIN_ACUR_1);
-            }
-            else
-            {
-                sensor = 2;
-                adc->adc0->startContinuous(PIN_ACUR_2);
-            }
-        }
-        else
-        {
-            sensor = 1;
-            adc->adc0->startContinuous(PIN_ACUR_1);
-        }
-        if (sensor == 1)
-        {
-            if (debugCur)
-            {
-                SERIAL_CONSOLE.println();
-                if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
-                {
-                    SERIAL_CONSOLE.print("Low Range: ");
-                }
-                else
-                {
-                    SERIAL_CONSOLE.print("Single In: ");
-                }
-                SERIAL_CONSOLE.print("Value ADC0: ");
-            }
-            value = (uint16_t)adc->adc0->analogReadContinuous(); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
-            if (debugCur)
-            {
-                SERIAL_CONSOLE.print(value * 3300 / adc->adc0->getMaxValue()); //- settings.offset1)
-                SERIAL_CONSOLE.print(" ");
-                SERIAL_CONSOLE.print(settings.offset1);
-            }
-            RawCur = int16_t((value * 3300 / adc->adc0->getMaxValue()) - settings.offset1) / (settings.convlow * 0.0000066);
 
-            if (abs((int16_t(value * 3300 / adc->adc0->getMaxValue()) - settings.offset1)) < settings.CurDead)
-            {
-                RawCur = 0;
-            }
-            if (debugCur != 0)
-            {
-                SERIAL_CONSOLE.print("  ");
-                SERIAL_CONSOLE.print(int16_t(value * 3300 / adc->adc0->getMaxValue()) - settings.offset1);
-                SERIAL_CONSOLE.print("  ");
-                SERIAL_CONSOLE.print(RawCur);
-                SERIAL_CONSOLE.print(" mA");
-                SERIAL_CONSOLE.print("  ");
-            }
-        }
-        else
-        {
-            if (debugCur != 0)
-            {
-                SERIAL_CONSOLE.println();
-                SERIAL_CONSOLE.print("High Range: ");
-                SERIAL_CONSOLE.print("Value ADC0: ");
-            }
-            value = (uint16_t)adc->adc0->analogReadContinuous(); // the unsigned is necessary for 16 bits, otherwise values larger than 3.3/2 V are negative!
-            if (debugCur != 0)
-            {
-                SERIAL_CONSOLE.print(value * 3300 / adc->adc0->getMaxValue()); //- settings.offset2)
-                SERIAL_CONSOLE.print("  ");
-                SERIAL_CONSOLE.print(settings.offset2);
-            }
-            RawCur = int16_t((value * 3300 / adc->adc0->getMaxValue()) - settings.offset2) / (settings.convhigh * 0.0000066);
-            if (value < 100 || value > (adc->adc0->getMaxValue() - 100))
-            {
-                RawCur = 0;
-            }
-            if (debugCur != 0)
-            {
-                SERIAL_CONSOLE.print("  ");
-                SERIAL_CONSOLE.print((float(value * 3300 / adc->adc0->getMaxValue()) - settings.offset2));
-                SERIAL_CONSOLE.print("  ");
-                SERIAL_CONSOLE.print(RawCur);
-                SERIAL_CONSOLE.print("mA");
-                SERIAL_CONSOLE.print("  ");
-            }
-        }
+// Reads a specific ADC pin and converts to raw mA based on offset/conversion
+int32_t readAdcAsmA(uint8_t pin, uint16_t offset, float convFactor) {
+    // Start continuous read (if not already running, simplified for this example)
+    adc->adc0->startContinuous(pin);
+    
+    // Read raw value
+    uint16_t rawAdc = (uint16_t)adc->adc0->analogReadContinuous();
+    
+    // Convert to mV
+    // Note: Using getMaxValue() ensures we don't hardcode 4095 or 1023
+    float voltageMv = (float)rawAdc * ADC_REF_MV / adc->adc0->getMaxValue();
+    
+    // Deadband check (if close to offset, return 0)
+    if (abs(voltageMv - offset) < settings.CurDead) {
+        return 0;
     }
 
-    if (settings.invertcur == 1)
-    {
-        RawCur = RawCur * -1;
+    // Calculate Current
+    // Original formula: (Voltage - Offset) / (Conv * 0.0000066)
+    return (int32_t)((voltageMv - offset) / (convFactor * CURRENT_SCALE_FACTOR));
+}
+
+// Handles the Coulomb Counting (Amp-Seconds)
+// Call this every loop to keep integration accurate!
+void updateCoulombCounter(float currentMa) {
+    unsigned long now = millis();
+    float dt = (now - lasttime) / 1000.0; // Delta time in seconds
+    
+    // Only integrate if time has passed
+    if (dt > 0) {
+        // Add (Amps * Seconds) -> result is Amp-Seconds
+        // Note: dividing mA by 1000 to get Amps
+        ampsecond += (currentMa / 1000.0) * dt; 
+        lasttime = now;
+    }
+}
+
+// The main processing pipeline (Filter -> Invert -> Integrate)
+void processCurrentValue(int32_t rawInput) {
+    
+    // 1. Invert if necessary
+    if (settings.invertcur == 1) {
+        rawInput *= -1;
     }
 
-    lowpassFilter.input(RawCur);
-    if (debugCur != 0)
-    {
-        SERIAL_CONSOLE.print(lowpassFilter.output());
-        SERIAL_CONSOLE.print(" | ");
-        SERIAL_CONSOLE.print(settings.changecur);
-        SERIAL_CONSOLE.print(" | ");
-    }
-
+    // 2. Apply Low Pass Filter
+    lowpassFilter.input(rawInput);
     currentact = lowpassFilter.output();
-
-    if (debugCur != 0)
-    {
-        SERIAL_CONSOLE.print(currentact);
-        SERIAL_CONSOLE.print("mA  ");
+    
+    // 3. Update the Coulomb Counter with the filtered value
+    if (abs(currentact) > COULOMB_COUNTER_IGNORE_mA) { // Example noise gate
+         updateCoulombCounter(currentact);
+    } else {
+         lasttime = millis(); // Reset time so we don't integrate the "gap"
     }
 
-    if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL)
-    {
-        if (sensor == 1)
-        {
-            if (currentact > 500 || currentact < -500)
-            {
-                ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
-                lasttime = millis();
-            }
-            else
-            {
-                lasttime = millis();
-            }
-        }
-        if (sensor == 2)
-        {
-            if (currentact > settings.changecur || currentact < (settings.changecur * -1))
-            {
-                ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
-                lasttime = millis();
-            }
-            else
-            {
-                lasttime = millis();
-            }
-        }
+    // Final global update
+    currentact = settings.ncur * currentact; 
+
+    // --- Debugging ---
+    if (debugCur != 0) {
+        SERIAL_CONSOLE.print("Raw: "); SERIAL_CONSOLE.print(rawInput);
+        SERIAL_CONSOLE.print(" | Filtered: "); SERIAL_CONSOLE.print(currentact);
+        SERIAL_CONSOLE.print("mA | Ah: "); SERIAL_CONSOLE.println(ampsecond / 3600.0);
     }
-    else
-    {
-        if (currentact > 500 || currentact < -500)
-        {
-            ampsecond = ampsecond + ((currentact * (millis() - lasttime) / 1000) / 1000);
-            lasttime = millis();
+}
+
+// --- Main Current Functions ---
+
+void getcurrent() {
+    int32_t newRawCurrent = 0;
+
+    // 1. ANALOG SENSING
+    if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL || settings.cursens == CURR_SENSE_ANALOGUE_GUESSING) {
+        
+        bool useLowRange = true;
+
+        // Determine which sensor to use
+        if (settings.cursens == CURR_SENSE_ANALOGUE_DUAL) {
+            // Check if we are within the low range limits
+            if (abs(currentact) < settings.changecur) {
+                useLowRange = true;
+            } else {
+                useLowRange = false;
+            }
+        } 
+        
+        if (useLowRange) {
+            sensor = 1; // Global tracker
+            newRawCurrent = readAdcAsmA(PIN_ACUR_1, settings.offset1, settings.convlow);
+        } else {
+            sensor = 2; // Global tracker
+            newRawCurrent = readAdcAsmA(PIN_ACUR_2, settings.offset2, settings.convhigh);
         }
-        else
-        {
-            lasttime = millis();
-        }
+        
+        // Pass the analog reading into the pipeline
+        processCurrentValue(newRawCurrent);
     }
-    currentact = settings.ncur * currentact;
-    RawCur = 0;
-    /*
-      AverageCurrentTotal = AverageCurrentTotal - RunningAverageBuffer[NextRunningAverage];
-
-      RunningAverageBuffer[NextRunningAverage] = currentact;
-
-      if (debugCur != 0)
-      {
-        SERIAL_CONSOLE.print(" | ");
-        SERIAL_CONSOLE.print(AverageCurrentTotal);
-        SERIAL_CONSOLE.print(" | ");
-        SERIAL_CONSOLE.print(RunningAverageBuffer[NextRunningAverage]);
-        SERIAL_CONSOLE.print(" | ");
-      }
-      AverageCurrentTotal = AverageCurrentTotal + RunningAverageBuffer[NextRunningAverage];
-      if (debugCur != 0)
-      {
-        SERIAL_CONSOLE.print(" | ");
-        SERIAL_CONSOLE.print(AverageCurrentTotal);
-        SERIAL_CONSOLE.print(" | ");
-      }
-
-      NextRunningAverage = NextRunningAverage + 1;
-
-      if (NextRunningAverage > RunningAverageCount)
-      {
-        NextRunningAverage = 0;
-      }
-
-      AverageCurrent = AverageCurrentTotal / (RunningAverageCount + 1);
-
-      if (debugCur != 0)
-      {
-        SERIAL_CONSOLE.print(AverageCurrent);
-        SERIAL_CONSOLE.print(" | ");
-        SERIAL_CONSOLE.print(AverageCurrentTotal);
-        SERIAL_CONSOLE.print(" | ");
-        SERIAL_CONSOLE.print(NextRunningAverage);
-      }
-    */
+    
+    // 2. CANBUS SENSING 
+    // If CANBUS is selected, this function usually does nothing 
+    // because 'CAB500()' calls processCurrentValue() directly.
+    // However, if you have any continuous tasks for CAN, put them here.
 }
 
 
-void calcur()
-{
-    adc->startContinuous(PIN_ACUR_1, ADC_0);
-    sensor = 1;
-    x = 0;
-    SERIAL_CONSOLE.print(" Calibrating Current Offset ::::: ");
-    while (x < 20)
-    {
-        settings.offset1 = settings.offset1 + ((uint16_t)adc->adc0->analogReadContinuous() * 3300 / adc->adc0->getMaxValue());
+// Helper to average 20 readings for calibration
+uint16_t performCalibration(uint8_t pin) {
+    uint32_t totalMv = 0; // Use a local variable so we don't corrupt the setting if we fail
+    
+    adc->adc0->startContinuous(pin);
+    SERIAL_CONSOLE.print("Calibrating Pin "); 
+    SERIAL_CONSOLE.print(pin);
+    SERIAL_CONSOLE.print(" : ");
+
+    // Take 20 samples
+    for (int i = 0; i < 20; i++) {
+        // Read raw
+        uint16_t raw = (uint16_t)adc->adc0->analogReadContinuous();
+        // Convert to mV immediately
+        uint16_t mv = raw * 3300 / adc->adc0->getMaxValue();
+        
+        totalMv += mv;
+        
         SERIAL_CONSOLE.print(".");
-        delay(100);
-        x++;
+        delay(100); // Keep the delay to average out noise over time
     }
-    settings.offset1 = settings.offset1 / 21;
-    SERIAL_CONSOLE.print(settings.offset1);
-    SERIAL_CONSOLE.print(" current offset 1 calibrated ");
-    SERIAL_CONSOLE.println("  ");
-    x = 0;
-    adc->adc0->startContinuous(PIN_ACUR_2);
-    sensor = 2;
-    SERIAL_CONSOLE.print(" Calibrating Current Offset ::::: ");
-    while (x < 20)
-    {
-        settings.offset2 = settings.offset2 + ((uint16_t)adc->adc0->analogReadContinuous() * 3300 / adc->adc0->getMaxValue());
-        SERIAL_CONSOLE.print(".");
-        delay(100);
-        x++;
-    }
-    settings.offset2 = settings.offset2 / 21;
-    SERIAL_CONSOLE.print(settings.offset2);
-    SERIAL_CONSOLE.print(" current offset 2 calibrated ");
-    SERIAL_CONSOLE.println("  ");
+    
+    SERIAL_CONSOLE.println(" Done.");
+    
+    // Return the average
+    return (uint16_t)(totalMv / 20);
+}
+
+// The main function you call from your setup or menu
+void calcur() {
+    SERIAL_CONSOLE.println("Starting Current Calibration...");
+    
+    // Calibrate Sensor 1
+    settings.offset1 = performCalibration(PIN_ACUR_1);
+    SERIAL_CONSOLE.print("Offset 1 New Value: ");
+    SERIAL_CONSOLE.println(settings.offset1);
+    
+    // Calibrate Sensor 2
+    settings.offset2 = performCalibration(PIN_ACUR_2);
+    SERIAL_CONSOLE.print("Offset 2 New Value: ");
+    SERIAL_CONSOLE.println(settings.offset2);
+    
+    // Ideally, save to EEPROM here so you don't have to calibrate every boot!
+    // saveSettings(); 
 }

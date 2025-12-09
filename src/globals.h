@@ -51,12 +51,19 @@ extern struct Contactors contactors; // Included in globals.h. Declared in .ino
 #define CURR_SENSE_CANBUS 2
 #define CURR_SENSE_ANALOGUE_GUESSING 3
 
+#define COULOMB_COUNTER_IGNORE_mA 100
+
+#define ADC_REF_MV 3300
+#define CURRENT_SCALE_FACTOR 0.0000066
+
 // Can current sensor values
 #define LemCAB300 1
 #define IsaScale 3
 #define VictronLynx 4
 #define LemCAB500 2
 #define CurCanMax 4 // max value
+#define CAB500_OFFSET 0x800000
+#define CAB300_OFFSET 0x80000000
 
 // Charger Types
 #define NoCharger 0

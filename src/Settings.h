@@ -42,8 +42,8 @@
 // Current Sensor Settings
 #define DEFAULT_NCUR 1           // Number of current sensors
 #define DEFAULT_INVERTCUR 0      // Invert current sense
-#define DEFAULT_CURSENS 2        // Current sensor type (see CURR_SENSE_* defines)
-#define DEFAULT_CURCAN LemCAB300 // CAN current sensor type
+#define DEFAULT_CURSENS CURR_SENSE_CANBUS        // Current sensor type (see CURR_SENSE_* defines)
+#define DEFAULT_CURCAN LemCAB500 // CAN current sensor type
 #define DEFAULT_CONVHIGH 580     // High Current sensor calibration constant
 #define DEFAULT_CONVLOW 6430     // Low Current sensor calibration constant
 #define DEFAULT_OFFSET1 1750     // Low Current Sensor reading Offset

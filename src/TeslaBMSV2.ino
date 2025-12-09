@@ -947,32 +947,26 @@ void Rx309()
  * If CAN debugging is enabled, the function prints the received current value in
  * both hexadecimal and decimal formats to the serial console.
  */
-void CAB300()
-{
-  for (int i = 0; i < 4; i++)
-  {
-    inbox = (inbox << 8) | inMsg.buf[i];
-  }
-  // CANmilliamps = inbox;
-  if (inbox > 0x80000000)
-  {
-    CANmilliamps = inbox - 0x80000000;
-  }
-  else
-  {
-    CANmilliamps = (0x80000000 - inbox) * -1;
-  }
-  if (settings.cursens == CURR_SENSE_CANBUS)
-  {
-    RawCur = CANmilliamps;
-    getcurrent();
-  }
-  if (candebug == 1)
-  {
-    Serial.println();
-    Serial.print(CANmilliamps);
-    Serial.print("mA ");
-  }
+void CAB300() {
+    // Combine 3 bytes into a 32-bit integer
+    int32_t rawCan = (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
+
+    // The sensor uses an offset of 0x800000 for Zero.
+    // 0x800000 = 0A
+    // 0x800001 = +1 Unit
+    // 0x7FFFFF = -1 Unit
+    CANmilliamps = rawCan - CAB300_OFFSET;
+
+    if (candebug == 1) {
+        Serial.print("CAB300 ID: "); Serial.print(inMsg.id, HEX);
+        Serial.print(" Raw: 0x"); Serial.print(rawCan, HEX);
+        Serial.print(" mA: "); Serial.println(CANmilliamps);
+    }
+
+    // Only process if this is the active sensor setting
+    if (settings.cursens == CURR_SENSE_CANBUS) {
+        processCurrentValue(CANmilliamps);
+    }
 }
 
 /**
@@ -987,38 +981,26 @@ void CAB300()
  * If CAN debugging is enabled, the function prints the received current value in
  * both hexadecimal and decimal formats to the serial console.
  */
-void CAB500()
-{
-  inbox = 0;
-  for (int i = 1; i < 4; i++)
-  {
-    inbox = (inbox << 8) | inMsg.buf[i];
-  }
-  CANmilliamps = inbox;
-  if (candebug == 1)
-  {
-    Serial.println();
-    Serial.print(CANmilliamps, HEX);
-  }
-  if (CANmilliamps > 0x800000)
-  {
-    CANmilliamps -= 0x800000;
-  }
-  else
-  {
-    CANmilliamps = (0x800000 - CANmilliamps) * -1;
-  }
-  if (settings.cursens == CURR_SENSE_CANBUS)
-  {
-    RawCur = CANmilliamps;
-    getcurrent();
-  }
-  if (candebug == 1)
-  {
-    Serial.println();
-    Serial.print(CANmilliamps);
-    Serial.print("mA ");
-  }
+void CAB500() {
+    // Combine 3 bytes into a 32-bit integer
+    int32_t rawCan = (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
+
+    // The sensor uses an offset of 0x800000 for Zero.
+    // 0x800000 = 0A
+    // 0x800001 = +1 Unit
+    // 0x7FFFFF = -1 Unit
+    CANmilliamps = rawCan - CAB500_OFFSET;
+
+    if (candebug == 1) {
+        Serial.print("CAB500 ID: "); Serial.print(inMsg.id, HEX);
+        Serial.print(" Raw: 0x"); Serial.print(rawCan, HEX);
+        Serial.print(" mA: "); Serial.println(CANmilliamps);
+    }
+
+    // Only process if this is the active sensor setting
+    if (settings.cursens == CURR_SENSE_CANBUS) {
+        processCurrentValue(CANmilliamps);
+    }
 }
 
 /**
