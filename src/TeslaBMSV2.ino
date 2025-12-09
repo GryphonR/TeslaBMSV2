@@ -75,8 +75,8 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> Can3;
 
 BMS_Contactor positive(POSITIVE, H1, BuiltIn);
 BMS_Contactor precharge(PRECHARGE, H2, BuiltIn);
-BMS_Contactor negative(NEGATIVE, H3, BuiltIn);
-BMS_Contactor charge(CHARGE, H4, BuiltIn);
+BMS_Contactor charge(CHARGE, H3, BuiltIn);
+BMS_Contactor negative(NEGATIVE, H4, BuiltIn);
 BMS_Contactor trip(0); //Unconfigured
 
 struct Contactors contactors = {positive, precharge, charge, negative, trip};
@@ -195,14 +195,12 @@ void setup()
   configewm.timeout = 5; // seconds
   configewm.pin = PIN_ERROR_LED;
   configewm.callback = watchdogCallback;
-  // watchdog.begin(configewm);
+  watchdog.begin(configewm);
   delay(100);
-  // watchdog.feed();
-
-  delay(5000); /* <-- not keeping this here would cause resets by Callback */
+  watchdog.feed();
+  delay(100); /* <-- not keeping this here would cause resets by Callback */
 
   // VE.begin(19200); //Victron VE direct bus
-
 
   moduleSetup();
 
@@ -246,8 +244,8 @@ void setup()
   // NVIC_ENABLE_IRQ(IRQ_LOW_VOLTAGE);
 
   // // Blink Heartbeat LED to indicate setup is complete
-  // digitalWrite(PIN_HEARTBEAT_LED, HIGH); // Turn off heartbeat LED
-  // delay(500);                            // Wait for 1 second
+  digitalWrite(PIN_HEARTBEAT_LED, HIGH); // Turn off heartbeat LED
+  delay(500);                            // Wait for 1 second
   digitalWrite(PIN_HEARTBEAT_LED, LOW); // Turn off heartbeat LED
 
   // bmsstatus = BMS_STATUS_BOOT;
@@ -271,25 +269,16 @@ void setup()
 
 void loop()
 {
+  watchdog.feed();
   // Add this temporarily
   digitalWrite(PIN_LED_BUILTIN, !digitalRead(PIN_LED_BUILTIN)); 
   
-  // Use raw Serial first to rule out Logger class issues
-  SERIAL_CONSOLE.println("INSIDE LOOP - FIRST LINE"); 
-  SERIAL_CONSOLE.flush();
-  // // resetwdog();
-  // Logger::debug("Entering indicators loop");
+
   indicatorsLoop(); // Call the indicators loop to handle LED and buzzer state
 
-  // // TODO - CANx.available not implemented for T4 - need to read CAN here
-  // // On message recieve.
-  // // while (CAN1.available())
-  // // {
-  // //   canread();
-  // // }
+  canRead();
 
   // Check if serial menu is requested
-  Logger::debug("Checking serial input");
   if (SERIAL_CONSOLE.available() > 0)
   {
     menu();
@@ -320,11 +309,12 @@ void loop()
   }
   else
   {
-    Logger::debug("No modules connected, trying to find them");
     // Try to reconnect to modules periodically
     static unsigned long nextModuleCheck = millis();
     if (millis() > nextModuleCheck)
     {
+      Logger::debug("No modules connected, trying to find them");
+
       nextModuleCheck += 5000; // every 5 seconds
       moduleSetup();
     }
@@ -334,6 +324,7 @@ void loop()
 
 void moduleSetup()
 {
+  watchdog.feed();
   Logger::info("Starting Communication with Battery Modules");
   Logger::debug("Renumbering BOARD IDs");
   bms.renumberBoardIDs();
@@ -774,7 +765,7 @@ int pgnFromCANId(int canId)
  */
 bool canRead()
 {
-  if (Can1.read(inMsg))
+  if (Can2.read(inMsg))
   {
     // Read data: len = data length, buf = data byte(s)
     if (settings.cursens == CURR_SENSE_CANBUS)
@@ -983,7 +974,7 @@ void CAB300() {
  */
 void CAB500() {
     // Combine 3 bytes into a 32-bit integer
-    int32_t rawCan = (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
+    int32_t rawCan = (inMsg.buf[0] << 24) | (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
 
     // The sensor uses an offset of 0x800000 for Zero.
     // 0x800000 = 0A

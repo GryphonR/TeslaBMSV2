@@ -62,7 +62,7 @@ extern struct Contactors contactors; // Included in globals.h. Declared in .ino
 #define VictronLynx 4
 #define LemCAB500 2
 #define CurCanMax 4 // max value
-#define CAB500_OFFSET 0x800000
+#define CAB500_OFFSET 0x80000000
 #define CAB300_OFFSET 0x80000000
 
 // Charger Types

@@ -237,8 +237,6 @@ void checkCurrent()
  */
 void outputCheck()
 {
-    Logger::debug("Entering Output Check Loop");
-
     // 1. Tick the Contactor State Machines
     // This handles economizers, delayed closing/opening, etc.
     updateContactors();
