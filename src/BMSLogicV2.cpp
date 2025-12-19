@@ -179,12 +179,12 @@ void checkCurrent()
     // 1. DISCHARGE Overcurrent Check
     if (Discharge == 1)
     {
-        // // HARD Limit (Instant Trip) - 2x discharge current
-        // if (currentact > (settings.discurrentmax * 2)) 
-        // {
-        //      setBMSstatus(BMS_STATUS_ERROR, ERROR_DISCHARGE_CURRENT, "Hard Overcurrent Trip!");
-        //      return;
-        // }
+        // HARD Limit (Instant Trip)
+        if (currentact > (settings.PulseDi)) 
+        {
+             setBMSstatus(BMS_STATUS_ERROR, ERROR_DISCHARGE_CURRENT, "Hard Overcurrent Trip!");
+             return;
+        }
 
         // Timed Trip
         // If we are exceeding the rated max for longer than 'triptime'
