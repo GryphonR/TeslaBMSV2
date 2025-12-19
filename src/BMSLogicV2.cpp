@@ -179,14 +179,14 @@ void checkCurrent()
     // 1. DISCHARGE Overcurrent Check
     if (Discharge == 1)
     {
-        // HARD Limit (Instant Trip) - 2x discharge current
-        if (currentact > (settings.discurrentmax * 2)) 
-        {
-             setBMSstatus(BMS_STATUS_ERROR, ERROR_DISCHARGE_CURRENT, "Hard Overcurrent Trip!");
-             return;
-        }
+        // // HARD Limit (Instant Trip) - 2x discharge current
+        // if (currentact > (settings.discurrentmax * 2)) 
+        // {
+        //      setBMSstatus(BMS_STATUS_ERROR, ERROR_DISCHARGE_CURRENT, "Hard Overcurrent Trip!");
+        //      return;
+        // }
 
-        // SOFT Limit (Timed Trip)
+        // Timed Trip
         // If we are exceeding the rated max for longer than 'triptime'
         if (currentact > settings.discurrentmax)
         {
@@ -284,7 +284,7 @@ void outputCheck()
             // -- Vehicle Mode Start Logic --
             else 
             {
-                if (bms.getLowCellVolt() > settings.DischVsetpoint) // && digitalRead(PIN_IGNITION) == HIGH)  //ADD BACK IN
+                if (bms.getLowCellVolt() > settings.DischVsetpoint && digitalRead(PIN_IGNITION) == HIGH)
                 {
                     setBMSstatus(BMS_STATUS_PRECHARGE, "Key ON detected");
                     Pretimer = millis();
@@ -312,7 +312,7 @@ void outputCheck()
 
             // 3. Check Precharge Completion Conditions
             // Time passed AND Current is low enough (Capacitors charged)
-            if (millis() > (Pretimer + settings.Pretime)) //ADD BACK IN && abs(currentact) < settings.Precurrent)
+            if (millis() > (Pretimer + settings.Pretime) && abs(currentact) < settings.Precurrent)
             {
                 // Close Main Positive
                 contactors.positive.close();
@@ -342,9 +342,9 @@ void outputCheck()
             // -- VEHICLE MODE --
             if (settings.ESSmode == 0)
             {
-                // if (digitalRead(PIN_IGNITION) == LOW) {  //ADD BACK IN
-                //     setBMSstatus(BMS_STATUS_READY, "Key OFF detected");
-                // }
+                if (digitalRead(PIN_IGNITION) == LOW) {  //ADD BACK IN
+                    setBMSstatus(BMS_STATUS_READY, "Key OFF detected");
+                }
                 if (digitalRead(PIN_CHARGE) == HIGH) {
                     setBMSstatus(BMS_STATUS_CHARGE, "AC detected during Drive");
                 }

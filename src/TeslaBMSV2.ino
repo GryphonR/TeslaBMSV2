@@ -116,11 +116,9 @@ void isrCP();
 
 void setup()
 {
-  debug.begin(SerialUSB1);
-  Logger::setSerialLoglevel(Logger::Debug); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setSerialLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
   Logger::setSdLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
   Logger::setOledLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
-
 
 
   indicatorsSetup();
@@ -134,9 +132,6 @@ void setup()
   SERIAL_CONSOLE.println(F("eChook Comms Master BMS - Tesla Modules"));
   SERIAL_CONSOLE.println(F("Starting up!"));
 
-  
-  SERIAL_AUX.begin(115200); // display and can adpater canbus
-  delay(2000);              // just for easy debugging. It takes a few seconds for USB to come up properly on most OS's
   Serial.println("Serial busses started");
 
   if (CrashReport)
@@ -263,8 +258,7 @@ void setup()
 
   // End of setup()
     Logger::info("Setup complete, entering main loop");
-    SERIAL_CONSOLE.flush(); // <--- FORCE THE DATA OUT
-    delay(2000); // Give the USB host a breather
+    SERIAL_CONSOLE.flush();
 }
 
 void loop()
@@ -320,6 +314,13 @@ void loop()
     }
   }
 
+  Logger::info("Power: %.2f", currentact * bms.getPackVoltage());
+  Logger::info("Current: %.2f", currentact * 1000);
+  Logger::info("Voltage: %.2f", bms.getPackVoltage());
+  Logger::info("Min Voltage: %.2f", bms.getLowCellVolt());
+  Logger::info("Max Voltage: %.2f", bms.getHighCellVolt());
+  Logger::info("Max Temp: %.2f", bms.getHighTemperature());
+  Logger::info("Soc: %.2f", SOC);
 } // End of loop
 
 void moduleSetup()

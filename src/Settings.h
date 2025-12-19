@@ -13,9 +13,9 @@
 #define DEFAULT_ESSMODE 0 // ESS mode
 
 // Battery Settings
-#define DEFAULT_CAP 100     // Capacity (Ah)
+#define DEFAULT_CAP 250     // Capacity (Ah)
 #define DEFAULT_PSTRINGS 1  // Parallel strings
-#define DEFAULT_SCELLS 6   // Series cells
+#define DEFAULT_SCELLS 12   // Series cells
 
 // CAN
 #define DEFAULT_CHECKSUM 2
@@ -23,13 +23,13 @@
 #define DEFAULT_BATTERY_ID 0x01
 
 // Voltage Setpoints
-#define DEFAULT_OVERV_SETPOINT 4.2f   // Overvoltage setpoint
-#define DEFAULT_UNDERV_SETPOINT 3.0f  // Undervoltage setpoint
-#define DEFAULT_CHARGEV_SETPOINT 4.1f // Charge voltage setpoint
-#define DEFAULT_CHARGE_HYS 0.2f       // Charge voltage hysteresis
+#define DEFAULT_OVERV_SETPOINT 4.0f   // Overvoltage setpoint
+#define DEFAULT_UNDERV_SETPOINT 3.2f  // Undervoltage setpoint
+#define DEFAULT_CHARGEV_SETPOINT 3.9f // Charge voltage setpoint
+#define DEFAULT_CHARGE_HYS 0.05f       // Charge voltage hysteresis
 #define DEFAULT_WARN_OFF 0.1f         // Warning offset
-#define DEFAULT_DISCHV_SETPOINT 3.2f  // Discharge voltage setpoint
-#define DEFAULT_DISCH_HYS 0.2f        // Discharge voltage hysteresis
+#define DEFAULT_DISCHV_SETPOINT 3.3f  // Discharge voltage setpoint
+#define DEFAULT_DISCH_HYS 0.05f        // Discharge voltage hysteresis
 #define DEFAULT_CELL_GAP 0.2f         // Cell voltage gap
 #define DEFAULT_IGNORE_VOLT 0.5f      // Ignore voltage threshold
 #define DEFAULT_STOREV_SETPOINT 3.8f  // Storage voltage setpoint
@@ -50,11 +50,11 @@
 #define DEFAULT_OFFSET2 1750     // High Current Sensor reading Offset
 
 // Current Setpoints
-#define DEFAULT_DISCURRENTMAX 300     // Max discharge current (A)
+#define DEFAULT_DISCURRENTMAX 450     // Max discharge current (A)
 #define DEFAULT_DISTAPER 0.3f         // Discharge taper
-#define DEFAULT_CHARGECURRENTMAX 300  // Max charge current (A)
+#define DEFAULT_CHARGECURRENTMAX 100  // Max charge current (A)
 #define DEFAULT_CHARGECURRENT2MAX 150 // Max charge current 2 (A)
-#define DEFAULT_CHARGECURRENTEND 50   // Charge end current (A)
+#define DEFAULT_CHARGECURRENTEND 2   // Charge end current (A)
 
 // Temperature Setpoints
 #define DEFAULT_OVERT_SETPOINT 65.0f   // Overtemperature setpoint
@@ -64,13 +64,13 @@
 #define DEFAULT_DIST_SETPOINT 40.0f    // Discharge temperature setpoint
 
 // Timing and Trip
-#define DEFAULT_TRIPTIME 500   // Trip time (ms)
+#define DEFAULT_TRIPTIME 1500   // Trip time (ms)
 #define DEFAULT_WARN_TOFF 5.0f // Warning turn-off time (s)
 
 // Pulse Charging/Discharging
-#define DEFAULT_PULSECH 600     // Pulse charge current (A)
+#define DEFAULT_PULSECH 200     // Pulse charge current (A)
 #define DEFAULT_PULSECHDUR 5000 // Pulse charge duration (ms)
-#define DEFAULT_PULSEDI 600     // Pulse discharge current (A)
+#define DEFAULT_PULSEDI 480     // Pulse discharge current (A)
 #define DEFAULT_PULSEDIDUR 5000 // Pulse discharge duration (ms)
 
 // State of Charge Voltages
@@ -87,7 +87,7 @@
 #define DEFAULT_CHARGERDIRECT 0 // Charger direct flag
 
 // Contactor Settings
-#define DEFAULT_PRETIME 5000     // Precharge time (ms)
+#define DEFAULT_PRETIME 1500     // Precharge time (ms)
 #define DEFAULT_PRECURRENT 1000  // Precharge current (A). Current must be below this threshold to close the precharge contactor
 #define DEFAULT_CONTHOLD 50      // Contactor hold current (A)
 
