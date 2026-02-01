@@ -1,0 +1,965 @@
+/**
+ * @file BMSModuleManager.cpp
+ * @brief Contains the BMSModuleManager class, using an array of BMSModules to manage and report pack status.
+ *
+ */
+
+#include "config/config.h"
+#include "battery/BMSModuleManager.h"
+#include "battery/BMSUtil.h"
+#include "storage/Logger.h"
+#include "config/pinouts.h"
+#include "config/globals.h"
+
+extern EEPROMSettings settings;
+
+/**
+ * @brief Constructs a BMSModuleManager object, initializing all modules to false,
+ * lowestPackVolt to 1000V, highestPackVolt to 0V, lowestPackTemp to 200C, highestPackTemp to -100C,
+ * and sets isFaulted to false.
+ */
+BMSModuleManager::BMSModuleManager()
+{
+  for (int i = 1; i <= MAX_MODULE_ADDR; i++) {
+    modules[i].setExists(false);
+    modules[i].setAddress(i);
+  }
+
+  lowestPackTemp = 200.0f;
+  highestPackTemp = -100.0f;
+  isFaulted = false;
+}
+
+/**
+ * @brief Clears all module voltage, temperature, and cell voltage data.
+ *
+ * Loops over all modules and calls their clearModule() method to
+ * clear out all of the voltage and temperature data. This is used
+ * prior to reading all of the module data to ensure that we are
+ * starting from a clean slate.
+ */
+void BMSModuleManager::clearmodules()
+{
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      modules[y].clearModule();
+    }
+  }
+}
+
+/**
+ * @brief Calculates the total number of cells in series in the pack.
+ *
+ * Loops through all modules and sums up the number of cells in each module
+ * to get the total number of cells in the pack. This is used to calculate
+ * the pack voltage.
+ *
+ * @return The total number of cells in series.
+ */
+int BMSModuleManager::seriescells()
+{
+  spack = 0;
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      spack = spack + modules[y].getscells();
+    }
+  }
+  return spack;
+}
+
+  /**
+   * @brief Activates cell balancing for each module based on the following conditions:
+   *
+   * 1. The module is present.
+   * 2. The module is not already balancing.
+   * 3. The module has at least one cell with a voltage higher than the lowest cell voltage.
+   *
+   * @param duration The duration in seconds to balance the cells.
+   * @param debug Set to 1 to print debug information.
+   */
+void BMSModuleManager::balanceCells(int duration, int debug)
+{
+  uint8_t payload[4];
+  uint8_t buff[30];
+  uint8_t balance = 0;//bit 0 - 5 are to activate cell balancing 1-6
+  CellsBalancing = 0;
+  if (debugMode == 1)
+  {
+    Serial.println();
+  }
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting() == 1)
+    {
+      balance = 0;
+      for (int i = 0; i < 6; i++)
+      {
+        if (getLowCellVolt() < modules[y].getCellVoltage(i))
+        {
+          balance = balance | (1 << i);
+        }
+      }
+      if (debugMode == 1)
+      {
+        Serial.print(y);
+        Serial.print(" - ");
+        Serial.print(balance, BIN);
+        Serial.print(" | ");
+      }
+      if (balance != 0) //only send balance command when needed
+      {
+        payload[0] = y << 1;
+        payload[1] = REG_BAL_TIME;
+        payload[2] = duration; //5 second balance limit, if not triggered to balance it will stop after 5 seconds
+        BMSUtil::sendData(payload, 3, true);
+        delay(2);
+        BMSUtil::getReply(buff, 30);
+        if (debugMode == 1)
+        {
+          for (int z = 0; z < 4; z++)
+          {
+            Serial.print(buff[z], HEX);
+            Serial.print("-");
+          }
+          Serial.print(" | ");
+        }
+        payload[0] = y << 1;
+        payload[1] = REG_BAL_CTRL;
+        payload[2] = balance; //write balance state to register
+        BMSUtil::sendData(payload, 3, true);
+        delay(2);
+        BMSUtil::getReply(buff, 30);
+        if (debugMode == 1)
+        {
+          for (int z = 0; z < 4; z++)
+          {
+            Serial.print(buff[z], HEX);
+            Serial.print("-");
+          }
+        }
+        CellsBalancing = CellsBalancing + balance;
+      }
+      if (debugMode == 1)
+      {
+        Serial.println();
+      }
+    }
+  }
+}
+
+
+
+/**
+ * Iterate through all 62 possible board addresses (1-62) to see if they respond
+ * Do a read of the address and the version number to see if they respond
+ * If they do, then add them to the list of found modules
+ */
+void BMSModuleManager::findBoards()
+{
+  uint8_t payload[3];
+  uint8_t buff[8];
+
+  numFoundModules = 0;
+  payload[0] = 0;
+  payload[1] = 0; //read registers starting at 0
+  payload[2] = 1; //read one byte
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    modules[x].setExists(false);
+    payload[0] = x << 1;
+    BMSUtil::sendData(payload, 3, false);
+    delay(20);
+    if (BMSUtil::getReply(buff, 8) > 4)
+    {
+      if (buff[0] == (x << 1) && buff[1] == 0 && buff[2] == 1 && buff[4] > 0) {
+        modules[x].setExists(true);
+        numFoundModules++;
+      }
+    }
+    delay(5);
+  }
+}
+
+
+/**
+ * @brief Force all modules to reset back to address 0 then set them all up in order so that the first module
+ * in line from the master board is 1, the second one 2, and so on.
+ */
+void BMSModuleManager::renumberBoardIDs()
+{
+  uint8_t payload[3];
+  uint8_t buff[8];
+  int attempts = 1;
+
+  for (int y = 1; y < 63; y++)
+  {
+    modules[y].setExists(false);
+    numFoundModules = 0;
+  }
+
+  while (attempts < 3)
+  {
+    payload[0] = 0x3F << 1; //broadcast the reset command
+    payload[1] = 0x3C;//reset
+    payload[2] = 0xA5;//data to cause a reset
+    BMSUtil::sendData(payload, 3, true);
+    delay(100);
+    BMSUtil::getReply(buff, 8);
+    if (buff[0] == 0x7F && buff[1] == 0x3C && buff[2] == 0xA5 && buff[3] == 0x57) break;
+    attempts++;
+  }
+
+  setupBoards();
+}
+
+/*
+   Try to set up any unitialized boards. Send a command to address 0 and see if there is a response. If there is then there is
+   still at least one unitialized board. Go ahead and give it the first ID not registered as already taken.
+   If we send a command to address 0 and no one responds then every board is inialized and this routine stops.
+   Don't run this routine until after the boards have already been enumerated.\
+   Note: The 0x80 conversion it is looking might in theory block the message from being forwarded so it might be required
+   To do all of this differently. Try with multiple boards. The alternative method would be to try to set the next unused
+   address and see if any boards respond back saying that they set the address.
+*/
+void BMSModuleManager::setupBoards()
+{
+  uint8_t payload[3];
+  uint8_t buff[10];
+  int retLen;
+
+  payload[0] = 0;
+  payload[1] = 0;
+  payload[2] = 1;
+
+  while (1 == 1)
+  {
+    payload[0] = 0;
+    payload[1] = 0;
+    payload[2] = 1;
+    retLen = BMSUtil::sendDataWithReply(payload, 3, false, buff, 4);
+    if (retLen == 4)
+    {
+      if (buff[0] == 0x80 && buff[1] == 0 && buff[2] == 1)
+      {
+        Logger::debug("00 found");
+        // look for a free address to use
+        for (int y = 1; y < 63; y++)
+        {
+          if (!modules[y].isExisting())
+          {
+            payload[0] = 0;
+            payload[1] = REG_ADDR_CTRL;
+            payload[2] = y | 0x80;
+            BMSUtil::sendData(payload, 3, true);
+            delay(3);
+            if (BMSUtil::getReply(buff, 10) > 2)
+            {
+              if (buff[0] == (0x81) && buff[1] == REG_ADDR_CTRL && buff[2] == (y + 0x80))
+              {
+                modules[y].setExists(true);
+                numFoundModules++;
+                Logger::debug("Address assigned");
+              }
+            }
+            break; // quit the for loop
+          }
+        }
+      }
+      else
+        break; // nobody responded properly to the zero address so our work here is done.
+    }
+    else
+      break;
+  }
+}
+
+/**
+ * @brief Clears all faults from the BMS modules.
+ *
+ * This function clears any faults recorded by the BMS modules. Faults are typically
+ * cleared after a power cycle or reset. The function sends a broadcast message to
+ * the modules to clear the faults. The function also sets the `isFaulted` flag to
+ * false to indicate that the faults have been cleared.
+ */
+void BMSModuleManager::clearFaults()
+{
+  uint8_t payload[3];
+  uint8_t buff[8];
+  payload[0] = 0x7F; //broadcast
+  payload[1] = REG_ALERT_STATUS;//Alert Status
+  payload[2] = 0xFF;//data to cause a reset
+  BMSUtil::sendDataWithReply(payload, 3, true, buff, 4);
+
+  payload[0] = 0x7F; //broadcast
+  payload[2] = 0x00;//data to clear
+  BMSUtil::sendDataWithReply(payload, 3, true, buff, 4);
+
+  payload[0] = 0x7F; //broadcast
+  payload[1] = REG_FAULT_STATUS;//Fault Status
+  payload[2] = 0xFF;//data to cause a reset
+  BMSUtil::sendDataWithReply(payload, 3, true, buff, 4);
+
+  payload[0] = 0x7F; //broadcast
+  payload[2] = 0x00;//data to clear
+  BMSUtil::sendDataWithReply(payload, 3, true, buff, 4);
+
+  isFaulted = false;
+}
+
+/**
+ * @brief Puts all boards on the bus into a Sleep state.
+ *
+ * This is good to use when the vehicle is in a rest state.
+ * Pulling the boards out of sleep only to check voltage decay and temperature when the contactors are open.
+ */
+void BMSModuleManager::sleepBoards()
+{
+  uint8_t payload[3];
+  uint8_t buff[8];
+  payload[0] = 0x7F; //broadcast
+  payload[1] = REG_IO_CTRL;//IO ctrl start
+  payload[2] = 0x04;//write sleep bit
+  BMSUtil::sendData(payload, 3, true);
+  delay(2);
+  BMSUtil::getReply(buff, 8);
+}
+
+/**
+ * Wakes all the boards up and clears thier SLEEP state bit in the Alert Status Registery
+ *
+ * The boards are put in a sleep state when the vehicle is in a rest state, and are only woken up
+ * to check voltage decay and temperature when the contactors are open. This function is useful
+ * to wake all the boards up when the vehicle is going to be used.
+ *
+ * Note: This function also clears the SLEEP state bit in the Alert Status Registery, which is
+ *       automatically set when the boards are put in a sleep state.
+ */
+void BMSModuleManager::wakeBoards()
+{
+  uint8_t payload[3];
+  uint8_t buff[8];
+  payload[0] = 0x7F; //broadcast
+  payload[1] = REG_IO_CTRL;//IO ctrl start
+  payload[2] = 0x00;//write sleep bit
+  BMSUtil::sendData(payload, 3, true);
+  delay(2);
+  BMSUtil::getReply(buff, 8);
+
+  payload[0] = 0x7F; //broadcast
+  payload[1] = REG_ALERT_STATUS;//Fault Status
+  payload[2] = 0x04;//data to cause a reset
+  BMSUtil::sendData(payload, 3, true);
+  delay(2);
+  BMSUtil::getReply(buff, 8);
+  payload[0] = 0x7F; //broadcast
+  payload[2] = 0x00;//data to clear
+  BMSUtil::sendData(payload, 3, true);
+  delay(2);
+  BMSUtil::getReply(buff, 8);
+}
+
+/**
+ * @brief Stops balancing activity on all connected BMS modules.
+ *
+ * This method iterates over all existing BMS modules and calls their
+ * `stopBalance` method to disable balancing activity. This is useful
+ * when the vehicle is not in operation and balancing is not necessary.
+ */
+void BMSModuleManager::StopBalancing()
+{
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+      modules[x].stopBalance();
+    }
+  }
+}
+
+/**
+ * @brief Retrieves voltage and temperature values from all connected BMS modules.
+ *
+ * This method first stops any balancing activity, then reads voltage and temperature
+ * values from all existing BMS modules. It also keeps track of the lowest and highest
+ * temperatures observed across all modules. Finally, it checks if any modules are in a
+ * faulted state and logs an error if so. The highest and lowest cell voltage values are
+ * also retrieved.
+ *
+ * @note This method is the primary entry point for reading BMS module data. It should
+ * be called periodically to ensure that the system has up-to-date information about
+ * the state of the battery pack.
+ */
+void BMSModuleManager::getAllVoltTemp()
+{
+  float localPackVolt = 0.0f;
+  float LocalHighCellVolt = 0.0;
+  float LocalLowCellVolt = 5.0;
+
+  // Why do we stop balancing?
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+      modules[x].stopBalance();
+    }
+  }
+
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+      Logger::debug("");
+      Logger::debug("Module %i exists. Reading voltage and temperature values", x);
+      modules[x].readModuleValues();
+      Logger::debug("Module voltage: %f", modules[x].getModuleVoltage());
+      Logger::debug("Lowest Cell V: %f     Highest Cell V: %f", modules[x].getLowCellV(), modules[x].getHighCellV());
+      Logger::debug("Temp1: %f       Temp2: %f", modules[x].getTemperature(0), modules[x].getTemperature(1));
+
+      // Accumulate the module voltages to get the total battery pack voltage
+      localPackVolt += modules[x].getModuleVoltage();
+      
+      // Check if this module has the lowest temperature
+      if (modules[x].getLowTemp() < lowestPackTemp && modules[x].getLowTemp() > -70)
+      {
+        lowestPackTemp = modules[x].getLowTemp();
+      }
+      
+      // Check if this module has the highest temperature
+      if (modules[x].getHighTemp() > highestPackTemp && modules[x].getLowTemp() > -70)
+      {
+        highestPackTemp = modules[x].getHighTemp();
+      }
+
+
+      // Check if this module has the highest voltage
+      if (modules[x].getLowCellV() <  LocalLowCellVolt)
+      {
+        LocalLowCellVolt = modules[x].getLowCellV();
+      }  
+
+      // Check if this module has the lowest voltage
+      if (modules[x].getHighCellV() >  LocalHighCellVolt)
+      {
+        LocalHighCellVolt = modules[x].getHighCellV();
+      }
+    }
+  }
+
+  // Commit the local battery stats to the BMSModuleManager members
+  packVolt = localPackVolt;
+  LowCellVolt = LocalLowCellVolt;
+  HighCellVolt = LocalHighCellVolt;
+}
+
+/**
+ * @brief Gets the current balancing status of the pack
+ *
+ * @return Bitfield of which cells are currently balancing. Bit 0 is cell 1, bit 1 is cell 2, etc.
+ */
+int BMSModuleManager::getBalancing()
+{
+  return CellsBalancing;
+}
+
+/**
+ * @brief Gets the lowest cell voltage of the pack that has been seen
+ *
+ * @return The lowest cell voltage of the pack in Volts
+ */
+float BMSModuleManager::getLowCellVolt()
+{
+  return LowCellVolt;
+}
+
+/**
+ * @brief Gets the number of BMS modules that have been found
+ *
+ * @return The number of BMS modules that have been found
+ */
+int BMSModuleManager::getNumModules()
+{
+  return numFoundModules;
+}
+
+/**
+ * @brief Gets the highest cell voltage of the pack that has been seen
+ *
+ * @return The highest cell voltage of the pack in Volts
+ */
+float BMSModuleManager::getHighCellVolt()
+{
+  return HighCellVolt;
+}
+
+/**
+ * @brief Gets the current pack voltage
+ *
+ * @return The current pack voltage in Volts
+ */
+float BMSModuleManager::getPackVoltage()
+{
+  return packVolt;
+}
+
+/**
+ * @brief Sets the battery ID of the pack
+ *
+ * This value is used to store specific configuration and settings for the pack
+ * @param id The ID of the battery pack
+ */
+void BMSModuleManager::setBatteryID(int id)
+{
+  batteryID = id;
+}
+
+/**
+ * @brief Sets the number of strings in parallel in the battery pack
+ * This value is used to calculate the pack voltage from the module voltages
+ * @param Pstrings The number of strings in parallel
+ */
+void BMSModuleManager::setPstrings(int Pstrings)
+{
+  Pstring = Pstrings;
+}
+
+void BMSModuleManager::setSensors(int sensor, float Ignore)
+{
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+      modules[x].settempsensor(sensor);
+      modules[x].setIgnoreCell(Ignore);
+    }
+  }
+}
+
+/**
+ * @brief Returns the average temperature of the battery pack
+ *
+ * This function calculates the average temperature of the battery pack by
+ * summing up the average temperatures of all modules and dividing by the
+ * number of modules. It also keeps track of the lowest and highest temperatures
+ * found in the pack.
+ *
+ * @return The average temperature of the battery pack
+ */
+float BMSModuleManager::getAvgTemperature()
+{
+  float avg = 0.0f;
+  lowTemp = 999.0f;
+  highTemp = -999.0f;
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting())
+    {
+#ifndef ALLOW_UNCONNECTED_TEMP_SENSORS
+      if (modules[x].getAvgTemp() > -70)
+      {
+#endif
+        avg += modules[x].getAvgTemp();
+        if (modules[x].getHighTemp() > highTemp)
+        {
+          highTemp = modules[x].getHighTemp();
+        }
+        if (modules[x].getLowTemp() < lowTemp)
+        {
+          lowTemp = modules[x].getLowTemp();
+        }
+#ifndef ALLOW_UNCONNECTED_TEMP_SENSORS
+      }
+#endif
+    }
+  }
+
+  if(numFoundModules > 0)
+  {
+    avg = avg / (float)(numFoundModules);
+  }
+  else{
+    avg = 0.0f;
+  }
+  
+  return avg;
+}
+
+/**
+ * @brief Returns the highest temperature of the battery pack
+ *
+ * @return The highest temperature of the battery pack
+ */
+float BMSModuleManager::getHighTemperature()
+{
+  return highTemp;
+}
+
+/**
+ * @brief Returns the lowest temperature of the battery pack
+ *
+ * @return The lowest temperature of the battery pack
+ */
+float BMSModuleManager::getLowTemperature()
+{
+  return lowTemp;
+}
+
+/**
+ * @brief Calculates the average cell voltage of the battery pack
+ *
+ * This function calculates the average cell voltage of the battery pack by
+ * summing up the average cell voltages of all modules and dividing by the
+ * number of modules.
+ *
+ * @return The average cell voltage of the battery pack
+ */
+float BMSModuleManager::getAvgCellVolt()
+{
+  float avg = 0.0f;
+  for (int x = 1; x <= MAX_MODULE_ADDR; x++)
+  {
+    if (modules[x].isExisting()){
+      float moduleAvg = modules[x].getAverageV();
+      avg += moduleAvg;
+      Logger::debug("Module %i exists. Module avg voltage of %f", x, moduleAvg);
+      Logger::debug("Module series cells: %i", modules[x].getscells());
+
+    }
+  }
+  avg = avg / (float)numFoundModules;
+  Logger::debug("Total avg voltage of %f", avg);
+  return avg;
+}
+
+/**
+ * @brief Prints a summary of the battery pack's state
+ *
+ * Prints the number of modules found, the pack voltage, average cell voltage, and
+ * average temperature. Then it loops over all modules and prints their voltage,
+ * temperature range, and any faults or alerts they have. If a module has a fault
+ * or alert, it prints a description of the fault or alert.
+ */
+void BMSModuleManager::printPackSummary()
+{
+  uint8_t faults;
+  uint8_t alerts;
+  uint8_t COV;
+  uint8_t CUV;
+
+  Logger::console("");
+  Logger::console("");
+  Logger::console("");
+  Logger::console("Modules: %i    Voltage: %fV   Avg Cell Voltage: %fV     Avg Temp: %fC ", numFoundModules,
+                  getPackVoltage(), getAvgCellVolt(), getAvgTemperature());
+  Logger::console("");
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      faults = modules[y].getFaults();
+      alerts = modules[y].getAlerts();
+      COV = modules[y].getCOVCells();
+      CUV = modules[y].getCUVCells();
+
+      Logger::console("                               Module #%i", y);
+
+      Logger::console("  Voltage: %fV   (%fV-%fV)     Temperatures: (%fC-%fC)", modules[y].getModuleVoltage(),
+                      modules[y].getLowCellV(), modules[y].getHighCellV(), modules[y].getLowTemp(), modules[y].getHighTemp());
+      if (faults > 0)
+      {
+        Logger::console("  MODULE IS FAULTED:");
+        if (faults & 1)
+        {
+          SERIAL_CONSOLE.print("    Overvoltage Cell Numbers (1-6): ");
+          for (int i = 0; i < 6; i++)
+          {
+            if (COV & (1 << i))
+            {
+              SERIAL_CONSOLE.print(i + 1);
+              SERIAL_CONSOLE.print(" ");
+            }
+          }
+          SERIAL_CONSOLE.println();
+        }
+        if (faults & 2)
+        {
+          SERIAL_CONSOLE.print("    Undervoltage Cell Numbers (1-6): ");
+          for (int i = 0; i < 6; i++)
+          {
+            if (CUV & (1 << i))
+            {
+              SERIAL_CONSOLE.print(i + 1);
+              SERIAL_CONSOLE.print(" ");
+            }
+          }
+          SERIAL_CONSOLE.println();
+        }
+        if (faults & 4)
+        {
+          Logger::console("    CRC error in received packet");
+        }
+        if (faults & 8)
+        {
+          Logger::console("    Power on reset has occurred");
+        }
+        if (faults & 0x10)
+        {
+          Logger::console("    Test fault active");
+        }
+        if (faults & 0x20)
+        {
+          Logger::console("    Internal registers inconsistent");
+        }
+      }
+      if (alerts > 0)
+      {
+        Logger::console("  MODULE HAS ALERTS:");
+        if (alerts & 1)
+        {
+          Logger::console("    Over temperature on TS1");
+        }
+        if (alerts & 2)
+        {
+          Logger::console("    Over temperature on TS2");
+        }
+        if (alerts & 4)
+        {
+          Logger::console("    Sleep mode active");
+        }
+        if (alerts & 8)
+        {
+          Logger::console("    Thermal shutdown active");
+        }
+        if (alerts & 0x10)
+        {
+          Logger::console("    Test Alert");
+        }
+        if (alerts & 0x20)
+        {
+          Logger::console("    OTP EPROM Uncorrectable Error");
+        }
+        if (alerts & 0x40)
+        {
+          Logger::console("    GROUP3 Regs Invalid");
+        }
+        if (alerts & 0x80)
+        {
+          Logger::console("    Address not registered");
+        }
+      }
+      if (faults > 0 || alerts > 0) SERIAL_CONSOLE.println();
+    }
+  }
+}
+
+/**
+ * @brief Prints detailed information about the pack to the serial console
+ * @param[in] digits The number of decimal places to display the voltage values
+ *
+ * This function prints detailed information about the pack to the serial console. It
+ * includes the number of modules, cells and strings, the pack voltage, average cell
+ * voltage, low and high cell voltage, average temperature, and detailed information about
+ * each module, including its voltage, cell voltages, and temperatures.
+ */
+void BMSModuleManager::printPackDetails(int digits)
+{
+  uint8_t faults;
+  uint8_t alerts;
+  uint8_t COV;
+  uint8_t CUV;
+  int cellNum = 0;
+
+  Logger::console("");
+  Logger::console("");
+  Logger::console("");
+  Logger::console("Modules: %i Cells: %i Strings: %i  Voltage: %fV   Avg Cell Voltage: %fV  Low Cell Voltage: %fV   High Cell Voltage: %fV Delta Voltage: %zmV   Avg Temp: %fC ", numFoundModules, seriescells(),
+                  Pstring, getPackVoltage(), getAvgCellVolt(), LowCellVolt, HighCellVolt, (HighCellVolt - LowCellVolt) * 1000, getAvgTemperature());
+  Logger::console("");
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      faults = modules[y].getFaults();
+      alerts = modules[y].getAlerts();
+      COV = modules[y].getCOVCells();
+      CUV = modules[y].getCUVCells();
+
+      SERIAL_CONSOLE.print("Module #");
+      SERIAL_CONSOLE.print(y);
+      if (y < 10) SERIAL_CONSOLE.print(" ");
+      SERIAL_CONSOLE.print("  ");
+      SERIAL_CONSOLE.print(modules[y].getModuleVoltage(), digits);
+      SERIAL_CONSOLE.print("V");
+      for (int i = 0; i < 6; i++)
+      {
+        if (cellNum < 10) SERIAL_CONSOLE.print(" ");
+        SERIAL_CONSOLE.print("  Cell");
+        SERIAL_CONSOLE.print(cellNum++);
+        SERIAL_CONSOLE.print(": ");
+        SERIAL_CONSOLE.print(modules[y].getCellVoltage(i), digits);
+        SERIAL_CONSOLE.print("V");
+      }
+      SERIAL_CONSOLE.print("  Neg Term Temp: ");
+      SERIAL_CONSOLE.print(modules[y].getTemperature(0));
+      SERIAL_CONSOLE.print("C  Pos Term Temp: ");
+      SERIAL_CONSOLE.print(modules[y].getTemperature(1));
+      SERIAL_CONSOLE.println("C");
+
+    }
+  }
+}
+
+/**
+ * @brief Prints detailed information about the pack to the serial console in CSV format.
+ *
+ * @param[in] timestamp The timestamp at which the data was collected.
+ * @param[in] current The current that was read from the current sensor.
+ * @param[in] SOC The state of charge of the pack.
+ * @param[in] delim The delimiter character to use between each value.
+ *
+ * This function prints detailed information about the pack to the serial console in CSV format. It
+ * includes the timestamp, current, SOC, module number, cell voltage, and temperatures for each module.
+ */
+void BMSModuleManager::printAllCSV(unsigned long timestamp, float current, int SOC, int delim)
+{
+  for (int y = 1; y < 63; y++)
+  {
+    if (modules[y].isExisting())
+    {
+      SERIAL_CONSOLE.print(timestamp);
+      if (delim == 1)
+      {
+        SERIAL_CONSOLE.print(" ");
+      }
+      else
+      {
+        SERIAL_CONSOLE.print(",");
+      }
+      SERIAL_CONSOLE.print(current, 0);
+      if (delim == 1)       {
+        SERIAL_CONSOLE.print(" ");
+      }       else       {
+        SERIAL_CONSOLE.print(",");
+      }
+      SERIAL_CONSOLE.print(SOC);
+      if (delim == 1)       {
+        SERIAL_CONSOLE.print(" ");
+      }       else       {
+        SERIAL_CONSOLE.print(",");
+      }
+      SERIAL_CONSOLE.print(y);
+      if (delim == 1)       {
+        SERIAL_CONSOLE.print(" ");
+      }       else       {
+        SERIAL_CONSOLE.print(",");
+      }
+      for (int i = 0; i < 8; i++)
+      {
+        SERIAL_CONSOLE.print(modules[y].getCellVoltage(i));
+        if (delim == 1)       {
+          SERIAL_CONSOLE.print(" ");
+        }       else       {
+          SERIAL_CONSOLE.print(",");
+        }
+      }
+      SERIAL_CONSOLE.print(modules[y].getTemperature(0));
+      if (delim == 1)       {
+        SERIAL_CONSOLE.print(" ");
+      }       else       {
+        SERIAL_CONSOLE.print(",");
+      }
+      SERIAL_CONSOLE.print(modules[y].getTemperature(1));
+      if (delim == 1)       {
+        SERIAL_CONSOLE.print(" ");
+      }       else       {
+        SERIAL_CONSOLE.print(",");
+      }
+      SERIAL_CONSOLE.print(modules[y].getTemperature(2));
+      SERIAL_CONSOLE.println();
+    }
+  }
+  // Same data was repeated on Serial2. That would drive some weird behaviour!
+  // for (int y = 1; y < 63; y++)
+  // {
+  //   if (modules[y].isExisting())
+  //   {
+  //     Serial2.print(timestamp);
+  //     if (delim == 1)
+  //     {
+  //       Serial2.print(" ");
+  //     }
+  //     else
+  //     {
+  //       Serial2.print(",");
+  //     }
+  //     Serial2.print(current, 0);
+  //     if (delim == 1)       {
+  //       Serial2.print(" ");
+  //     }       else       {
+  //       Serial2.print(",");
+  //     }
+  //     Serial2.print(SOC);
+  //     if (delim == 1)       {
+  //       Serial2.print(" ");
+  //     }       else       {
+  //       Serial2.print(",");
+  //     }
+  //     Serial2.print(y);
+  //     if (delim == 1)       {
+  //       Serial2.print(" ");
+  //     }       else       {
+  //       Serial2.print(",");
+  //     }
+  //     for (int i = 0; i < 8; i++)
+  //     {
+  //       Serial2.print(modules[y].getCellVoltage(i));
+  //       if (delim == 1)       {
+  //         Serial2.print(" ");
+  //       }       else       {
+  //         Serial2.print(",");
+  //       }
+  //     }
+  //     Serial2.print(modules[y].getTemperature(0));
+  //     if (delim == 1)       {
+  //       Serial2.print(" ");
+  //     }       else       {
+  //       Serial2.print(",");
+  //     }
+  //     Serial2.print(modules[y].getTemperature(1));
+  //     if (delim == 1)       {
+  //       Serial2.print(" ");
+  //     }       else       {
+  //       Serial2.print(",");
+  //     }
+  //     Serial2.print(modules[y].getTemperature(2));
+  //     Serial2.println();
+  //   }
+  // }
+}
+
+/**
+ * @brief Get the cell voltage of a module
+ *
+ * @param modid Module ID. Valid values are 1-62
+ * @param cellid Cell ID. Valid values are 0-5
+ * @return The cell voltage in millivolts
+ */
+uint16_t BMSModuleManager::getcellvolt(int modid, int cellid)
+{
+  return (modules[modid].getCellVoltage(cellid) * 1000);
+}
+
+/**
+ * @brief Get the temperature of a module
+ *
+ * @param modid Module ID. Valid values are 1-62
+ * @param tempid Temperature ID. Valid values are 0-2
+ * @return The temperature in degrees Celsius
+ */
+uint16_t BMSModuleManager::gettemp(int modid, int tempid)
+{
+  return (modules[modid].getTemperature(tempid));
+}
