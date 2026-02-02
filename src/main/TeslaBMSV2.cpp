@@ -1,9 +1,9 @@
 /**
  * @file TeslaBMSV2.ino
  * @brief Entry Point for the project.
- * 
- * Adapted from the original SimpBMS Arduino project 
- * with setup() and loop() functions. * 
+ *
+ * Adapted from the original SimpBMS Arduino project
+ * with setup() and loop() functions. *
  */
 
 /*
@@ -47,7 +47,6 @@
 #include "display/BMS_OLED.h"
 #include "power/BMS_Contactor.h"
 
-
 // Libraries
 #include <Arduino.h>
 #include "TeensyDebug.h"
@@ -78,7 +77,7 @@ BMS_Contactor positive(POSITIVE, H1, BuiltIn);
 BMS_Contactor precharge(PRECHARGE, H2, BuiltIn);
 BMS_Contactor charge(CHARGE, H3, BuiltIn);
 BMS_Contactor negative(NEGATIVE, H4, BuiltIn);
-BMS_Contactor trip(0); //Unconfigured
+BMS_Contactor trip(0); // Unconfigured
 
 struct Contactors contactors = {positive, precharge, charge, negative, trip};
 
@@ -88,8 +87,6 @@ struct Contactors contactors = {positive, precharge, charge, negative, trip};
 
 BMSModuleManager bms;
 EEPROMSettings settings;
-
-int SOC;
 
 ADC *adc = new ADC(); // adc object
 
@@ -122,9 +119,8 @@ void moduleSetup();
 void setup()
 {
   Logger::setSerialLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
-  Logger::setSdLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
-  Logger::setOledLoglevel(Logger::Info); // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
-
+  Logger::setSdLoglevel(Logger::Info);     // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
+  Logger::setOledLoglevel(Logger::Info);   // Debug = 0, Info = 1, Warn = 2, Error = 3, Off = 4
 
   indicatorsSetup();
 
@@ -146,7 +142,6 @@ void setup()
     SERIAL_CONSOLE.print(CrashReport);
   }
 
-
   // ------------- OLED Setup -------------
   setupOLED();
 
@@ -163,8 +158,8 @@ void setup()
 
   /**
    * A Note on Settings
-   * 
-   * They do not appear to be saved to the EEPROM, except when changing settings in the 
+   *
+   * They do not appear to be saved to the EEPROM, except when changing settings in the
    * Serial Menu. There is no automatic saving on the first boot that I can find,
    * as would be implied by testing the settings version vs the eeprom version
    */
@@ -187,8 +182,6 @@ void setup()
   Serial.println("Starting CAN bus Can3 at " + String(settings.canSpeed) + " baud");
   Can3.begin();
   Can3.setBaudRate(settings.canSpeed);
-
- 
 
   //  Enable WDT T4.x
   WDT_timings_t configewm;
@@ -246,7 +239,7 @@ void setup()
   // // Blink Heartbeat LED to indicate setup is complete
   digitalWrite(PIN_HEARTBEAT_LED, HIGH); // Turn off heartbeat LED
   delay(500);                            // Wait for 1 second
-  digitalWrite(PIN_HEARTBEAT_LED, LOW); // Turn off heartbeat LED
+  digitalWrite(PIN_HEARTBEAT_LED, LOW);  // Turn off heartbeat LED
 
   // bmsstatus = BMS_STATUS_BOOT;
   if (bmsError == ERROR_NONE)
@@ -262,16 +255,15 @@ void setup()
   }
 
   // End of setup()
-    Logger::info("Setup complete, entering main loop");
-    SERIAL_CONSOLE.flush();
+  Logger::info("Setup complete, entering main loop");
+  SERIAL_CONSOLE.flush();
 }
 
 void loop()
 {
   watchdog.feed();
   // Add this temporarily
-  digitalWrite(PIN_LED_BUILTIN, !digitalRead(PIN_LED_BUILTIN)); 
-  
+  digitalWrite(PIN_LED_BUILTIN, !digitalRead(PIN_LED_BUILTIN));
 
   indicatorsLoop(); // Call the indicators loop to handle LED and buzzer state
 
@@ -283,18 +275,16 @@ void loop()
     menu();
   }
 
-  
   static unsigned long nextContactorCheck = millis();
   if (millis() > nextContactorCheck)
   {
     Logger::debug("Checking contactors");
     nextContactorCheck += 1000;
-    Serial.printf("Contactor Current: %f\n", negative.getPinCurrent(1)); 
+    Serial.printf("Contactor Current: %f\n", negative.getPinCurrent(1));
     delay(10);
-    Serial.printf("Contactor Voltage: %f\n", negative.getVoltage(1)); 
-    Serial.printf("Contactor Temperature: %f\n", negative.getTemperature(1));     
+    Serial.printf("Contactor Voltage: %f\n", negative.getVoltage(1));
+    Serial.printf("Contactor Temperature: %f\n", negative.getTemperature(1));
   }
-  
 
   if (modulesConnected)
   {
@@ -316,15 +306,17 @@ void loop()
 
       nextModuleCheck += 5000; // every 5 seconds
       moduleSetup();
-      }
-      if (settings.ESSmode == 1)
-      {
-        // bmsstatus = BMS_STATUS_READY;
-        setBMSstatus(BMS_STATUS_READY, "SOC initialized from memory after 5 seconds in ESS mode");
-      }
+    }
+    if (settings.ESSmode == 1)
+    {
+      // bmsstatus = BMS_STATUS_READY;
+      setBMSstatus(BMS_STATUS_READY, "SOC initialized from memory after 5 seconds in ESS mode");
     }
   }
+}
 
+void updateSOC()
+{
   SOC = ((ampsecond * 0.27777777777778) / (settings.CAP * settings.Pstrings * 1000)) * 100;
 
   if (settings.voltsoc == 1 || settings.cursens == 0)
@@ -785,26 +777,32 @@ void Rx309()
  * If CAN debugging is enabled, the function prints the received current value in
  * both hexadecimal and decimal formats to the serial console.
  */
-void CAB300() {
-    // Combine 3 bytes into a 32-bit integer
-    int32_t rawCan = (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
+void CAB300()
+{
+  // Combine 3 bytes into a 32-bit integer
+  int32_t rawCan = (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
 
-    // The sensor uses an offset of 0x800000 for Zero.
-    // 0x800000 = 0A
-    // 0x800001 = +1 Unit
-    // 0x7FFFFF = -1 Unit
-    CANmilliamps = rawCan - CAB300_OFFSET;
+  // The sensor uses an offset of 0x800000 for Zero.
+  // 0x800000 = 0A
+  // 0x800001 = +1 Unit
+  // 0x7FFFFF = -1 Unit
+  CANmilliamps = rawCan - CAB300_OFFSET;
 
-    if (candebug == 1) {
-        Serial.print("CAB300 ID: "); Serial.print(inMsg.id, HEX);
-        Serial.print(" Raw: 0x"); Serial.print(rawCan, HEX);
-        Serial.print(" mA: "); Serial.println(CANmilliamps);
-    }
+  if (candebug == 1)
+  {
+    Serial.print("CAB300 ID: ");
+    Serial.print(inMsg.id, HEX);
+    Serial.print(" Raw: 0x");
+    Serial.print(rawCan, HEX);
+    Serial.print(" mA: ");
+    Serial.println(CANmilliamps);
+  }
 
-    // Only process if this is the active sensor setting
-    if (settings.cursens == CURR_SENSE_CANBUS) {
-        processCurrentValue(CANmilliamps);
-    }
+  // Only process if this is the active sensor setting
+  if (settings.cursens == CURR_SENSE_CANBUS)
+  {
+    processCurrentValue(CANmilliamps);
+  }
 }
 
 /**
@@ -819,26 +817,32 @@ void CAB300() {
  * If CAN debugging is enabled, the function prints the received current value in
  * both hexadecimal and decimal formats to the serial console.
  */
-void CAB500() {
-    // Combine 3 bytes into a 32-bit integer
-    int32_t rawCan = (inMsg.buf[0] << 24) | (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
+void CAB500()
+{
+  // Combine 3 bytes into a 32-bit integer
+  int32_t rawCan = (inMsg.buf[0] << 24) | (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
 
-    // The sensor uses an offset of 0x800000 for Zero.
-    // 0x800000 = 0A
-    // 0x800001 = +1 Unit
-    // 0x7FFFFF = -1 Unit
-    CANmilliamps = rawCan - CAB500_OFFSET;
+  // The sensor uses an offset of 0x800000 for Zero.
+  // 0x800000 = 0A
+  // 0x800001 = +1 Unit
+  // 0x7FFFFF = -1 Unit
+  CANmilliamps = rawCan - CAB500_OFFSET;
 
-    if (candebug == 1) {
-        Serial.print("CAB500 ID: "); Serial.print(inMsg.id, HEX);
-        Serial.print(" Raw: 0x"); Serial.print(rawCan, HEX);
-        Serial.print(" mA: "); Serial.println(CANmilliamps);
-    }
+  if (candebug == 1)
+  {
+    Serial.print("CAB500 ID: ");
+    Serial.print(inMsg.id, HEX);
+    Serial.print(" Raw: 0x");
+    Serial.print(rawCan, HEX);
+    Serial.print(" mA: ");
+    Serial.println(CANmilliamps);
+  }
 
-    // Only process if this is the active sensor setting
-    if (settings.cursens == CURR_SENSE_CANBUS) {
-        processCurrentValue(CANmilliamps);
-    }
+  // Only process if this is the active sensor setting
+  if (settings.cursens == CURR_SENSE_CANBUS)
+  {
+    processCurrentValue(CANmilliamps);
+  }
 }
 
 /**
@@ -942,7 +946,6 @@ void pwmcomms()
     Serial.print(" OUT7 ");
   */
 }
-
 
 /**
  * @brief Communicates with the charger via CAN bus to set charging parameters.
