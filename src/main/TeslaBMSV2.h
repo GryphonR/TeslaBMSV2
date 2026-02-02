@@ -11,7 +11,8 @@ void outputdebug();
 void gaugeUpdate();
 void updateSOC();
 void SOCcharged(int y);
-void currentlimit();
+// currentlimit is implemented in power/limits.cpp
+#include "power/limits.h"
 void getcurrent();
 void alarmupdate();
 void dashupdate();

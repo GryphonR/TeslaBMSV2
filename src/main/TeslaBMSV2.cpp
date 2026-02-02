@@ -89,6 +89,8 @@ struct Contactors contactors = {positive, precharge, charge, negative, trip};
 BMSModuleManager bms;
 EEPROMSettings settings;
 
+int SOC;
+
 ADC *adc = new ADC(); // adc object
 
 CAN_message_t msg;
@@ -106,7 +108,6 @@ void Rx309();
 void CAB300();
 void CAB500();
 void handleVictronLynx();
-void currentlimit();
 void inputdebug();
 void outputdebug();
 void resetwdog();
@@ -315,166 +316,6 @@ void loop()
 
       nextModuleCheck += 5000; // every 5 seconds
       moduleSetup();
-    }
-  }
-
-  Logger::info("Power: %.2f", currentact * bms.getPackVoltage());
-  Logger::info("Current: %.2f", currentact * 1000);
-  Logger::info("Voltage: %.2f", bms.getPackVoltage());
-  Logger::info("Min Voltage: %.2f", bms.getLowCellVolt());
-  Logger::info("Max Voltage: %.2f", bms.getHighCellVolt());
-  Logger::info("Max Temp: %.2f", bms.getHighTemperature());
-  Logger::info("Soc: %.2f", SOC);
-} // End of loop
-
-void moduleSetup()
-{
-  watchdog.feed();
-  Logger::info("Starting Communication with Battery Modules");
-  Logger::debug("Renumbering BOARD IDs");
-  bms.renumberBoardIDs();
-
-  lastUpdate = 0;
-  Logger::debug("Finding BMS boards");
-  bms.findBoards();
-
-  bms.setPstrings(settings.Pstrings);
-  bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
-  
-  bms.getAllVoltTemp();
-  bms.getAvgCellVolt();
-
-  Logger::debug("Number of Modules Found: %i", bms.getNumModules());
-
-  if (bms.getNumModules() == 0)
-  {
-    Logger::error("No modules found - Check connections to pack");
-    setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "No modules found - Check connections to pack");
-    modulesConnected = false;
-  } else if (bms.seriescells() != settings.Scells)
-  {
-    Logger::error("Number of cells in pack does not match settings");
-    Logger::error("Detected: %d, Expected: %d", bms.seriescells(), settings.Scells);
-    setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "Number of cells in pack does not match settings");
-    modulesConnected = false;
-  }
-  else{
-    Logger::debug("BMS initialised correctly", bms.getNumModules());
-    setBMSstatus(BMS_STATUS_READY, ERROR_NONE, "BMS initialised correctly");
-    modulesConnected = true;
-  }
-}
-
-/**
- * @brief Sets up all the required pins as inputs or outputs
- *
- * This function sets the pin modes for all the digital inputs and outputs,
- * and sets all the outputs low on boot. It also sets the PWM frequency for
- * the desired pins.
- *
- * @note This function is called by setup() at startup.
- */
-void pinSetup()
-{
-  Serial.println("Setting up pins");
-  // ------------- Pin Mode Assignments -------------
-  // pinMode(ACUR1, INPUT);//Not required for Analogue Pins
-  // pinMode(ACUR2, INPUT);//Not required for Analogue Pins
-  pinMode(PIN_IGNITION, INPUT_PULLDOWN);
-  pinMode(PIN_IN2, INPUT_PULLDOWN);
-  pinMode(PIN_CHARGE, INPUT_PULLDOWN);
-  pinMode(PIN_EVSE_PILOT, INPUT_PULLDOWN);
-  pinMode(PIN_OUT1, OUTPUT); // Positive contactor
-  pinMode(PIN_OUT2, OUTPUT); // precharge
-  pinMode(PIN_OUT3, OUTPUT); // charge relay
-  pinMode(PIN_OUT4, OUTPUT); // Negative contactor
-  pinMode(PIN_OUT5, OUTPUT); // pwm driver output
-  pinMode(PIN_OUT6, OUTPUT); // pwm driver output
-  pinMode(PIN_OUT7, OUTPUT); // pwm driver output
-  pinMode(PIN_OUT8, OUTPUT); // pwm driver output
-
-  // ------------- Set all outputs low on boot -------------
-  digitalWrite(PIN_OUT1, LOW);
-  digitalWrite(PIN_OUT2, LOW);
-  digitalWrite(PIN_OUT3, LOW);
-  digitalWrite(PIN_OUT4, LOW);
-  digitalWrite(PIN_OUT5, LOW);
-  digitalWrite(PIN_OUT6, LOW);
-  digitalWrite(PIN_OUT7, LOW);
-  digitalWrite(PIN_OUT8, LOW);
-
-  // ------------- PWM Output Configuration -------------
-  analogWriteFrequency(PIN_OUT5, pwmfreq);
-  analogWriteFrequency(PIN_OUT6, pwmfreq);
-  analogWriteFrequency(PIN_OUT7, pwmfreq);
-  analogWriteFrequency(PIN_OUT8, pwmfreq);
-
-  // adc->adc0->setAveraging(16);  // set number of averages
-  // adc->adc0->setResolution(16); // set bits of resolution
-  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
-  adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);
-  adc->adc0->startContinuous(PIN_ACUR_1);
-}
-
-
-/**
- * @brief Updates the State of Charge (SOC) based on current measurements and voltage readings.
- *
- * This function calculates the SOC of the battery pack using either current integration
- * (amp-seconds) or voltage-based estimation, depending on the configuration settings.
- * It also handles initial SOC setting from memory or voltage after a delay, and ensures
- * SOC remains within valid bounds (0-100%).
- *
- * The function updates the `SOC` variable and `ampsecond` variable, which represents
- * the total charge in milliamp-hours. It also provides debug output if enabled.
- *
- * Key features:
- * - Initial SOC setting from memory or voltage after 5 seconds.
- * - Voltage-based SOC estimation if configured.
- * - Current integration for SOC calculation if current sensing is enabled.
- * - Ensures SOC does not exceed 100% or drop below 0%.
- * - Debug output for current, SOC, and amp-seconds.
- */
-void updateSOC()
-{
-  if (SOCreset == 1)
-  {
-    SOC = map(uint16_t(bms.getLowCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
-    ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778;
-    SOCreset = 0;
-  }
-
-  if (SOCset == 0 && SOCmem == 0)
-  {
-    if (millis() > 5000)
-    {
-      SOC = map(uint16_t(bms.getLowCellVolt() * 1000), settings.socvolt[0], settings.socvolt[2], settings.socvolt[1], settings.socvolt[3]);
-
-      ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778;
-      SOCset = 1;
-      if (debugMode != 0)
-      {
-        SERIAL_CONSOLE.println("  ");
-        SERIAL_CONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
-      }
-      if (settings.ESSmode == 1)
-      {
-        // bmsstatus = BMS_STATUS_READY;
-        setBMSstatus(BMS_STATUS_READY, "SOC initialized from voltage after 5 seconds in ESS mode");
-      }
-    }
-  }
-
-  if (SOCset == 0 && SOCmem == 1)
-  {
-    ampsecond = (SOC * settings.CAP * settings.Pstrings * 10) / 0.27777777777778;
-    if (millis() > 5000)
-    {
-      SOCset = 1;
-      if (debugMode != 0)
-      {
-        SERIAL_CONSOLE.println("  ");
-        SERIAL_CONSOLE.println("//////////////////////////////////////// SOC SET ////////////////////////////////////////");
       }
       if (settings.ESSmode == 1)
       {
@@ -594,6 +435,7 @@ void VEcan() // communication with Victron system over CAN
     msg.buf[0] = lowByte(uint16_t((settings.StoreVsetpoint * settings.Scells) * 10));
     msg.buf[1] = highByte(uint16_t((settings.StoreVsetpoint * settings.Scells) * 10));
   }
+  // chargecurrent/discurrent are in tenths of amps (0.1 A). Sent as 16-bit little-endian.
   msg.buf[2] = lowByte(chargecurrent);
   msg.buf[3] = highByte(chargecurrent);
   msg.buf[4] = lowByte(discurrent);
@@ -1031,169 +873,7 @@ void handleVictronLynx()
   }
 }
 
-/**
- * @brief Calculates and sets the charge and discharge current limits based on various conditions.
- *
- * This function evaluates the current status of the Battery Management System (BMS)
- * and adjusts the charge and discharge current limits accordingly. It considers factors
- * such as temperature, voltage, state of charge (SOC), and predefined settings to ensure
- * safe operation of the battery system.
- *
- * The function first checks if the BMS is in an error state, in which case both
- * charge and discharge currents are set to zero. If the BMS is operational, it starts
- * with maximum allowed currents and applies derating based on temperature and voltage
- * thresholds. It also ensures that no negative current values are set.
- *
- * Additionally, if there is an AC current limit from a control pilot, it calculates
- * the maximum allowable charge power and adjusts the charge current accordingly.
- */
-void currentlimit()
-{
-  Logger::debug("Entering Current Limit");
-  if (bmsstatus == BMS_STATUS_ERROR)
-  {
-    discurrent = 0;
-    chargecurrent = 0;
-  }
-  /*
-    settings.PulseCh = 600; //Peak Charge current in 0.1A
-    settings.PulseChDur = 5000; //Ms of discharge pulse derating
-    settings.PulseDi = 600; //Peak Charge current in 0.1A
-    settings.PulseDiDur = 5000; //Ms of discharge pulse derating
-  */
-  else
-  {
-
-    /// Start at no derating///
-    discurrent = settings.discurrentmax;
-
-    if (chargecurrentlimit == false)
-    {
-      chargecurrent = settings.chargecurrentmax;
-    }
-    else
-    {
-      chargecurrent = settings.chargecurrent2max;
-    }
-
-    ///////All hard limits to into zeros
-    if (bms.getLowTemperature() < settings.UnderTSetpoint)
-    {
-      // discurrent = 0; Request Daniel
-      chargecurrent = 0;
-    }
-    if (bms.getHighTemperature() > settings.OverTSetpoint)
-    {
-      discurrent = 0;
-      chargecurrent = 0;
-    }
-    if (bms.getHighCellVolt() > settings.OverVSetpoint)
-    {
-      chargecurrent = 0;
-    }
-    if (bms.getHighCellVolt() > settings.OverVSetpoint)
-    {
-      chargecurrent = 0;
-    }
-    if (bms.getLowCellVolt() < settings.UnderVSetpoint || bms.getLowCellVolt() < settings.DischVsetpoint)
-    {
-      discurrent = 0;
-    }
-
-    // Modifying discharge current///
-
-    if (discurrent > 0)
-    {
-      // Temperature based///
-
-      if (bms.getHighTemperature() > settings.DisTSetpoint)
-      {
-        discurrent = discurrent - map(bms.getHighTemperature(), settings.DisTSetpoint, settings.OverTSetpoint, 0, settings.discurrentmax);
-      }
-      // Voltagee based///
-      if (bms.getLowCellVolt() < (settings.DischVsetpoint + settings.DisTaper))
-      {
-        discurrent = discurrent - map(bms.getLowCellVolt(), settings.DischVsetpoint, (settings.DischVsetpoint + settings.DisTaper), settings.discurrentmax, 0);
-      }
-    }
-
-    // Modifying Charge current///
-
-    if (chargecurrent > 0)
-    {
-      if (chargecurrentlimit == false)
-      {
-        // Temperature based///
-        if (bms.getLowTemperature() < settings.ChargeTSetpoint)
-        {
-          chargecurrent = chargecurrent - map(bms.getLowTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrentmax, 0);
-        }
-        // Voltagee based///
-        if (storagemode == 1)
-        {
-          if (bms.getHighCellVolt() > (settings.StoreVsetpoint - settings.ChargeHys))
-          {
-            chargecurrent = chargecurrent - map(bms.getHighCellVolt(), (settings.StoreVsetpoint - settings.ChargeHys), settings.StoreVsetpoint, settings.chargecurrentend, settings.chargecurrentmax);
-          }
-        }
-        else
-        {
-          if (bms.getHighCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
-          {
-            chargecurrent = chargecurrent - map(bms.getHighCellVolt(), (settings.ChargeVsetpoint - settings.ChargeHys), settings.ChargeVsetpoint, 0, (settings.chargecurrentmax - settings.chargecurrentend));
-          }
-        }
-      }
-      else
-      {
-        // Temperature based///
-        if (bms.getLowTemperature() < settings.ChargeTSetpoint)
-        {
-          chargecurrent = chargecurrent - map(bms.getLowTemperature(), settings.UnderTSetpoint, settings.ChargeTSetpoint, settings.chargecurrent2max, 0);
-        }
-        // Voltagee based///
-        if (storagemode == 1)
-        {
-          if (bms.getHighCellVolt() > (settings.StoreVsetpoint - settings.ChargeHys))
-          {
-            chargecurrent = chargecurrent - map(bms.getHighCellVolt(), (settings.StoreVsetpoint - settings.ChargeHys), settings.StoreVsetpoint, settings.chargecurrentend, settings.chargecurrent2max);
-          }
-        }
-        else
-        {
-          if (bms.getHighCellVolt() > (settings.ChargeVsetpoint - settings.ChargeHys))
-          {
-            chargecurrent = chargecurrent - map(bms.getHighCellVolt(), (settings.ChargeVsetpoint - settings.ChargeHys), settings.ChargeVsetpoint, 0, (settings.chargecurrent2max - settings.chargecurrentend));
-          }
-        }
-      }
-    }
-  }
-  /// No negative currents///
-
-  if (discurrent < 0)
-  {
-    discurrent = 0;
-  }
-  if (chargecurrent < 0)
-  {
-    chargecurrent = 0;
-  }
-
-  // Charge current derate for Control Pilot AC limit
-
-  if (accurlim > 0)
-  {
-    chargerpower = accurlim * settings.chargerACv * settings.chargereff * 0.01;
-    tempchargecurrent = (chargerpower * 10) / (bms.getAvgCellVolt() * settings.Scells);
-
-    if (chargecurrent > tempchargecurrent)
-    {
-      chargecurrent = tempchargecurrent;
-    }
-  }
-  Logger::debug("Exiting Current Limit");
-}
+// currentlimit() implementation moved to src/power/limits.cpp
 
 /**
  * @brief Resets the watchdog timer to prevent system reset.
