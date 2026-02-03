@@ -47,6 +47,8 @@
 #include "display/BMS_OLED.h"
 #include "power/BMS_Contactor.h"
 
+
+
 // Libraries
 #include <Arduino.h>
 #include "TeensyDebug.h"
@@ -61,6 +63,21 @@
 #include <Watchdog_t4.h>
 #include <imxrt.h>
 #include <CrashReport.h>
+
+// Comms Modules
+#include "comms/CanBusManager.h"
+#include "comms/sensors/CAB500.h"
+#include "comms/sensors/CAB300.h"
+#include "comms/sensors/IsaScale.h"
+#include "comms/chargers/Charger.h"
+#include "comms/chargers/ElconCharger.h"
+#include "comms/chargers/ChevyVoltCharger.h"
+#include "comms/chargers/EltekCharger.h"
+#include "comms/chargers/BrusaCharger.h"
+#include "comms/chargers/CodaCharger.h"
+#include "comms/emulators/VictronEmulator.h"
+#include <vector>
+#include <functional>
 
 /////Version Identifier/////////
 int firmver = 250823; // Year Month Day
@@ -93,18 +110,142 @@ ADC *adc = new ADC(); // adc object
 CAN_message_t msg;
 CAN_message_t inMsg;
 
+// -----------------------------------------------------------
+// Modular CAN Architecture Setup
+// -----------------------------------------------------------
+
+// Forward declaration for legacy handler
+void Rx309();
+
+// Helper wrappers to create function pointers from FlexCAN_T4 member functions
+bool can1Read(CAN_message_t &msg) { return Can1.read(msg); }
+int can1Write(const CAN_message_t &msg) { return Can1.write(msg); }
+
+bool can2Read(CAN_message_t &msg) { return Can2.read(msg); }
+int can2Write(const CAN_message_t &msg) { return Can2.write(msg); }
+
+bool can3Read(CAN_message_t &msg) { return Can3.read(msg); }
+int can3Write(const CAN_message_t &msg) { return Can3.write(msg); }
+
+// One manager per CAN bus
+CanBusManager can1Manager(can1Read, can1Write);
+CanBusManager can2Manager(can2Read, can2Write);
+CanBusManager can3Manager(can3Read, can3Write);
+
+// Active device pointers
+CurrentSensor* activeSensor = nullptr;
+Charger* activeCharger = nullptr;
+VictronEmulator* victronEmulator = nullptr;
+
+// 3. Define Legacy Listener (Adapter)
+// Currently: Contactors (0x309)
+class LegacyCanListener : public CanListener 
+{
+public:
+    bool onReceive(const CAN_message_t &msg) override 
+    {
+        // Update global 'inMsg' which legacy functions rely on
+        inMsg = msg; 
+
+        // Handle Contactor Request
+        if (msg.id == 0x309) {
+            Rx309();
+            return true;
+        }
+        
+        return false;
+    }
+};
+
+LegacyCanListener legacyListener;
+
+// -----------------------------------------------------------
+// Setup Helper
+// -----------------------------------------------------------
+void setupCanDevices()
+{
+    // Lambda to bridge back to legacy processing
+    auto updateCallback = [](float amps) {
+         extern void processCurrentValue(int32_t rawInput);
+         processCurrentValue((int32_t)(amps * 1000.0f));
+    };
+
+    // =========================================================
+    // PROTOTYPE: Multi-bus demonstration
+    // - CAB500 sensor on CAN1
+    // - Chargers on CAN1
+    // - Victron Emulator output on CAN3
+    // =========================================================
+
+    // A. Setup Current Sensor on CAN1
+    if (settings.cursens == CURR_SENSE_CANBUS)
+    {
+        switch(settings.curcan) {
+            case 1: // CAB300
+                activeSensor = new CAB300(updateCallback);
+                can1Manager.registerListener(activeSensor);
+                Logger::info("CAB300 sensor on CAN1");
+                break;
+            case 2: // CAB500
+                activeSensor = new CAB500(updateCallback);
+                can1Manager.registerListener(activeSensor);
+                Logger::info("CAB500 sensor on CAN1");
+                break;
+            case 3: // IsaScale
+                activeSensor = new IsaScaleSensor(updateCallback);
+                can1Manager.registerListener(activeSensor);
+                Logger::info("IsaScale sensor on CAN1");
+                break;
+        }
+    }
+
+    // B. Setup Charger on CAN1 (default for now)
+    auto can1SendCallback = [](const CAN_message_t& m){ can1Write(m); };
+
+    switch(settings.chargertype) {
+        case Elcon:
+            activeCharger = new ElconCharger(can1SendCallback);
+            break;
+        case ChevyVolt:
+            activeCharger = new ChevyVoltCharger(can1SendCallback);
+            break;
+        case Eltek:
+            activeCharger = new EltekCharger(can1SendCallback);
+            break;
+        case BrusaNLG5:
+            activeCharger = new BrusaCharger(can1SendCallback);
+            break;
+        case Coda:
+            activeCharger = new CodaCharger(can1SendCallback);
+            break;
+    }
+
+    if (activeCharger) {
+        can1Manager.registerListener(activeCharger);
+        Logger::info("Charger on CAN1");
+    }
+
+    // C. Register Legacy Helper on CAN1
+    can1Manager.registerListener(&legacyListener);
+
+    // D. Setup Victron Emulator on CAN3
+    auto can3SendCallback = [](const CAN_message_t& m){ can3Write(m); };
+    victronEmulator = new VictronEmulator(can3SendCallback, bms, settings);
+    Logger::info("Victron Emulator on CAN3");
+}
+
+// Prototypes needs to be updated or we just place this before setup()
+// Since I am editing the block that contains "LegacyCanListener", I can put this helper here.
+
+
+
 // Prototypes
 void alarmupdate();
 void printbmsstat();
 void updateSOC();
 void SOCcharged(int y);
 void VEcan();
-int pgnFromCANId(int canId);
-bool canRead();
 void Rx309();
-void CAB300();
-void CAB500();
-void handleVictronLynx();
 void inputdebug();
 void outputdebug();
 void resetwdog();
@@ -195,6 +336,11 @@ void setup()
 
   // VE.begin(19200); //Victron VE direct bus
 
+  // -----------------------------------------------------------
+  // Register CAN Devices
+  // -----------------------------------------------------------
+  setupCanDevices();
+
   moduleSetup();
 
   SOC = (EEPROM.read(1000));
@@ -267,7 +413,10 @@ void loop()
 
   indicatorsLoop(); // Call the indicators loop to handle LED and buzzer state
 
-  canRead();
+  // Poll all CAN Managers
+  can1Manager.poll();
+  can2Manager.poll();
+  can3Manager.poll();
 
   // Check if serial menu is requested
   if (SERIAL_CONSOLE.available() > 0)
@@ -313,6 +462,97 @@ void loop()
       setBMSstatus(BMS_STATUS_READY, "SOC initialized from memory after 5 seconds in ESS mode");
     }
   }
+}
+
+void moduleSetup()
+{
+  watchdog.feed();
+  Logger::info("Starting Communication with Battery Modules");
+  Logger::debug("Renumbering BOARD IDs");
+  bms.renumberBoardIDs();
+
+  lastUpdate = 0;
+  Logger::debug("Finding BMS boards");
+  bms.findBoards();
+
+  bms.setPstrings(settings.Pstrings);
+  bms.setSensors(settings.IgnoreTemp, settings.IgnoreVolt);
+
+  bms.getAllVoltTemp();
+  bms.getAvgCellVolt();
+
+  Logger::debug("Number of Modules Found: %i", bms.getNumModules());
+
+  if (bms.getNumModules() == 0)
+  {
+    Logger::error("No modules found - Check connections to pack");
+    setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "No modules found - Check connections to pack");
+    modulesConnected = false;
+  }
+  else if (bms.seriescells() != settings.Scells)
+  {
+    Logger::error("Number of cells in pack does not match settings");
+    Logger::error("Detected: %d, Expected: %d", bms.seriescells(), settings.Scells);
+    setBMSstatus(BMS_STATUS_ERROR, ERROR_BATTERY_COMMS, "Number of cells in pack does not match settings");
+    modulesConnected = false;
+  }
+  else
+  {
+    Logger::debug("BMS initialised correctly", bms.getNumModules());
+    setBMSstatus(BMS_STATUS_READY, ERROR_NONE, "BMS initialised correctly");
+    modulesConnected = true;
+  }
+}
+
+/**
+ * @brief Sets up all the required pins as inputs or outputs
+ *
+ * This function sets the pin modes for all the digital inputs and outputs,
+ * and sets all the outputs low on boot. It also sets the PWM frequency for
+ * the desired pins.
+ *
+ * @note This function is called by setup() at startup.
+ */
+void pinSetup()
+{
+  Serial.println("Setting up pins");
+  // ------------- Pin Mode Assignments -------------
+  // pinMode(ACUR1, INPUT);//Not required for Analogue Pins
+  // pinMode(ACUR2, INPUT);//Not required for Analogue Pins
+  pinMode(PIN_IGNITION, INPUT_PULLDOWN);
+  pinMode(PIN_IN2, INPUT_PULLDOWN);
+  pinMode(PIN_CHARGE, INPUT_PULLDOWN);
+  pinMode(PIN_EVSE_PILOT, INPUT_PULLDOWN);
+  pinMode(PIN_OUT1, OUTPUT); // Positive contactor
+  pinMode(PIN_OUT2, OUTPUT); // precharge
+  pinMode(PIN_OUT3, OUTPUT); // charge relay
+  pinMode(PIN_OUT4, OUTPUT); // Negative contactor
+  pinMode(PIN_OUT5, OUTPUT); // pwm driver output
+  pinMode(PIN_OUT6, OUTPUT); // pwm driver output
+  pinMode(PIN_OUT7, OUTPUT); // pwm driver output
+  pinMode(PIN_OUT8, OUTPUT); // pwm driver output
+
+  // ------------- Set all outputs low on boot -------------
+  digitalWrite(PIN_OUT1, LOW);
+  digitalWrite(PIN_OUT2, LOW);
+  digitalWrite(PIN_OUT3, LOW);
+  digitalWrite(PIN_OUT4, LOW);
+  digitalWrite(PIN_OUT5, LOW);
+  digitalWrite(PIN_OUT6, LOW);
+  digitalWrite(PIN_OUT7, LOW);
+  digitalWrite(PIN_OUT8, LOW);
+
+  // ------------- PWM Output Configuration -------------
+  analogWriteFrequency(PIN_OUT5, pwmfreq);
+  analogWriteFrequency(PIN_OUT6, pwmfreq);
+  analogWriteFrequency(PIN_OUT7, pwmfreq);
+  analogWriteFrequency(PIN_OUT8, pwmfreq);
+
+  // adc->adc0->setAveraging(16);  // set number of averages
+  // adc->adc0->setResolution(16); // set bits of resolution
+  adc->adc0->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED);
+  adc->adc0->setSamplingSpeed(ADC_SAMPLING_SPEED::LOW_SPEED);
+  adc->adc0->startContinuous(PIN_ACUR_1);
 }
 
 void updateSOC()
@@ -415,322 +655,9 @@ void SOCcharged(int y)
  */
 void VEcan() // communication with Victron system over CAN
 {
-  msg.id = 0x351;
-  msg.len = 8;
-  if (storagemode == 0)
-  {
-    msg.buf[0] = lowByte(uint16_t((settings.ChargeVsetpoint * settings.Scells) * 10));
-    msg.buf[1] = highByte(uint16_t((settings.ChargeVsetpoint * settings.Scells) * 10));
+  if (victronEmulator) {
+    victronEmulator->update();
   }
-  else
-  {
-    msg.buf[0] = lowByte(uint16_t((settings.StoreVsetpoint * settings.Scells) * 10));
-    msg.buf[1] = highByte(uint16_t((settings.StoreVsetpoint * settings.Scells) * 10));
-  }
-  // chargecurrent/discurrent are in tenths of amps (0.1 A). Sent as 16-bit little-endian.
-  msg.buf[2] = lowByte(chargecurrent);
-  msg.buf[3] = highByte(chargecurrent);
-  msg.buf[4] = lowByte(discurrent);
-  msg.buf[5] = highByte(discurrent);
-  msg.buf[6] = lowByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
-  msg.buf[7] = highByte(uint16_t((settings.DischVsetpoint * settings.Scells) * 10));
-  Can1.write(msg);
-
-  msg.id = 0x355;
-  msg.len = 8;
-  msg.buf[0] = lowByte(SOC);
-  msg.buf[1] = highByte(SOC);
-  msg.buf[2] = lowByte(SOH);
-  msg.buf[3] = highByte(SOH);
-  msg.buf[4] = lowByte(SOC * 10);
-  msg.buf[5] = highByte(SOC * 10);
-  msg.buf[6] = 0;
-  msg.buf[7] = 0;
-  Can1.write(msg);
-
-  msg.id = 0x356;
-  msg.len = 8;
-
-  if (settings.chargertype == VictronHV || settings.SerialCan == 1)
-  {
-    msg.buf[0] = lowByte(uint16_t(bms.getPackVoltage() * 10));
-    msg.buf[1] = highByte(uint16_t(bms.getPackVoltage() * 10));
-  }
-  else
-  {
-    msg.buf[0] = lowByte(uint16_t(bms.getPackVoltage() * 100));
-    msg.buf[1] = highByte(uint16_t(bms.getPackVoltage() * 100));
-  }
-
-  msg.buf[2] = lowByte(long(currentact / 100));
-  msg.buf[3] = highByte(long(currentact / 100));
-  msg.buf[4] = lowByte(int16_t(bms.getAvgTemperature() * 10));
-  msg.buf[5] = highByte(int16_t(bms.getAvgTemperature() * 10));
-  msg.buf[6] = 0;
-  msg.buf[7] = 0;
-  Can1.write(msg);
-
-  delay(2);
-  msg.id = 0x35A;
-  msg.len = 8;
-  msg.buf[0] = alarm[0];   // High temp  Low Voltage | High Voltage
-  msg.buf[1] = alarm[1];   // High Discharge Current | Low Temperature
-  msg.buf[2] = alarm[2];   // Internal Failure | High Charge current
-  msg.buf[3] = alarm[3];   // Cell Imbalance
-  msg.buf[4] = warning[0]; // High temp  Low Voltage | High Voltage
-  msg.buf[5] = warning[1]; // High Discharge Current | Low Temperature
-  msg.buf[6] = warning[2]; // Internal Failure | High Charge current
-  msg.buf[7] = warning[3]; // Cell Imbalance
-  Can1.write(msg);
-
-  msg.id = 0x35E;
-  msg.len = 8;
-  msg.buf[0] = bmsname[0];
-  msg.buf[1] = bmsname[1];
-  msg.buf[2] = bmsname[2];
-  msg.buf[3] = bmsname[3];
-  msg.buf[4] = bmsname[4];
-  msg.buf[5] = bmsname[5];
-  msg.buf[6] = bmsname[6];
-  msg.buf[7] = bmsname[7];
-  Can1.write(msg);
-
-  delay(2);
-  msg.id = 0x370;
-  msg.len = 8;
-  msg.buf[0] = bmsmanu[0];
-  msg.buf[1] = bmsmanu[1];
-  msg.buf[2] = bmsmanu[2];
-  msg.buf[3] = bmsmanu[3];
-  msg.buf[4] = bmsmanu[4];
-  msg.buf[5] = bmsmanu[5];
-  msg.buf[6] = bmsmanu[6];
-  msg.buf[7] = bmsmanu[7];
-  Can1.write(msg);
-
-  delay(2);
-  msg.id = 0x373;
-  msg.len = 8;
-  msg.buf[0] = lowByte(uint16_t(bms.getLowCellVolt() * 1000));
-  msg.buf[1] = highByte(uint16_t(bms.getLowCellVolt() * 1000));
-  msg.buf[2] = lowByte(uint16_t(bms.getHighCellVolt() * 1000));
-  msg.buf[3] = highByte(uint16_t(bms.getHighCellVolt() * 1000));
-  msg.buf[4] = lowByte(uint16_t(bms.getLowTemperature() + 273.15));
-  msg.buf[5] = highByte(uint16_t(bms.getLowTemperature() + 273.15));
-  msg.buf[6] = lowByte(uint16_t(bms.getHighTemperature() + 273.15));
-  msg.buf[7] = highByte(uint16_t(bms.getHighTemperature() + 273.15));
-  Can1.write(msg);
-
-  delay(2);
-  msg.id = 0x379; // Installed capacity
-  msg.len = 8;
-  msg.buf[0] = lowByte(uint16_t(settings.Pstrings * settings.CAP));
-  msg.buf[1] = highByte(uint16_t(settings.Pstrings * settings.CAP));
-  msg.buf[2] = contstat; // contactor state
-  msg.buf[3] = (digitalRead(PIN_OUT1) | (digitalRead(PIN_OUT2) << 1) | (digitalRead(PIN_OUT3) << 2) | (digitalRead(PIN_OUT4) << 3));
-  msg.buf[4] = bmsstatus;
-  msg.buf[5] = 0x00;
-  msg.buf[6] = 0x00;
-  msg.buf[7] = 0x00;
-  Can1.write(msg);
-  /*
-      delay(2);
-    msg.id  = 0x378; //Installed capacity
-    msg.len = 2;
-    //energy in 100wh/unit
-    msg.buf[0] =
-    msg.buf[1] =
-    msg.buf[2] =
-    msg.buf[3] =
-    //energy out 100wh/unit
-    msg.buf[4] =
-    msg.buf[5] =
-    msg.buf[6] =
-    msg.buf[7] =
-  */
-  delay(2);
-
-  msg.id = 0x372;
-  msg.len = 8;
-  msg.buf[0] = lowByte(bms.getNumModules());
-  msg.buf[1] = highByte(bms.getNumModules());
-  msg.buf[2] = 0x00;
-  msg.buf[3] = 0x00;
-  msg.buf[4] = 0x00;
-  msg.buf[5] = 0x00;
-  msg.buf[6] = 0x00;
-  msg.buf[7] = 0x00;
-  Can1.write(msg);
-}
-
-/*
- * @brief Extracts the PGN (Parameter Group Number) from a given CAN ID.
- *
- * This function takes a CAN ID as input and determines whether it is an extended
- * or standard ID. If it is an extended ID, it extracts the PGN by applying a mask
- * and shifting the bits accordingly. If it is a standard ID, it simply returns
- * the CAN ID as is.
- *
- * @param canId The CAN ID from which to extract the PGN.
- * @return The extracted PGN if the CAN ID is extended; otherwise, returns the original CAN ID.
- */
-int pgnFromCANId(int canId)
-{
-  if ((canId & 0x10000000) == 0x10000000)
-  {
-    return (canId & 0x03FFFF00) >> 8;
-  }
-  else
-  {
-    return canId; // not sure if this is really right?
-  }
-}
-
-/**
- * @brief Reads and processes incoming CAN messages.
- *
- * This function checks for incoming CAN messages using the `Can1` object.
- * If a message is received, it processes the message based on its ID and
- * performs various actions depending on the configuration settings.
- *
- * The function handles messages for current sensing via CAN bus, including
- * support for different current sensors (CAB300, CAB500, Jaguar I-Pace ISA shunt).
- * It also processes a specific message with ID 0x309 to manage contactor requests.
- *
- * If debugging is enabled, the function prints detailed information about
- * the received CAN messages to the serial console.
- *
- * @return true if a message was read and processed; false if no message was available.
- */
-bool canRead()
-{
-  if (Can2.read(inMsg))
-  {
-    // Read data: len = data length, buf = data byte(s)
-    if (settings.cursens == CURR_SENSE_CANBUS)
-    {
-      if (settings.curcan == 1)
-      {
-        switch (inMsg.id)
-        {
-        case 0x3c0:
-          CAB300();
-          break;
-
-        case 0x3c1:
-          CAB300();
-          break;
-
-        case 0x3c2:
-          CAB300();
-          break;
-
-        default:
-          break;
-        }
-      }
-      if (settings.curcan == 2)
-      {
-        switch (inMsg.id)
-        {
-        case 0x3c0:
-          CAB500();
-          break;
-
-        case 0x3c1:
-          CAB500();
-          break;
-
-        case 0x3c2:
-          CAB500();
-          break;
-
-        default:
-          break;
-        }
-      }
-      if (settings.curcan == 3)
-      {
-        switch (inMsg.id)
-        {
-        case 0x521: //
-          CANmilliamps = (long)((inMsg.buf[2] << 24) | (inMsg.buf[3] << 16) | (inMsg.buf[4] << 8) | (inMsg.buf[5]));
-          if (settings.cursens == CURR_SENSE_CANBUS)
-          {
-            RawCur = CANmilliamps;
-            getcurrent();
-          }
-          break;
-        case 0x3C3: // Jaguar Ipace ISA shunt current reading
-          CANmilliamps = inMsg.buf[5] + (inMsg.buf[4] << 8) + (inMsg.buf[3] << 16) + (inMsg.buf[2] << 24);
-          if (settings.cursens == CURR_SENSE_CANBUS)
-          {
-            RawCur = CANmilliamps;
-            getcurrent();
-          }
-          break;
-
-        case 0x522: //
-          voltage1 = (long)((inMsg.buf[2] << 24) | (inMsg.buf[3] << 16) | (inMsg.buf[4] << 8) | (inMsg.buf[5]));
-          break;
-        case 0x523: //
-          voltage2 = (long)((inMsg.buf[2] << 24) | (inMsg.buf[3] << 16) | (inMsg.buf[4] << 8) | (inMsg.buf[5]));
-          break;
-        default:
-          break;
-        }
-      }
-      if (settings.curcan == 4)
-      {
-        if (pgnFromCANId(inMsg.id) == 0x1F214 && inMsg.buf[0] == 0) // Check PGN and only use the first packet of each sequence
-        {
-          handleVictronLynx();
-        }
-      }
-    }
-
-    if (inMsg.id == 0x309)
-    {
-      Rx309();
-    }
-
-    if (debugMode == 1)
-    {
-      if (candebug == 1)
-      {
-        Serial.print(millis());
-        if ((inMsg.id & 0x80000000) == 0x80000000) // Determine if ID is standard (11 bits) or extended (29 bits)
-          sprintf(msgString, "Extended ID : 0x%.8lX  DLC : % 1d  Data : ", (inMsg.id & 0x1FFFFFFF), inMsg.len);
-        else
-          sprintf(msgString, ", 0x%.3lX, false, % 1d", inMsg.id, inMsg.len);
-
-        Serial.print(msgString);
-
-        if ((inMsg.id & 0x40000000) == 0x40000000)
-        { // Determine if message is a remote request frame.
-          sprintf(msgString, " REMOTE REQUEST FRAME");
-          Serial.print(msgString);
-        }
-        else
-        {
-          for (byte i = 0; i < inMsg.len; i++)
-          {
-            sprintf(msgString, ", 0x%.2X", inMsg.buf[i]);
-            Serial.print(msgString);
-          }
-        }
-
-        Serial.println();
-      }
-    }
-  }
-  else
-  {
-    // No Message
-    return 0;
-  }
-  // returns true as it's read a message, now check again.
-  return 1;
 }
 
 /**
@@ -762,118 +689,6 @@ void Rx309()
       CanOnRev = true;
       CanOntimeout = millis();
     }
-  }
-}
-
-/**
- * @brief Processes CAN messages from a CAB300 current sensor.
- *
- * This function reads a 4-byte current measurement from the incoming CAN message
- * buffer, combines the bytes into a single integer value, and converts it to milliamps.
- * It handles both positive and negative current values based on the sensor's output format.
- * If the current sensing method is set to CAN bus, it updates the raw current value
- * and calls the `getcurrent()` function to process it further.
- *
- * If CAN debugging is enabled, the function prints the received current value in
- * both hexadecimal and decimal formats to the serial console.
- */
-void CAB300()
-{
-  // Combine 3 bytes into a 32-bit integer
-  int32_t rawCan = (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
-
-  // The sensor uses an offset of 0x800000 for Zero.
-  // 0x800000 = 0A
-  // 0x800001 = +1 Unit
-  // 0x7FFFFF = -1 Unit
-  CANmilliamps = rawCan - CAB300_OFFSET;
-
-  if (candebug == 1)
-  {
-    Serial.print("CAB300 ID: ");
-    Serial.print(inMsg.id, HEX);
-    Serial.print(" Raw: 0x");
-    Serial.print(rawCan, HEX);
-    Serial.print(" mA: ");
-    Serial.println(CANmilliamps);
-  }
-
-  // Only process if this is the active sensor setting
-  if (settings.cursens == CURR_SENSE_CANBUS)
-  {
-    processCurrentValue(CANmilliamps);
-  }
-}
-
-/**
- * @brief Processes CAN messages from a CAB500 current sensor.
- *
- * This function reads a 3-byte current measurement from the incoming CAN message
- * buffer, combines the bytes into a single integer value, and converts it to milliamps.
- * It handles both positive and negative current values based on the sensor's output format.
- * If the current sensing method is set to CAN bus, it updates the raw current value
- * and calls the `getcurrent()` function to process it further.
- *
- * If CAN debugging is enabled, the function prints the received current value in
- * both hexadecimal and decimal formats to the serial console.
- */
-void CAB500()
-{
-  // Combine 3 bytes into a 32-bit integer
-  int32_t rawCan = (inMsg.buf[0] << 24) | (inMsg.buf[1] << 16) | (inMsg.buf[2] << 8) | inMsg.buf[3];
-
-  // The sensor uses an offset of 0x800000 for Zero.
-  // 0x800000 = 0A
-  // 0x800001 = +1 Unit
-  // 0x7FFFFF = -1 Unit
-  CANmilliamps = rawCan - CAB500_OFFSET;
-
-  if (candebug == 1)
-  {
-    Serial.print("CAB500 ID: ");
-    Serial.print(inMsg.id, HEX);
-    Serial.print(" Raw: 0x");
-    Serial.print(rawCan, HEX);
-    Serial.print(" mA: ");
-    Serial.println(CANmilliamps);
-  }
-
-  // Only process if this is the active sensor setting
-  if (settings.cursens == CURR_SENSE_CANBUS)
-  {
-    processCurrentValue(CANmilliamps);
-  }
-}
-
-/**
- * @brief Handles CAN messages from a Victron Lynx current sensor.
- *
- * This function processes incoming CAN messages specifically formatted for
- * Victron Lynx current sensors. It checks for invalid data (0xffff) and
- * extracts the current value from the message buffer. The current is then
- * converted to milliamps and, if the current sensing method is set to CAN bus,
- * updates the raw current value and calls the `getcurrent()` function.
- *
- * If CAN debugging is enabled, the function prints the received current value
- * in milliamps to the serial console.
- */
-void handleVictronLynx()
-{
-  if (inMsg.buf[4] == 0xff && inMsg.buf[3] == 0xff)
-    return;
-  int16_t current = (int)inMsg.buf[4] << 8; // in 0.1A increments
-  current |= inMsg.buf[3];
-  CANmilliamps = current * 100;
-  if (settings.cursens == CURR_SENSE_CANBUS)
-  {
-    RawCur = CANmilliamps;
-    getcurrent();
-  }
-  if (candebug == 1)
-  {
-    Serial.println();
-    Serial.print(CANmilliamps);
-    Serial.print("mA ");
   }
 }
 
@@ -962,153 +777,20 @@ void pwmcomms()
  */
 void chargercomms()
 {
+  if (activeCharger) {
+      // Send the control message via our modular class
+      // We pass the RAW target values. The Charger implementation handles scaling/protocol.
 
-  if (settings.chargertype == Elcon)
-  {
-    msg.id = 0x1806E5F4; // broadcast to all Elteks
-    msg.len = 8;
-    msg.flags.extended = 1;
-    msg.buf[0] = highByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    msg.buf[1] = lowByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    msg.buf[2] = highByte(chargecurrent / ncharger);
-    msg.buf[3] = lowByte(chargecurrent / ncharger);
-    msg.buf[4] = 0x00;
-    msg.buf[5] = 0x00;
-    msg.buf[6] = 0x00;
-    msg.buf[7] = 0x00;
-
-    Can1.write(msg);
-    msg.flags.extended = 0;
-  }
-
-  if (settings.chargertype == Eltek)
-  {
-    msg.id = 0x2FF; // broadcast to all Elteks
-    msg.len = 7;
-    msg.buf[0] = 0x01;
-    msg.buf[1] = lowByte(1000);
-    msg.buf[2] = highByte(1000);
-    msg.buf[3] = lowByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    msg.buf[4] = highByte(uint16_t(settings.ChargeVsetpoint * settings.Scells * 10));
-    msg.buf[5] = lowByte(chargecurrent / ncharger);
-    msg.buf[6] = highByte(chargecurrent / ncharger);
-
-    Can1.write(msg);
-  }
-  if (settings.chargertype == BrusaNLG5)
-  {
-    msg.id = chargerid1;
-    msg.len = 7;
-    msg.buf[0] = 0x80;
-    /*
-      if (chargertoggle == 0)
-      {
-      msg.buf[0] = 0x80;
-      chargertoggle++;
-      }
-      else
-      {
-      msg.buf[0] = 0xC0;
-      chargertoggle = 0;
-      }
-    */
-    if (digitalRead(PIN_IN2) == LOW) // Gen OFF
-    {
-      msg.buf[1] = highByte(maxac1 * 10);
-      msg.buf[2] = lowByte(maxac1 * 10);
-    }
-    else
-    {
-      msg.buf[1] = highByte(maxac2 * 10);
-      msg.buf[2] = lowByte(maxac2 * 10);
-    }
-    msg.buf[5] = highByte(chargecurrent / ncharger);
-    msg.buf[6] = lowByte(chargecurrent / ncharger);
-    msg.buf[3] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerendbulk) * 10));
-    msg.buf[4] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerendbulk) * 10));
-    Can1.write(msg);
-
-    delay(2);
-
-    msg.id = chargerid2;
-    msg.len = 7;
-    msg.buf[0] = 0x80;
-    if (digitalRead(PIN_IN2) == LOW) // Gen OFF
-    {
-      msg.buf[1] = highByte(maxac1 * 10);
-      msg.buf[2] = lowByte(maxac1 * 10);
-    }
-    else
-    {
-      msg.buf[1] = highByte(maxac2 * 10);
-      msg.buf[2] = lowByte(maxac2 * 10);
-    }
-    msg.buf[3] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerend) * 10));
-    msg.buf[4] = lowByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) - chargerend) * 10));
-    msg.buf[5] = highByte(chargecurrent / ncharger);
-    msg.buf[6] = lowByte(chargecurrent / ncharger);
-    Can1.write(msg);
-  }
-  if (settings.chargertype == ChevyVolt)
-  {
-    msg.id = 0x30E;
-    msg.len = 1;
-    msg.buf[0] = 0x02; // only HV charging , 0x03 hv and 12V charging
-    Can1.write(msg);
-
-    msg.id = 0x304;
-    msg.len = 4;
-    msg.buf[0] = 0x40; // fixed
-    if ((chargecurrent * 2) > 255)
-    {
-      msg.buf[1] = 255;
-    }
-    else
-    {
-      msg.buf[1] = (chargecurrent * 2);
-    }
-    if ((settings.ChargeVsetpoint * settings.Scells) > 200)
-    {
-      msg.buf[2] = highByte(uint16_t((settings.ChargeVsetpoint * settings.Scells) * 2));
-      msg.buf[3] = lowByte(uint16_t((settings.ChargeVsetpoint * settings.Scells) * 2));
-    }
-    else
-    {
-      msg.buf[2] = highByte(400);
-      msg.buf[3] = lowByte(400);
-    }
-    Can1.write(msg);
-  }
-
-  if (settings.chargertype == Coda)
-  {
-    msg.id = 0x050;
-    msg.len = 8;
-    msg.buf[0] = 0x00;
-    msg.buf[1] = 0xDC;
-    if ((settings.ChargeVsetpoint * settings.Scells) > 200)
-    {
-      msg.buf[2] = highByte(uint16_t((settings.ChargeVsetpoint * settings.Scells) * 10));
-      msg.buf[3] = lowByte(uint16_t((settings.ChargeVsetpoint * settings.Scells) * 10));
-    }
-    else
-    {
-      msg.buf[2] = highByte(400);
-      msg.buf[3] = lowByte(400);
-    }
-    msg.buf[4] = 0x00;
-    if ((settings.ChargeVsetpoint * settings.Scells) * chargecurrent < 3300)
-    {
-      msg.buf[5] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) * chargecurrent) / 240));
-      msg.buf[6] = highByte(uint16_t(((settings.ChargeVsetpoint * settings.Scells) * chargecurrent) / 240));
-    }
-    else // 15 A AC limit
-    {
-      msg.buf[5] = 0x00;
-      msg.buf[6] = 0x96;
-    }
-    msg.buf[7] = 0x01; // HV charging
-    Can1.write(msg);
+      // Calculate target voltage
+      float targetV = settings.ChargeVsetpoint * settings.Scells; 
+      
+      // Calculate target current
+      // Logic: 'chargecurrent' in Limits.cpp is stored in 0.1A units.
+      // e.g., 100 = 10.0A.
+      // Our Charger Interface expects Amps (float).
+      float targetC = (float)chargecurrent / 10.0f;
+  
+      activeCharger->sendControlMessage(targetV, targetC);
   }
 }
 
